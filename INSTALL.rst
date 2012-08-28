@@ -12,3 +12,9 @@ OpenAction installation guide
     2.2 Merge urls.py.dist with the Askbot urls
     2.3 Merge openaction_settings.py with the Askbot settings
     2.4 Add 'action' app to the Askbot installed apps (in Askbot settings)
+
+    2.5 Link the 'base' app into the Askbot installation
+    2.6 Add 'base' app to the Askbot installed apps (in Askbot settings)
+
+    2.7 Link the 'lib' app into the Askbot installation
+    2.8 Add 'lib' app to the Askbot installed apps (in Askbot settings)
