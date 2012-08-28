@@ -42,8 +42,12 @@ class Action(models.Model, Resource):
 
     @property
     def question(self):
-        #TODO: should be moved in askbot Thread class
-        return self.thread._question_post()
+        """QUestion holds the main content for an action.
+
+        It is an askbot Post of type ``question``
+        """
+        #DONE: moved in askbot_models_extension
+        return self.thread.question
         
 
     @property
@@ -107,7 +111,7 @@ class ActionCategory(models.Model, Resource):
 
     name = models.CharField(max_length=128, unique=True, blank=False,verbose_name=_('name'))
     description = models.TextField(blank=True,verbose_name=_('description'))
-    image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
+    #image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
 
     class Meta:
         verbose_name=_('Product category')
