@@ -1,0 +1,30 @@
+<html>
+<head><title>Apri L'AZIONE!</title></head>
+
+<body>
+
+Score: {{action.score}}
+
+<p>Question: {{action.title}}</p>
+
+<p>Description: {{action.description}}</p>
+
+<p>Text: {{action.content}}</p>
+
+<p>VOTERS:</p>
+<ul>
+{% for voter in action.voters %}
+<li>{{ voter.user__username }}</li>
+{% endfor %}
+</ul>
+
+<p>COMMENtS: </p>
+<ul>
+{% for comment in action.comments %}
+<li>{{ commment }} #FIXME Matteo</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>
+
