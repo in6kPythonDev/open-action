@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from askbot.models import Thread
+from askbot.models.post import Post
 
 from base.models import Resource
 from base.utils import get_resource_icon_path
@@ -51,6 +52,56 @@ class Action(models.Model, Resource):
         
 
     @property
+    def owner(self):
+        ''' 
+            The owner is the User who posted this action
+            question. 
+        '''
+        #WAS: post = self.thread.posts.get(post_type='question')
+        #WAS: return post.author
+        return self.question.author
+
+    @property
+    def pingbacks(self):
+        pass
+
+    @property
+    def create_datetime(self):
+        return self.question.added_at
+    
+    @property
+    def geonames(self):
+        pass
+
+    @property
+    def categories(self):
+        pass
+
+    @property
+    def politicians(self):
+        pass
+
+    @property
+    def medias(self):
+        pass
+
+    @property
+    def activists(self):
+        pass
+    
+    @property
+    def relateds(self):
+        ''' The Actions which have the same authors
+        '''
+        pass
+
+    @property
+    def place(self):
+        ''' The place the Question and the Comments Author come from 
+            How do I find this information starting from User?'''
+        pass
+    
+    @property
     def title(self):
         status = ""
         if self.status != const.ACTION_STATUS['active']:
@@ -84,7 +135,34 @@ class Action(models.Model, Resource):
 
     @property
     def comments(self):
+        ''' 2
+        Return a post queryset
+        
+        How to find author and author related information, 
+        the creation datetime, 
+        the text, 
+        the score (votes)
+        '''
         return self.question.comments.all()
+
+    @property
+    def blog_posts(self):
+        ''' 
+        The blog posts are answers to an Askbot question
+        
+        How to find the creation datetime, 
+        the author, 
+        the comments related to the posts,
+        an 'is_automatic'-like field in the Post model in order to
+        create a new Post once a Question reach its threshold 
+        '''
+        answers = []
+        for answer in Post.objects.get_answers():
+            parent = answer.get_parent_post()
+            if parent == self.question:
+                answers.append(answer)
+        
+        return answers
 
 #--------------------------------------------------------------------------------
 

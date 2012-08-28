@@ -15,9 +15,12 @@ class ActionDetailView(DetailView):
         return self.instance
 
     def get_context_data(self, **kwargs):
-
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
+        # a set
+        #attrs = ('',
+        #    '',
+        #)
         return context
 
 #@decorators.check_spam('text')
