@@ -1,7 +1,10 @@
 from django.db import models
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from askbot.models import Thread
+
 from base.models import Resource
+from base.utils import get_resource_icon_path
 from action import const
 
 class Action(models.Model, Resource):
@@ -104,8 +107,7 @@ class ActionCategory(models.Model, Resource):
 
     name = models.CharField(max_length=128, unique=True, blank=False,verbose_name=_('name'))
     description = models.TextField(blank=True,verbose_name=_('description'))
-    #WAS: image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
-    image = models.ImageField(null=True, blank=True,verbose_name=_('image'))
+    image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
 
     class Meta:
         verbose_name=_('Product category')

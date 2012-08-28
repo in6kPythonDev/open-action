@@ -1,5 +1,8 @@
 from django.db import models
 
+from lib import ClassProperty
+from django.db.models import permalink
+
 import logging
 log = logging.getLogger(__name__)
 
