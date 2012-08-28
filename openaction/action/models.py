@@ -128,5 +128,6 @@ from django.dispatch import receiver
 
 @receiver(post_save, sender=Thread)
 def create_action(sender, **kwargs):
-    action = Action(thread=kwargs['instance'])
-    action.save()
+    if kwargs['created']:
+        action = Action(thread=kwargs['instance'])
+        action.save()
