@@ -32,10 +32,10 @@ class Action(models.Model, Resource):
             status = const.ACTION_STATUS['deleted']
         elif self.score == 0:
             # cannot be voted until all fields are set
-            # so the Action goes into "draft" status
-            status = const.ACTION_STATUS['created']
-        elif not self.threshold or self.score < self.threshold:
+            # so the Action goes into "ready" status
             status = const.ACTION_STATUS['draft']
+        elif not self.threshold or self.score < self.threshold:
+            status = const.ACTION_STATUS['ready']
         elif self.score >= self.threshold:
             status = const.ACTION_STATUS['active']
         return status
