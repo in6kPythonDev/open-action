@@ -71,36 +71,30 @@ class Action(models.Model, Resource):
     
     @property
     def geonames(self):
-        pass
+        return self.geoname_set.all()
 
     @property
     def categories(self):
-        pass
+        return self.category_set.all()
 
     @property
     def politicians(self):
-        pass
+        return self.politician_set.all()
 
     @property
     def medias(self):
-        pass
+        return self.media_set.all()
 
     @property
     def activists(self):
         pass
     
     @property
-    def relateds(self):
-        ''' The Actions which have the same authors
+    def relateds_by_owner(self):
+        ''' Actions which have the same authors
         '''
-        pass
+        return Action.objects.filter(thread__question__author=self.owner)
 
-    @property
-    def place(self):
-        ''' The place the Question and the Comments Author come from 
-            How do I find this information starting from User?'''
-        pass
-    
     @property
     def title(self):
         status = ""
@@ -135,16 +129,17 @@ class Action(models.Model, Resource):
 
     @property
     def comments(self):
-        ''' 2
-        Return a post queryset
+        '''Return a post queryset of type "comments".
         
-        How to find author and author related information, 
-        the creation datetime, 
-        the text, 
-        the score (votes)
+        From each comment we find:
+        * author --> comment.author
+        * author.place --> comment.author.place TODO
+        * creation datetime --> comment.added_at, 
+        * text --> comment.text, 
+        * score --> comment.score
         '''
         return self.question.comments.all()
-
+    
     @property
     def blog_posts(self):
         ''' 
@@ -156,13 +151,7 @@ class Action(models.Model, Resource):
         an 'is_automatic'-like field in the Post model in order to
         create a new Post once a Question reach its threshold 
         '''
-        answers = []
-        for answer in Post.objects.get_answers():
-            parent = answer.get_parent_post()
-            if parent == self.question:
-                answers.append(answer)
-        
-        return answers
+        return self.thread.posts.filter(post_type="answer")
 
 #--------------------------------------------------------------------------------
 

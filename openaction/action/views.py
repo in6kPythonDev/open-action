@@ -1,5 +1,6 @@
 from django.views.generic.detail import DetailView
 
+from askbot.models import Post
 from action.models import Action
 
 class ActionDetailView(DetailView):
@@ -22,6 +23,59 @@ class ActionDetailView(DetailView):
         #    '',
         #)
         return context
+
+#---------------------------------------------------------------------------------
+
+class VoteView(View, SingleObjectMixin):
+    """Aumenta di 1 il voto 
+
+    * accessibile solo tramite POST
+    * recupera la action in "def get_object(self)"
+    * aggiungere un voto ad una action
+    * aggiungere un voto solo se in uno stato ammissibile
+    * l'utente sia autenticato
+   
+    SUCCESSIVAMENTE (ma non lo fare)
+    * prenderemo via url HTTP il parametro "token" per capire
+      da chi è stato inviato il link
+    """
+
+    model = Post
+
+class ActionVoteView(VoteView):
+    """Aggiunge un voto su una action."""
+    pass
+
+class CommentVoteView(VoteView):
+    """Aggiunge un voto su un commento."""
+    pass
+
+#---------------------------------------------------------------------------------
+
+class EditableParameterView(UpdateView):
+    """Consente di editare un attributo di un modello.
+
+    * accessibile solo tramite POST
+    * recupera l'istanza del modello Action
+    * fa getattr(instance, "update_%s" % <attr_name>)(value, save=True) 
+    * dove value è request.POST["value"]
+    per testare:
+    <form method="post" action="/action/1/edit/title">
+        <input type="text" value="nuovo titolo" />
+        <input type="submit" value="submit" />
+    </form>
+
+    * Devi definire in action i metodi update_xxxx (tipo update_title)
+    che prendono come parametro il valore e un flag "save" per capire se devono
+    anche salvarlo istantaneamente.
+    """
+    
+class EditablePoliticianView(EditableParameterView):
+    pass
+
+    
+
+#---------------------------------------------------------------------------------
 
 #@decorators.check_spam('text')
 #def ask(request):#view used to ask a new question

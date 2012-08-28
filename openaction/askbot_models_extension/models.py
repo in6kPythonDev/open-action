@@ -29,3 +29,8 @@ class PostExtension(ModelExtender):
 
     
 #TODO TOTHINK if we could enlarge even the summary field...
+
+#--------------------------------------------------------------------------------
+
+#TODO: place can be blank/null at creation time?
+#TODO TOTHINK User.add_to_class("place", models.CharField(max_length=512))
