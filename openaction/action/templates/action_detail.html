@@ -11,6 +11,8 @@ Score: {{action.score}}
 
 <p>Text: {{action.content}}</p>
 
+<p>Author: {{action.owner}}</p>
+
 <p>VOTERS:</p>
 <ul>
 {% for voter in action.voters %}
@@ -18,10 +20,17 @@ Score: {{action.score}}
 {% endfor %}
 </ul>
 
-<p>COMMENtS: </p>
+<p>COMMENTS: </p>
 <ul>
 {% for comment in action.comments %}
-<li>{{ commment }} #FIXME Matteo</li>
+<li>{{ comment }}</li>
+{% endfor %}
+</ul>
+
+<p>ANSWERS: </p>
+<ul>
+{% for answer in action.blog_posts %}
+<li>{{ answer.text }}</li>
 {% endfor %}
 </ul>
 
