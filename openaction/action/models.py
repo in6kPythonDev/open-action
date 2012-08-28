@@ -1,9 +1,10 @@
 from django.db import models
 
 from askbot.models import Thread
+from base.models import Resource
 from action import const
 
-class Action(models.Model):
+class Action(models.Model, Resource):
 
     # Extending Askbot model!
     thread = models.OneToOneField(Thread)
@@ -11,6 +12,9 @@ class Action(models.Model):
     victory = models.BooleanField(default=False)
 
     threshold = models.PositiveIntegerField(blank=True, null=True)
+
+    geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
+    category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
 
     # Status can be 
     # CREATED, DRAFT, CANCELED DRAFT, ACTIVE, CLOSED, VICTORY
@@ -75,8 +79,9 @@ class Action(models.Model):
     def comments(self):
         return self.question.comments.all()
 
+#--------------------------------------------------------------------------------
 
-class GeoName(models.Model):
+class Geoname(models.Model):
 
     GEO_CHOICES = (
         ('state', 'Stato'),
@@ -90,5 +95,38 @@ class GeoName(models.Model):
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
 
+#--------------------------------------------------------------------------------
+
+class ActionCategory(models.Model, Resource):
+
+    # The name is in the form MAINCATEGORY::SUBCATEGORY
+    # accept arbitrary sublevels
+
+    name = models.CharField(max_length=128, unique=True, blank=False,verbose_name=_('name'))
+    description = models.TextField(blank=True,verbose_name=_('description'))
+    #WAS: image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
+    image = models.ImageField(null=True, blank=True,verbose_name=_('image'))
+
+    class Meta:
+        verbose_name=_('Product category')
+        verbose_name_plural = _("Product categories")
+        ordering = ('name',)
+
+    def __unicode__(self):
+        return self.name
+    
+    @property
+    def icon(self):
+        return self.image or super(ActionCategory, self).icon
 
 
+#--------------------------------------------------------------------------------
+# Askbot signal handling
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Thread)
+def create_action(sender, **kwargs):
+    action = Action(thread=kwargs['instance'])
+    action.save()

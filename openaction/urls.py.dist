@@ -2,4 +2,4 @@
 #importa gli urls di askbot
 
 #aggiungi in testa nei pattern
-#    (r'^admin/', include(admin.site.urls)),
+    #(r'^action/', include('action.urls')),
