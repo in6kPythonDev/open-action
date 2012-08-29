@@ -4,9 +4,13 @@ except ImportError as e:
     # Using Django < 1.4
     from django.conf.urls.defaults import patterns, url
 
-from action.views import ActionDetailView, ActionVoteView, CommentVoteView
+from action.views import ActionDetailView, ActionVoteView, CommentVoteView,EditablePoliticianView,EditableParameterView
+#DELETE just for testing
+from action.views import TestView
 
 urlpatterns = patterns('',
+    #DELETE just for testing
+    url(r'^$',TestView),
     url(r'^(?P<pk>\d+)/$', ActionDetailView.as_view(), 
         name='action-detail'
     ),

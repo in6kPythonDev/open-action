@@ -1,7 +1,23 @@
-from django.views.generic.detail import DetailView
+from django.views.generic.detail import DetailView,SingleObjectMixin
+from django.views.generic.edit import UpdateView
+from django.views.generic import View
+from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 
 from askbot.models import Post
+from askbot.models.repute import Vote
 from action.models import Action
+from action import const as action_const
+
+#DELETE just for testing
+from django.http import HttpResponse
+
+#DELETE just for testing
+def TestView(request):
+    html = "<html><head><title>VOTA l'AZIONE!</title></head><body><form method=\"post\" action=\"question/1/vote/\"><input type=\"submit\" value=\"submit\" /></form></body></html>"
+    return HttpResponse(html)
+    
 
 class ActionDetailView(DetailView):
 
@@ -28,27 +44,75 @@ class ActionDetailView(DetailView):
 
 class VoteView(View, SingleObjectMixin):
     """Aumenta di 1 il voto 
-
+      
+    This means that the Action score will be incremented by 1
+    and that a new vote will be added to the Action question votes
     * accessibile solo tramite POST
-    * recupera la action in "def get_object(self)"
-    * aggiungere un voto ad una action
-    * aggiungere un voto solo se in uno stato ammissibile
-    * l'utente sia autenticato
+    * recupera la action in "def get_object(self)" v
+    * aggiungere un voto ad una action v
+    * aggiungere un voto solo se in uno stato ammissibile v
+    * l'utente sia autenticato v
    
     SUCCESSIVAMENTE (ma non lo fare)
     * prenderemo via url HTTP il parametro "token" per capire
-      da chi è stato inviato il link
+      da chi e' stato inviato il link
     """
 
     model = Post
 
-class ActionVoteView(VoteView):
-    """Aggiunge un voto su una action."""
-    pass
+    def get_object(self,queryset=None):
+        """ Return the Action related to the post object """
+        self.post = super(VoteView, self).get_object(queryset)
+        action = self.post.thread.action
 
+        return action
+
+class ActionVoteView(VoteView):
+    """Add a vote to an Action."""
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return HttpResponseRedirect(reverse('action-vote', 
+                kwargs={'pk': self.action.pk})
+        )
+        self.action = self.get_object()
+        
+        #QUESTION: should an action which reached 'victory' status
+        #still be votable?
+        if not self.action.status == action_const.ACTION_STATUS['ready'] \
+           and not self.action.status == action_const.ACTION_STATUS['active']:
+            return HttpResponseRedirect(reverse('action-vote', 
+                kwargs={'pk': self.action.pk})
+        )
+        
+        #Create a vote without saving it
+        vote, created = Vote.objects.get_or_create(user=request.user,
+            voted_post=self.post,vote=u'Up')
+        if created:
+            self.post.score = int(self.post.score) + 1
+        
+        return HttpResponseRedirect(reverse('action-vote',
+            kwargs={'pk': self.action.pk})
+        )
+        
 class CommentVoteView(VoteView):
-    """Aggiunge un voto su un commento."""
-    pass
+    """Add a vote to an Action comment."""
+    
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return HttpResponseRedirect(reverse('comment-vote', 
+                kwargs={'pk': self.action.pk})
+        )
+        self.action = self.get_object()
+        
+        #Create a vote without saving it
+        vote, created = Vote.objects.get_or_create(user=request.user,
+            voted_post=self.post,vote=u'Up')
+        if created:
+            self.post.score = int(self.post.score) + 1
+        
+        return HttpResponseRedirect(reverse('comment-vote',
+            kwargs={'pk': self.action.pk}))
 
 #---------------------------------------------------------------------------------
 
@@ -58,7 +122,7 @@ class EditableParameterView(UpdateView):
     * accessibile solo tramite POST
     * recupera l'istanza del modello Action
     * fa getattr(instance, "update_%s" % <attr_name>)(value, save=True) 
-    * dove value è request.POST["value"]
+    * dove value e' request.POST["value"]
     per testare:
     <form method="post" action="/action/1/edit/title">
         <input type="text" value="nuovo titolo" />
