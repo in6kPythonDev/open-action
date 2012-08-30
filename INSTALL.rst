@@ -13,8 +13,11 @@ OpenAction installation guide
     2.3 Merge openaction_settings.py with the Askbot settings
     2.4 Add 'action' app to the Askbot installed apps (in Askbot settings)
 
-    2.5 Link the 'base' app into the Askbot installation
-    2.6 Add 'base' app to the Askbot installed apps (in Askbot settings)
+#OLD    2.5 Link the 'base' app into the Askbot installation
+#OLD    2.6 Add 'base' app to the Askbot installed apps (in Askbot settings)
 
-    2.7 Link the 'lib' app into the Askbot installation
-    2.8 Add 'lib' app to the Askbot installed apps (in Askbot settings)
+#OLD    2.7 Link the 'lib' app into the Askbot installation
+#OLD    2.8 Add 'lib' app to the Askbot installed apps (in Askbot settings)
+
+3. Add 'askbot_models_extension' app to the openaction INSTALLED_APPS into 
+    the openaction settings file. Include it ABOVE the action app.

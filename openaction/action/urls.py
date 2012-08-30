@@ -10,7 +10,7 @@ from action.views import TestView
 
 urlpatterns = patterns('',
     #DELETE just for testing
-    url(r'^$',TestView),
+    url(r'^$',TestView,name='test'),
     url(r'^(?P<pk>\d+)/$', ActionDetailView.as_view(), 
         name='action-detail'
     ),

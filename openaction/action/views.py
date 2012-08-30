@@ -15,7 +15,9 @@ from django.http import HttpResponse
 
 #DELETE just for testing
 def TestView(request):
-    html = "<html><head><title>VOTA l'AZIONE!</title></head><body><form method=\"post\" action=\"question/1/vote/\"><input type=\"submit\" value=\"submit\" /></form></body></html>"
+    html = "<html><head><title>VOTA l'AZIONE!</title></head> \
+        <body><form method=\"post\" action=\"question/1/vote/\"> \
+        <input type=\"submit\" value=\"submit\" /></form></body></html>"
     return HttpResponse(html)
     
 
@@ -133,7 +135,33 @@ class EditableParameterView(UpdateView):
     che prendono come parametro il valore e un flag "save" per capire se devono
     anche salvarlo istantaneamente.
     """
-    
+    model = Action
+    form_class = EditActionAttributeForm
+    success_url = ""#The URL to redirect to after the form is processed.
+
+    def get_object(self,queryset=None):
+        """ Return the Action related to the post object """
+        self.post = super(VoteView, self).get_object(queryset)
+        action = self.post.thread.action
+
+        return action
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return HttpResponse(request.META['HTTP_REFERER'])
+        self.action = self.get_object()
+        form_class = self.get_form_class()
+        #value has to be taken from a form text_field 
+        #need to define the form
+        
+        return HttpResponse(request.META['HTTP_REFERER'])
+
+    def form_valid(self, form):
+        super(VoteView, self).form_valid(form)
+        #first i get the value from the form
+        getattr(self.action, "update_%s" % attr)(value, save=True)
+        
+
 class EditablePoliticianView(EditableParameterView):
     pass
 

@@ -42,6 +42,26 @@ class Action(models.Model, Resource):
         return status
 
     @property
+    def update_status(self,value,save=True):
+        """ QUESTION: can a User really change the status ? """
+        if value == const.ACTION_STATUS['victory']:
+            status = value
+            self.victory = True
+        elif value == const.ACTION_STATUS['closed']:
+            status = value
+            self.thread.closed = True
+        elif value == const.ACTION_STATUS['deleted']:
+            status = value
+            self.question.deleted = True
+        elif value = const.ACTION_STATUS['draft']:
+            status = value
+            self.score = 0
+        if save:
+            self.save()
+
+        return value
+
+    @property
     def question(self):
         """QUestion holds the main content for an action.
 
@@ -101,8 +121,15 @@ class Action(models.Model, Resource):
         if self.status != const.ACTION_STATUS['active']:
             status = u" [%s]" % self.status
         return u"%s%s" % (self.thread.title, status)
-    
 
+    @property
+    def update_title(self, value, save = True):
+        self.thread.title = value
+        if save:
+            self.thread.save()
+        
+        return value
+    
     @property
     def description(self):
         """Description is a quite short summary of the action"""
@@ -110,6 +137,14 @@ class Action(models.Model, Resource):
         # TODO TOTHINK 
         # Askbot summary is 300 chars long, we should enlarge it...
         return self.question.summary
+
+    @property
+    def description(self, value, save = True):
+        self.question.summary = value
+        if save:
+            self.question.save()
+
+        return value
     
     @property
     def score(self):
@@ -118,6 +153,14 @@ class Action(models.Model, Resource):
     @property
     def content(self):
         return self.question.text
+
+    @property
+    def update_content(self, value, save = True):
+        self.question.text = value
+        if save:
+            self.question.save()
+
+        return value
 
     @property
     def votes(self):
@@ -160,7 +203,7 @@ class Geoname(models.Model):
     GEO_CHOICES = (
         ('state', 'Stato'),
         ('province', 'Provincia'),
-        #TODO: Matteo
+        ('municipality', 'Comune'),
     )
 
     name = models.CharField(max_length=1024)
