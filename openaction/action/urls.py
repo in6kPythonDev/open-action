@@ -6,11 +6,11 @@ except ImportError as e:
 
 from action.views import ActionDetailView, ActionVoteView, CommentVoteView,EditablePoliticianView,EditableParameterView
 #DELETE just for testing
-from action.views import TestView
+from action.views import test_post_view
 
 urlpatterns = patterns('',
     #DELETE just for testing
-    url(r'^$',TestView,name='test'),
+    url(r'^$',test_post_view,name='test'),
     # Single action view
     url(r'^(?P<pk>\d+)/$', ActionDetailView.as_view(), 
         name='action-detail'

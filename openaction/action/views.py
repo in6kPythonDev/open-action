@@ -14,7 +14,7 @@ from action import const as action_const
 from django.http import HttpResponse
 
 #DELETE just for testing
-def TestView(request):
+def test_post_view(request):
     html = "<html><head><title>VOTA l'AZIONE!</title></head> \
         <body><form method=\"post\" action=\"question/1/vote/\"> \
         <input type=\"submit\" value=\"submit\" /></form></body></html>"
@@ -30,16 +30,12 @@ class ActionDetailView(DetailView):
     def get_object(self):
         self.instance = super(ActionDetailView, self).get_object()
         # needs to do something here...?
-        # POSSIBLE TODO: parse token and increment counter "action suggested by user"
+        # POSSIBLE TODO FUTURE: parse token and increment counter "action view suggested by user"
         return self.instance
 
     def get_context_data(self, **kwargs):
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
-        # a set
-        #attrs = ('',
-        #    '',
-        #)
         return context
 
 #---------------------------------------------------------------------------------
