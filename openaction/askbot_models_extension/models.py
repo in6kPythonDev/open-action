@@ -34,3 +34,25 @@ class PostExtension(ModelExtender):
 
 #TODO: place can be blank/null at creation time?
 #TODO TOTHINK User.add_to_class("place", models.CharField(max_length=512))
+
+#--------------------------------------------------------------------------------
+
+class VoteExtension(ModelExtender):
+
+    ext_prefix = '_askbot_ext_'
+
+    def _askbot_ext_save(self, *args, **kw):
+
+        orig_save = self._orig_method
+        if self.referral:
+            if self.referral == self.user:
+                # TODO: specific exception
+                raise PermissionDenied("Cannot be referred by yourself")
+
+        orig_save(self, *args, **kw)
+        
+
+
+Vote.add_to_class('referral', 
+    models.ForeignKey(User, null=True, blank=True)
+)

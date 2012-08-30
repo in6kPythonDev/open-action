@@ -15,7 +15,7 @@ class Action(models.Model, Resource):
 
     victory = models.BooleanField(default=False)
 
-    threshold = models.PositiveIntegerField(blank=True, null=True)
+    _threshold = models.PositiveIntegerField(blank=True, null=True)
 
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
@@ -196,6 +196,47 @@ class Action(models.Model, Resource):
         '''
         return self.thread.posts.filter(post_type="answer")
 
+    def compute_threshold(self):
+        """Compute threshold for an action to become ACTIVE.
+
+        Threshold is the number of votes needed for an action to be
+        puglished and activate media and politicians contacts.
+        """
+
+        #TODO
+        threshold = 3
+        self._threshold = threshold
+        self.save()
+
+    @property
+    def threshold(self):
+        """Return threshold to make the action ACTIVE.
+
+        Compute it if not already computed.
+        """
+
+        if not self._threshold:
+           if self.status == const.ACTION_STATUS_READY:
+                self.compute_threshold() 
+        return self._threshold
+
+    def get_token_for_user(self, user):
+        """Return token for user to share that action.
+
+        In this way the user can be recognized as referrer for a vote,
+        or just (maybe in future) for viewing the action page"""
+
+        #TODO
+        token = "TODO"
+        return token
+
+    def get_vote_referrer_for_user(self, user):
+        """Return vote referrer for user vote on this action."""
+
+        vote = "TODO"
+        return vote.referral
+        
+
 #--------------------------------------------------------------------------------
 
 class Geoname(models.Model):
@@ -245,5 +286,7 @@ from django.dispatch import receiver
 @receiver(post_save, sender=Thread)
 def create_action(sender, **kwargs):
     if kwargs['created']:
-        action = Action(thread=kwargs['instance'])
-        action.save()
+        thread = kwargs['instance']
+        if not thread.action:
+            action = Action(thread=kwargs['instance'])
+            action.save()

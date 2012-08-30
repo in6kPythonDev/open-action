@@ -10,9 +10,11 @@ class ModelExtender(object):
         """Extending cls with object attrs that starts by prefix.
 
         Prefix is defined in __class__.ext_prefix.
+        Original method, if present, is saved in self._orig_method
         """
 
         prefix = self.__class__.ext_prefix
+        self._orig_method = None
 
         for method_name in dir(self):
 
@@ -20,7 +22,9 @@ class ModelExtender(object):
 
                 #print("Aggiungo il metodo %s" % method_name)
                 
-                sender.add_to_class(
+                self._orig_method = getattr(cls, method_name)
+                setattr(
+                    cls,
                     method_name[len(prefix):],
                     getattr(self.__class__, method_name)
                 )

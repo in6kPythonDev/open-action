@@ -11,14 +11,14 @@ Action statuses
 
 """
 
-ACTION_DRAFT = 'DRAFT'
-ACTION_READY = 'READY'
+ACTION_STATUS_DRAFT = 'DRAFT'
+ACTION_STATUS_READY = 'READY'
 
 # TODO TOCOMPLETE Antonio with documentation
 
 ACTION_STATUS = {
-    'draft' : ACTION_DRAFT,
-    'ready'   : ACTION_READY,
+    'draft' : ACTION_STATUS_DRAFT,
+    'ready'   : ACTION_STATUS_READY,
     'deleted' : 'CANCELED DRAFT',
     'active' : 'ACTIVE',
     'closed' : 'CLOSED',
