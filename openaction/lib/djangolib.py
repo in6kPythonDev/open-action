@@ -1,6 +1,7 @@
 # Author: Luca Ferroni <luca@befair.it>
 # License: AGPLv3
 
+#--------------------------------------------------------------------------------
 
 class ModelExtender(object):
 
@@ -20,12 +21,13 @@ class ModelExtender(object):
 
             if method_name.startswith(prefix):
 
-                #print("Aggiungo il metodo %s" % method_name)
-                
-                self._orig_method = getattr(cls, method_name)
+                # print("Aggiungo il metodo %s" % method_name)
+                orig_method_name = method_name[len(prefix):]
+                self._orig_method = getattr(cls, method_name, None)
                 setattr(
-                    cls,
-                    method_name[len(prefix):],
+                    cls, orig_method_name,
                     getattr(self.__class__, method_name)
                 )
+
+#--------------------------------------------------------------------------------
 

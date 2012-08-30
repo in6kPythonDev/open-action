@@ -13,6 +13,7 @@ Action statuses
 
 ACTION_STATUS_DRAFT = 'DRAFT'
 ACTION_STATUS_READY = 'READY'
+ACTION_STATUS_ACTIVE = 'ACTIVE'
 
 # TODO TOCOMPLETE Antonio with documentation
 
@@ -20,7 +21,7 @@ ACTION_STATUS = {
     'draft' : ACTION_STATUS_DRAFT,
     'ready'   : ACTION_STATUS_READY,
     'deleted' : 'CANCELED DRAFT',
-    'active' : 'ACTIVE',
+    'active' : ACTION_STATUS_ACTIVE,
     'closed' : 'CLOSED',
     'victory' : 'VICTORY',
 }

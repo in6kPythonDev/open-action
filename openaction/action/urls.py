@@ -11,6 +11,7 @@ from action.views import test_post_view
 urlpatterns = patterns('',
     #DELETE just for testing
     url(r'^$',test_post_view,name='test'),
+
     # Single action view
     url(r'^(?P<pk>\d+)/$', ActionDetailView.as_view(), 
         name='action-detail'

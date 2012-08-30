@@ -5,10 +5,19 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 
+from django.utils.decorators import method_decorator
+
 from askbot.models import Post
 from askbot.models.repute import Vote
 from action.models import Action
 from action import const as action_const
+
+from action.exceptions import ActionInvalidStatusException
+from lib import views_support
+
+import logging
+
+log = logging.getLogger("openaction")
 
 #DELETE just for testing
 from django.http import HttpResponse
@@ -20,7 +29,6 @@ def test_post_view(request):
         <input type=\"submit\" value=\"submit\" /></form></body></html>"
     return HttpResponse(html)
     
-
 class ActionDetailView(DetailView):
 
     model = Action
@@ -56,42 +64,38 @@ class VoteView(View, SingleObjectMixin):
       da chi e' stato inviato il link
     """
 
-    model = Post
+    model = Action
 
-    def get_object(self,queryset=None):
-        """ Return the Action related to the post object """
-        self.post = super(VoteView, self).get_object(queryset)
-        action = self.post.thread.action
-
-        return action
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(VoteView, self).dispatch(*args, **kwargs)
 
 class ActionVoteView(VoteView):
     """Add a vote to an Action."""
 
     def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
-            return HttpResponseRedirect(reverse('action-vote', 
-                kwargs={'pk': self.action.pk})
-        )
-        self.action = self.get_object()
-        
-        #QUESTION: should an action which reached 'victory' status
-        #still be votable?
-        if not self.action.status == action_const.ACTION_STATUS['ready'] \
-           and not self.action.status == action_const.ACTION_STATUS['active']:
-            return HttpResponseRedirect(reverse('action-vote', 
-                kwargs={'pk': self.action.pk})
-        )
-        
-        #Create a vote without saving it
-        vote, created = Vote.objects.get_or_create(user=request.user,
-            voted_post=self.post,vote=u'Up')
-        if created:
-            self.post.score = int(self.post.score) + 1
-        
-        return HttpResponseRedirect(reverse('action-vote',
-            kwargs={'pk': self.action.pk})
-        )
+
+        try:
+            action = self.get_object()
+            log.debug("%s:user %s voting action %s" % (
+                self.__class__.__name__.lower(),
+                request.user, action
+            ))
+            
+            #QUESTION: should an action which reached 'victory' status
+            # still be votable?
+            if action.status not in (
+                action_const.ACTION_STATUS_READY, 
+                action_const.ACTION_STATUS_ACTIVE
+            ):
+                return views_support.response_error(request, msg=ActionInvalidStatusException())
+
+            action.vote_add(request.user)
+                
+            return views_support.response_success(request)
+        except Exception as e:
+            log.debug("Exception raised %s" % e)
+            return views_support.response_error(request, msg=e)
         
 class CommentVoteView(VoteView):
     """Add a vote to an Action comment."""
@@ -115,51 +119,52 @@ class CommentVoteView(VoteView):
 #---------------------------------------------------------------------------------
 
 class EditableParameterView(UpdateView):
-    """Consente di editare un attributo di un modello.
-
-    * accessibile solo tramite POST
-    * recupera l'istanza del modello Action
-    * fa getattr(instance, "update_%s" % <attr_name>)(value, save=True) 
-    * dove value e' request.POST["value"]
-    per testare:
-    <form method="post" action="/action/1/edit/title">
-        <input type="text" value="nuovo titolo" />
-        <input type="submit" value="submit" />
-    </form>
-
-    * Devi definire in action i metodi update_xxxx (tipo update_title)
-    che prendono come parametro il valore e un flag "save" per capire se devono
-    anche salvarlo istantaneamente.
-    """
-    model = Action
-    form_class = EditActionAttributeForm
-    success_url = ""#The URL to redirect to after the form is processed.
-
-    def get_object(self,queryset=None):
-        """ Return the Action related to the post object """
-        self.post = super(VoteView, self).get_object(queryset)
-        action = self.post.thread.action
-
-        return action
-
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
-            return HttpResponse(request.META['HTTP_REFERER'])
-        self.action = self.get_object()
-        form_class = self.get_form_class()
-        #value has to be taken from a form text_field 
-        #need to define the form
-        
-        return HttpResponse(request.META['HTTP_REFERER'])
-
-    def form_valid(self, form):
-        super(VoteView, self).form_valid(form)
-        #first i get the value from the form
-        getattr(self.action, "update_%s" % attr)(value, save=True)
-        
-
-class EditablePoliticianView(EditableParameterView):
     pass
+#    """Consente di editare un attributo di un modello.
+#
+#    * accessibile solo tramite POST
+#    * recupera l'istanza del modello Action
+#    * fa getattr(instance, "update_%s" % <attr_name>)(value, save=True) 
+#    * dove value e' request.POST["value"]
+#    per testare:
+#    <form method="post" action="/action/1/edit/title">
+#        <input type="text" value="nuovo titolo" />
+#        <input type="submit" value="submit" />
+#    </form>
+#
+#    * Devi definire in action i metodi update_xxxx (tipo update_title)
+#    che prendono come parametro il valore e un flag "save" per capire se devono
+#    anche salvarlo istantaneamente.
+#    """
+#    model = Action
+#    form_class = EditActionAttributeForm
+#    success_url = ""#The URL to redirect to after the form is processed.
+#
+#    def get_object(self,queryset=None):
+#        """ Return the Action related to the post object """
+#        self.post = super(VoteView, self).get_object(queryset)
+#        action = self.post.thread.action
+#
+#        return action
+#
+#    def post(self, request, *args, **kwargs):
+#        if not request.user.is_authenticated():
+#            return HttpResponse(request.META['HTTP_REFERER'])
+#        self.action = self.get_object()
+#        form_class = self.get_form_class()
+#        #value has to be taken from a form text_field 
+#        #need to define the form
+#        
+#        return HttpResponse(request.META['HTTP_REFERER'])
+#
+#    def form_valid(self, form):
+#        super(VoteView, self).form_valid(form)
+#        #first i get the value from the form
+#        getattr(self.action, "update_%s" % attr)(value, save=True)
+#        
+#
+class EditablePoliticianView(EditableParameterView):
+   pass
 
     
 

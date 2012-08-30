@@ -15,6 +15,14 @@ Antonio
 Io - progetto
 =============
 
+Setter
+------
+
+Problema dei setter. Essendoci oggetti innestati ho un problema nel settare 
+temporaneamente gli attributi. Ad esempio v. property "score".
+
+Posso definire il setter di score, ma lo devo salvare subito in "question"
+altrimenti se da fuori faccio action.save(), non salvo lo score dato che è in "question"
 
 Action
 ------

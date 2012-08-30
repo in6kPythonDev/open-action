@@ -1,12 +1,15 @@
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from askbot.models import Thread
-from askbot.models.post import Post
 
 from base.models import Resource
 from base.utils import get_resource_icon_path
 from action import const
+
+import logging
+
+log = logging.getLogger("openaction")
 
 class Action(models.Model, Resource):
 
@@ -19,6 +22,9 @@ class Action(models.Model, Resource):
 
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
+
+    def __unicode__(self):
+        return self.title
 
     # Status can be 
     # CREATED, DRAFT, CANCELED DRAFT, ACTIVE, CLOSED, VICTORY
@@ -39,27 +45,31 @@ class Action(models.Model, Resource):
             status = const.ACTION_STATUS['ready']
         elif self.score >= self.threshold:
             status = const.ACTION_STATUS['active']
+
         return status
 
-    @property
-    def update_status(self,value,save=True):
-        """ QUESTION: can a User really change the status ? """
-        if value == const.ACTION_STATUS['victory']:
-            status = value
-            self.victory = True
-        elif value == const.ACTION_STATUS['closed']:
-            status = value
-            self.thread.closed = True
-        elif value == const.ACTION_STATUS['deleted']:
-            status = value
-            self.question.deleted = True
-        elif value = const.ACTION_STATUS['draft']:
-            status = value
-            self.score = 0
-        if save:
-            self.save()
+    def update_status(self, value):
+        """ Update status and save it """
 
-        return value
+        if value == const.ACTION_STATUS['victory']:
+            self.victory = True
+            self.save()
+        elif value == const.ACTION_STATUS['closed']:
+            self.thread.closed = True
+            self.thread.save()
+        elif value == const.ACTION_STATUS['deleted']:
+            self.question.deleted = True
+            self.question.save()
+        elif value == const.ACTION_STATUS['draft']:
+            log.warning("Setting of DRAFT status, this shouldn't be done")
+            self.question.score = 0
+            self.question.save()
+        elif value == const.ACTION_STATUS_READY:
+            log.warning("Setting of READY status, this should be done only by bot")
+            self.question.score = self.threshold
+            self.question.save()
+        else:
+            raise ValueError("Invalid status %s for action %s" % (value, self))
 
     @property
     def question(self):
@@ -67,7 +77,7 @@ class Action(models.Model, Resource):
 
         It is an askbot Post of type ``question``
         """
-        #DONE: moved in askbot_models_extension
+        #DONE: thread extension (see `askbot_models_extension` app)
         return self.thread.question
         
 
@@ -118,17 +128,13 @@ class Action(models.Model, Resource):
     @property
     def title(self):
         status = ""
-        if self.status != const.ACTION_STATUS['active']:
+        if self.status != const.ACTION_STATUS_ACTIVE:
             status = u" [%s]" % self.status
         return u"%s%s" % (self.thread.title, status)
 
-    @property
-    def update_title(self, value, save = True):
+    def update_title(self, value):
         self.thread.title = value
-        if save:
-            self.thread.save()
-        
-        return value
+        self.thread.save()
     
     @property
     def description(self):
@@ -138,13 +144,9 @@ class Action(models.Model, Resource):
         # Askbot summary is 300 chars long, we should enlarge it...
         return self.question.summary
 
-    @property
-    def description(self, value, save = True):
+    def update_description(self, value):
         self.question.summary = value
-        if save:
-            self.question.save()
-
-        return value
+        self.question.save()
     
     @property
     def score(self):
@@ -154,13 +156,9 @@ class Action(models.Model, Resource):
     def content(self):
         return self.question.text
 
-    @property
-    def update_content(self, value, save = True):
+    def update_content(self, value):
         self.question.text = value
-        if save:
-            self.question.save()
-
-        return value
+        self.question.save()
 
     @property
     def votes(self):
@@ -227,15 +225,31 @@ class Action(models.Model, Resource):
         or just (maybe in future) for viewing the action page"""
 
         #TODO
-        token = "TODO"
+        token = "TODO fero"
         return token
 
-    def get_vote_referrer_for_user(self, user):
+    def get_vote_referral_for_user(self, user):
         """Return vote referrer for user vote on this action."""
 
-        vote = "TODO"
+        vote = "TODO Matteo"
+        # TODO Matteo: change name to get_vote_for_user
+        # anche change tests or other code that uses it
         return vote.referral
         
+    @transaction.commit_on_success
+    def vote_add(self, user, referral=None):
+
+        # Check that user cannot vote twice... 
+        # Check that user != referral
+        vote = user.upvote(self.question) 
+
+        # Add referral 
+        vote.referral = referral
+        vote.save()
+
+        log.debug("Vote added for user %s on action %s with referral %s" % (
+            user, self, referral
+        ))
 
 #--------------------------------------------------------------------------------
 
@@ -287,6 +301,8 @@ from django.dispatch import receiver
 def create_action(sender, **kwargs):
     if kwargs['created']:
         thread = kwargs['instance']
-        if not thread.action:
+        try:
+            assert(thread.action)
+        except Action.DoesNotExist as e:
             action = Action(thread=kwargs['instance'])
             action.save()
