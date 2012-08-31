@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
 
 class ActionInvalidStatusException(Exception):
     pass
 
 class InvalidReferralError(Exception):
     
-    def __str__(self):
-        return "A User cannot be referred by himself"
+    def __unicode__(self):
+        #TODO Matteo: italian
+        return u"A User cannot be referred by himself"
 
 class UserCannotVoteTwice(Exception):
     
@@ -14,6 +16,7 @@ class UserCannotVoteTwice(Exception):
         self.action = action  
 
     def __str__(self):
+        #TODO Matteo: unicode italian
         return "The user %s has already voted the Action %s" % (self.user,
             self.action)
         
