@@ -118,11 +118,11 @@ class ActionViewTest(OpenActionViewTestCase):
         self.assertEqual(response.status_code, 200)
         return response
  
-    def __post_add_comment(self, query_string=""):
+    def __post_add_comment(self, **kwargs):
 
         response = self._c.post(
-            reverse('action-comment-add', args=(self._action.pk)) + \
-            query_string
+            reverse('action-comment-add', args=(self._action.pk)),
+            kwargs
         )
         print response
         self.assertEqual(response.status_code, 200)
@@ -211,22 +211,23 @@ class ActionViewTest(OpenActionViewTestCase):
 
 #Matteo------------------------------------------------------------------------
 
-    def test_add_comment_to_action(self, user=None, query_string=""):
+    def test_add_comment_to_action(self, user=None):
  
         # Test for authenticated user
-        self._login(user)
+        logged_in = self._login(user)
 
         comment = "Ohi, che bel castello..."
-        query_string = "?comment=%s" % comment
     
         #Adding comment to action 
-        response = self.__post_add_comment(query_string=query_string)
+        response = self.__post_add_comment({ 'comment' : comment })
 
-        # Success
-        success = self._check_for_success_response(response)
-
-        if success:
+        if logged_in:
+            # Success
+            success = self._check_for_success_response(response)
             self._comment_post = self._action.comments.get(pk=1)
+        else:
+            # Unauthenticated user cannot post
+            self._check_for_error_response(response) #TODO Matteo add exception
 
     def test_add_blog_post_to_action(self):
         
