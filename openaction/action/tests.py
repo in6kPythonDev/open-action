@@ -104,6 +104,7 @@ class ActionViewTest(OpenActionViewTestCase):
             reverse('action-vote-add', args=(self._action.pk,)) + \
             query_string
         )
+        print response
         self.assertEqual(response.status_code, 200)
         return response
 
@@ -154,7 +155,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         self.assertEqual(
             self._author, 
-            self._action.get_vote_referral_for_user(self.u2)
+            self._action.get_vote_for_user(self.u2)
         )
 
     def test_not_add_two_votes_for_the_same_action(self):

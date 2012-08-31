@@ -3,8 +3,10 @@
 """
 
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 
 from askbot.models import Thread, Vote, User
+from action.exceptions import UserCannotVoteTwice,InvalidReferralError
 
 from lib.djangolib import ModelExtender
 
@@ -60,7 +62,19 @@ def vote_check_before_save(sender, **kwargs):
     if vote.referral:
         if vote.referral == vote.user:
             # TODO Matteo: define specific exception
-            raise PermissionDenied("Cannot be referred by yourself")
+            #WAS: raise PermissionDenied("Cannot be referred by yourself")
+            raise InvalidReferralError()
+
+    if vote.voted_post.post_type == 'question':
+        action = vote.voted_post.thread.action
+        
+        if action.get_vote_for_user(vote.user):
+            raise UserCannotVoteTwice(vote.user,vote.voted_post.thread.question)
+        #WAS:try:
+        #WAS:   if vote.voted_post.votes.get(user=vote.user):
+        #WAS:        raise UserCannotVoteTwice(vote.user,vote.voted_post.thread.question)
+        #WAS:except ObjectDoesNotExist as e:
+        #WAS:   pass
 
     # Retrieve vote for the same user on the same post
-    # Maybe you could use the same code of Action.get_vote_referral_for_user
+    # Maybe you could use the same code of Action.get_vote_for_user

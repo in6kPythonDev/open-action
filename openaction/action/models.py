@@ -1,5 +1,6 @@
 from django.db import models, transaction
 from django.utils.translation import ugettext, ugettext_lazy as _
+from django.core.exceptions import ObjectDoesNotExist
 
 from askbot.models import Thread
 
@@ -228,13 +229,19 @@ class Action(models.Model, Resource):
         token = "TODO fero"
         return token
 
-    def get_vote_referral_for_user(self, user):
+    #WAS:def get_vote_referral_for_user(self, user):
+    def get_vote_for_user(self, user):
         """Return vote referrer for user vote on this action."""
-
-        vote = "TODO Matteo"
+        
+        "TODO Matteo"
+        try:
+            vote = self.votes.get(user=user)
+        except ObjectDoesNotExist as e:
+            return None
         # TODO Matteo: change name to get_vote_for_user
         # anche change tests or other code that uses it
-        return vote.referral
+        #WAS: return vote.referral
+        return vote
         
     @transaction.commit_on_success
     def vote_add(self, user, referral=None):
