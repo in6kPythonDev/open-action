@@ -49,7 +49,7 @@ class ActionDetailView(DetailView):
 #---------------------------------------------------------------------------------
 
 class VoteView(View, SingleObjectMixin):
-    """Aumenta di 1 il voto 
+    """Add a vote to a post  
       
     This means that the Action score will be incremented by 1
     and that a new vote will be added to the Action question votes
@@ -101,20 +101,19 @@ class CommentVoteView(VoteView):
     """Add a vote to an Action comment."""
     
     def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
-            return HttpResponseRedirect(reverse('comment-vote', 
-                kwargs={'pk': self.action.pk})
-        )
-        self.action = self.get_object()
-        
-        #Create a vote without saving it
-        vote, created = Vote.objects.get_or_create(user=request.user,
-            voted_post=self.post,vote=u'Up')
-        if created:
-            self.post.score = int(self.post.score) + 1
-        
-        return HttpResponseRedirect(reverse('comment-vote',
-            kwargs={'pk': self.action.pk}))
+        pass 
+
+#---------------------------------------------------------------------------------
+
+    class CommentView(View, SingleObjectMixin):
+        """ Add a comment to a post"""
+        pass
+
+    class ActionCommentView(CommentView):
+        """ Add a comment to an action"""
+        pass
+
+    class 
 
 #---------------------------------------------------------------------------------
 

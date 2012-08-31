@@ -6,17 +6,17 @@ class ActionInvalidStatusException(Exception):
 class InvalidReferralError(Exception):
     
     def __unicode__(self):
-        #TODO Matteo: italian
-        return u"A User cannot be referred by himself"
+        #QUESTION: exception should be in first person or in third person?
+        return u"Un utente non può avere se stesso come referente del voto."
 
 class UserCannotVoteTwice(Exception):
     
     def __init__(self, user, action):
         self.user = user
-        self.action = action  
+        self.post = post
 
-    def __str__(self):
-        #TODO Matteo: unicode italian
-        return "The user %s has already voted the Action %s" % (self.user,
+    def __unicode__(self):
+        #QUESTION: exception should be in first person or in third person?
+        return "L'utente ha già votato questo post." % (self.user,
             self.action)
         

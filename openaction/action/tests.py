@@ -108,6 +108,47 @@ class ActionViewTest(OpenActionViewTestCase):
         self.assertEqual(response.status_code, 200)
         return response
 
+    def __comment_post_add_vote(self, query_string=""):
+
+        response = self._c.post(
+            reverse('comment-vote-add', args=(self._comment_post.pk,)) + \
+            query_string
+        )
+        print response
+        self.assertEqual(response.status_code, 200)
+        return response
+ 
+    def __post_add_comment(self, query_string=""):
+
+        response = self._c.post(
+            reverse('action-comment-add', args=(self._action.pk)) + \
+            query_string
+        )
+        print response
+        self.assertEqual(response.status_code, 200)
+        return response
+    
+    def __post_add_blog_post(self, query_string=""):
+
+        response = self._c.post(
+            reverse('action-blogpost-add', args=(self._action.pk)) + \
+            query_string
+        )
+        print response
+        self.assertEqual(response.status_code, 200)
+        return response
+
+    
+    def __blog_post_add_comment(self, query_string=""):
+
+        response = self._c.post(
+            reverse('blogpost-comment-add', args=(self._blog_post.pk)) + \
+            query_string
+        )
+        print response
+        self.assertEqual(response.status_code, 200)
+        return response
+    
     def test_add_vote_to_draft_action(self, user=None):
 
         # Test for authenticated user
@@ -155,7 +196,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         self.assertEqual(
             self._author, 
-            self._action.get_vote_for_user(self.u2)
+            self._action.get_vote_for_user(self.u2).referra.referral
         )
 
     def test_not_add_two_votes_for_the_same_action(self):
@@ -167,3 +208,61 @@ class ActionViewTest(OpenActionViewTestCase):
         response = self.test_add_vote_to_ready_action()
 
         self._check_for_error_response(response, e=UserCannotVoteTwice)
+
+#Matteo------------------------------------------------------------------------
+
+    def test_add_comment_to_action(self, user=None, query_string=""):
+ 
+        # Test for authenticated user
+        self._login(user)
+
+        comment = "Ohi, che bel castello..."
+        query_string = "?comment=%s" % comment
+    
+        #Adding comment to action 
+        response = self.__post_add_comment(query_string=query_string)
+
+        # Success
+        success = self._check_for_success_response(response)
+
+        if success:
+            self._comment_post = self._action.comments.get(pk=1)
+
+    def test_add_blog_post_to_action(self):
+        
+        # test for authenticated user
+        self._login(user)
+        
+        #Adding blog_post to action 
+        response = self.__post_add_blog_post()
+        
+        # Success
+        success = self._check_for_success_response(response)
+
+    def test_add_comment_to_blog_post(self):
+
+        # test for authenticated user
+        self._login(user)
+
+        #Assuming that the previous test passed
+        self.blog_post = self._action.blog_posts.get(pk=1)
+
+        comment = "... marcondiro ndiro ndello"
+        
+        #Adding blog_post to action 
+        response = self.__blog_post_add_comment(query_string="?comment=%s" % comment)
+
+        # Success
+        success = self._check_for_success_response(response)
+
+    def test_add_vote_to_action_comment(self):
+        
+        # Test for authenticated user
+        self._login(user)
+        
+        #Assuming that the previous test added a comment to the Action
+        response = self.__comment_post_add_vote()
+
+        #Success
+        self._check_for_success_response(response)
+
