@@ -229,19 +229,12 @@ class Action(models.Model, Resource):
         token = "TODO fero"
         return token
 
-    #WAS:def get_vote_referral_for_user(self, user):
     def get_vote_for_user(self, user):
-        """Return vote referrer for user vote on this action."""
+        """Return vote for user on this action.
+
+        raises Vote.ObjectDoesNotExist"""
         
-        "TODO Matteo"
-        try:
-            vote = self.votes.get(user=user)
-        except ObjectDoesNotExist as e:
-            return None
-        # TODO Matteo: change name to get_vote_for_user
-        # anche change tests or other code that uses it
-        #WAS: return vote.referral
-        return vote
+        return self.votes.get(user=user)
         
     @transaction.commit_on_success
     def vote_add(self, user, referral=None):

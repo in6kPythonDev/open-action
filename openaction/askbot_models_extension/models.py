@@ -54,27 +54,31 @@ def vote_check_before_save(sender, **kwargs):
     """Overload Askbot.repute.Vote.save
 
     TODO Matteo: Check that a user cannot vote twice
-    TODO Matteo: Check that referral cannot be the user himself
+    Check that referral cannot be the user himself
     """
 
     vote = kwargs['instance']
 
+    #WAS "openaction style" 
+    #WAS "openaction style"if vote.voted_post.post_type == 'question':
+    #WAS "openaction style"    action = vote.voted_post.thread.action
+    #WAS "openaction style"    
+    #WAS "openaction style"    if action.get_vote_for_user(vote.user):
+    #WAS "openaction style"        raise UserCannotVoteTwice(vote.user,vote.voted_post.thread.question)
+
+    # Retrieve vote for the same user on the same post
+    # Do it in "askbot style" in order to reuse code also for vote on comments
+    try:
+        done_vote = vote.voted_post.votes.get(user=vote.user)
+    except ObjectDoesNotExist as e:
+        pass
+    else:
+        raise UserCannotVoteTwice(vote.user, vote.voted_post)
+
+    # Check referral
     if vote.referral:
         if vote.referral == vote.user:
             # TODO Matteo: define specific exception
             #WAS: raise PermissionDenied("Cannot be referred by yourself")
             raise InvalidReferralError()
 
-    if vote.voted_post.post_type == 'question':
-        action = vote.voted_post.thread.action
-        
-        if action.get_vote_for_user(vote.user):
-            raise UserCannotVoteTwice(vote.user,vote.voted_post.thread.question)
-        #WAS:try:
-        #WAS:   if vote.voted_post.votes.get(user=vote.user):
-        #WAS:        raise UserCannotVoteTwice(vote.user,vote.voted_post.thread.question)
-        #WAS:except ObjectDoesNotExist as e:
-        #WAS:   pass
-
-    # Retrieve vote for the same user on the same post
-    # Maybe you could use the same code of Action.get_vote_for_user
