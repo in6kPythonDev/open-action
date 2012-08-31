@@ -45,6 +45,10 @@ class OpenActionViewTestCase(AskbotTestCase):
         u.save()
         return u
 
+    def create_user_unloggable(username):
+        # Create user with no password --> cannot login
+        return super(OpenActionViewTestCase, self).create_user(*args, **kw)
+
     def _create_action(self):
 
         # Create test user
@@ -64,6 +68,11 @@ class OpenActionViewTestCase(AskbotTestCase):
         self._c.logout()
 
     def _login(self, user=None):
+        """Login a user.
+
+        If user is None, login the Action owner
+        """
+
         self._logout()
         login_user = [self._author, user][bool(user)]
         rv = self._c.login(username=login_user.username, password=self.TEST_PASSWORD)
@@ -97,56 +106,47 @@ class ActionViewTest(OpenActionViewTestCase):
 
         super(ActionViewTest, self).setUp()
         self._create_action()
+        self.unloggable = self.create_user_unloggable("pluto")
 
-    def __post_add_vote(self, query_string=""):
+    def _do_post_add_vote(self, query_string=""):
 
         response = self._c.post(
             reverse('action-vote-add', args=(self._action.pk,)) + \
             query_string
         )
-        print response
-        self.assertEqual(response.status_code, 200)
         return response
 
-    def __comment_post_add_vote(self, query_string=""):
+    def _do_post_comment_add_vote(self, comment, **kwargs):
 
         response = self._c.post(
-            reverse('comment-vote-add', args=(self._comment_post.pk,)) + \
-            query_string
+            reverse('comment-vote-add', args=(comment.pk,)),
+            kwargs
         )
-        print response
-        self.assertEqual(response.status_code, 200)
         return response
  
-    def __post_add_comment(self, **kwargs):
+    def _do_post_add_comment(self, **kwargs):
 
         response = self._c.post(
             reverse('action-comment-add', args=(self._action.pk)),
             kwargs
         )
-        print response
-        self.assertEqual(response.status_code, 200)
         return response
     
-    def __post_add_blog_post(self, query_string=""):
+    def _do_post_add_blog_post(self, **kwargs):
 
         response = self._c.post(
-            reverse('action-blogpost-add', args=(self._action.pk)) + \
-            query_string
+            reverse('action-blogpost-add', args=(self._action.pk)),
+            kwargs
         )
-        print response
-        self.assertEqual(response.status_code, 200)
         return response
 
     
-    def __blog_post_add_comment(self, query_string=""):
+    def _do_post_add_comment_to_blog_post(self, blog_post, **kwargs):
 
         response = self._c.post(
-            reverse('blogpost-comment-add', args=(self._blog_post.pk)) + \
-            query_string
+            reverse('blogpost-comment-add', args=(blog_post.pk)),
+            kwargs
         )
-        print response
-        self.assertEqual(response.status_code, 200)
         return response
     
     def test_add_vote_to_draft_action(self, user=None):
@@ -154,7 +154,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login(user)
 
-        response = self.__post_add_vote()
+        response = self._do_post_add_vote()
 
         # Error verified because invalid action status
         self._check_for_error_response(
@@ -172,7 +172,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login(user)
 
-        response = self.__post_add_vote(query_string=query_string)
+        response = self._do_post_add_vote(query_string=query_string)
         self._check_for_success_response(response)
 
         action_voted = Action.objects.get(pk=self._action.pk)
@@ -219,51 +219,62 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = "Ohi, che bel castello..."
     
         #Adding comment to action 
-        response = self.__post_add_comment({ 'comment' : comment })
+        response = self._do_post_add_comment(comment=comment)
 
         if logged_in:
             # Success
             success = self._check_for_success_response(response)
-            self._comment_post = self._action.comments.get(pk=1)
+            self._comment_post = self._action.comments.get(
+                text=comment, author=self._author
+            )
         else:
             # Unauthenticated user cannot post
-            self._check_for_error_response(response) #TODO Matteo add exception
+            self._check_for_error_response(response) #TODO Matteo add exception as parameter e=
 
-    def test_add_blog_post_to_action(self):
+    def test_unauthenticated_add_comment_to_action(self):
+
+        self.test_add_comment_to_action(user=self.unloggable)
+
+    def test_add_blog_post_to_action(self, user=None):
         
         # test for authenticated user
         self._login(user)
         
         #Adding blog_post to action 
-        response = self.__post_add_blog_post()
+        text = "Articolo di blog relativo a action %s" % self._action
+        response = self._do_post_add_blog_post(text=text)
         
         # Success
-        success = self._check_for_success_response(response)
+        self._check_for_success_response(response)
 
-    def test_add_comment_to_blog_post(self):
+    def test_add_comment_to_blog_post(self, user=None):
 
         # test for authenticated user
         self._login(user)
 
-        #Assuming that the previous test passed
-        self.blog_post = self._action.blog_posts.get(pk=1)
+        text = "Altro blog post su action %s" % self._action
+        self._do_post_add_blog_post(text=text)
+        blog_post = self._action.blog_posts.latest()
 
-        comment = "... marcondiro ndiro ndello"
+        comment_text = "... marcondiro ndiro ndello"
         
-        #Adding blog_post to action 
-        response = self.__blog_post_add_comment(query_string="?comment=%s" % comment)
+        #Adding comment to blog_post
+        response = self._do_post_add_comment_to_blog_post(
+            blog_post=blog_post,
+            comment_text=comment_text
+        )
 
-        # Success
-        success = self._check_for_success_response(response)
+        self._check_for_success_response(response)
 
-    def test_add_vote_to_action_comment(self):
+    def test_add_vote_to_action_comment(self, user=None):
         
         # Test for authenticated user
         self._login(user)
         
-        #Assuming that the previous test added a comment to the Action
-        response = self.__comment_post_add_vote()
+        comment = "obj" # TODO: Matteo
+        response = self._do_post_comment_add_vote(comment=comment)
 
         #Success
         self._check_for_success_response(response)
 
+        #TODO: ready and draft differences...

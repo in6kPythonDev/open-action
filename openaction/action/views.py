@@ -64,14 +64,14 @@ class VoteView(View, SingleObjectMixin):
       da chi e' stato inviato il link
     """
 
-    model = Action
-
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(VoteView, self).dispatch(*args, **kwargs)
 
 class ActionVoteView(VoteView):
     """Add a vote to an Action."""
+
+    model = Action
 
     def post(self, request, *args, **kwargs):
 
@@ -91,17 +91,22 @@ class ActionVoteView(VoteView):
                 return views_support.response_error(request, msg=ActionInvalidStatusException())
 
             action.vote_add(request.user)
-                
             return views_support.response_success(request)
+                
         except Exception as e:
             log.debug("Exception raised %s" % e)
             return views_support.response_error(request, msg=e)
         
 class CommentVoteView(VoteView):
     """Add a vote to an Action comment."""
+
+    model = Post
     
     def post(self, request, *args, **kwargs):
         pass 
+        # comment = get_object()
+        # controlla post_type
+        #note: vote = request.user.upvote(comment) 
 
 #---------------------------------------------------------------------------------
 

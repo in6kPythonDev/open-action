@@ -27,7 +27,7 @@ urlpatterns = patterns('',
     ),
     # Action related view (list of actions, comments for action, ...)
     url(r'^comment/(?P<pk>\d+)/vote/add/$', CommentVoteView.as_view(), 
-        name='comment-vote'
+        name='comment-vote-add'
     ),
 )
 
