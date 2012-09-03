@@ -2,9 +2,10 @@
 Matteo
 ------
 
-* ActionCreateView: creazione politici e media come categorie e territori 
+* ActionCreateView: creazione politician_set e media_set da fare come category_set e geoname_set
+* test per ActionCreateView 
 * ActionUpdateView: aggiornamento del post e dei campi ManyToManyField. Verificare che non è posibile aggiornarlo in un certo stato.
-* test per ActionCreateView e ActionUpdateView
+* test per ActionUpdateView
 
 Antonio
 -------
