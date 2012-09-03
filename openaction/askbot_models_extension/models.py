@@ -5,7 +5,7 @@
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 
-from askbot.models import Thread, Vote, User
+from askbot.models import Thread, Vote, User, Post
 from action.exceptions import UserCannotVoteTwice,InvalidReferralError
 
 from lib.djangolib import ModelExtender
@@ -47,13 +47,28 @@ Vote.add_to_class('referral',
 # Askbot signal handling
 
 from django.db.models.signals import pre_save
-from django.dispatch import receiver
+from django.dispatch import receiver 
+from action import const as action_const
+from action.exceptions import CommentActionInvalidStatusException
+
+@receiver(pre_save, sender=Post)
+def comment_check_before_save(sender, **kwargs):
+    """ Overload Askbot.post.Post.save """
+
+    post = kwargs['instance']
+    
+    if not post.is_question():
+        if post.thread.action.status in (
+            action_const.ACTION_STATUS_DRAFT
+        ):
+            #DONE Matteo: define appropriate arguments
+            raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
 @receiver(pre_save, sender=Vote)
 def vote_check_before_save(sender, **kwargs):
     """Overload Askbot.repute.Vote.save
 
-    TODO Matteo: Check that a user cannot vote twice
+    DONE Matteo: Check that a user cannot vote twice
     Check that referral cannot be the user himself
     """
 

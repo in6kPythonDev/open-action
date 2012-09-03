@@ -251,6 +251,26 @@ class Action(models.Model, Resource):
             user, self, referral
         ))
 
+    def comment_add(self, comment, user):
+        """ Have to check for:
+        
+            1- user login --> in the Views
+            2- action status (has to not be draft)
+        
+
+            added_at and by_email are handled by post.add_comment
+        """
+
+        self.question.add_comment(comment, 
+            user, 
+            added_at=None, 
+            by_email=False
+        )
+        
+        log.debug("Comment added for user %s on action %s" % (
+            user, self
+        ))
+
 #--------------------------------------------------------------------------------
 
 class Geoname(models.Model):

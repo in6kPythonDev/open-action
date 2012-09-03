@@ -12,8 +12,10 @@ from django.db import connection
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 
 from askbot.models import Post, User
+from askbot.models.repute import Vote
 from action.models import Action
 from action import const, exceptions
 
@@ -45,7 +47,7 @@ class OpenActionViewTestCase(AskbotTestCase):
         u.save()
         return u
 
-    def create_user_unloggable(username):
+    def create_user_unloggable(self, *args, **kw):
         # Create user with no password --> cannot login
         return super(OpenActionViewTestCase, self).create_user(*args, **kw)
 
@@ -76,8 +78,9 @@ class OpenActionViewTestCase(AskbotTestCase):
         self._logout()
         login_user = [self._author, user][bool(user)]
         rv = self._c.login(username=login_user.username, password=self.TEST_PASSWORD)
-        if not rv:
-            raise Exception("Created user is not logged in")
+        #KO: if not rv:
+        #KO:    raise Exception("Created user is not logged in")
+        return rv
 
     def _check_for_error_response(self, response, e=Exception):
         """HTTP response is always 200, context_data 'http_status_code' tells the truth"""
@@ -95,7 +98,11 @@ class OpenActionViewTestCase(AskbotTestCase):
             response.context_data['http_status_code'], 
             views_support.HTTP_SUCCESS
         )
-
+    
+    def _check_for_redirect_response(self,response):
+        """ HTTP response is 302, in case the server redirects to another page"""
+        self.assertEqual(response.status_code, views_support.HTTP_REDIRECT)
+        
 
 #---------------------------------------------------------------------------------
 
@@ -127,7 +134,7 @@ class ActionViewTest(OpenActionViewTestCase):
     def _do_post_add_comment(self, **kwargs):
 
         response = self._c.post(
-            reverse('action-comment-add', args=(self._action.pk)),
+            reverse('action-comment-add', args=(self._action.pk,)),
             kwargs
         )
         return response
@@ -135,7 +142,7 @@ class ActionViewTest(OpenActionViewTestCase):
     def _do_post_add_blog_post(self, **kwargs):
 
         response = self._c.post(
-            reverse('action-blogpost-add', args=(self._action.pk)),
+            reverse('action-blogpost-add', args=(self._action.pk,)),
             kwargs
         )
         return response
@@ -144,21 +151,27 @@ class ActionViewTest(OpenActionViewTestCase):
     def _do_post_add_comment_to_blog_post(self, blog_post, **kwargs):
 
         response = self._c.post(
-            reverse('blogpost-comment-add', args=(blog_post.pk)),
+            reverse('blogpost-comment-add', args=(blog_post.pk,)),
             kwargs
         )
         return response
+
+#------------------------------------------------------------------------------
     
     def test_add_vote_to_draft_action(self, user=None):
 
         # Test for authenticated user
         self._login(user)
+        
+        self._action.update_status(const.ACTION_STATUS_DRAFT)
+        #CLEANING votes
 
         response = self._do_post_add_vote()
+        print "\n------------add_vote_draft_action resp: %s\n" % response
 
         # Error verified because invalid action status
         self._check_for_error_response(
-            response, e=exceptions.ActionInvalidStatusException
+            response, e=exceptions.VoteActionInvalidStatusException
         )
 
         action_voted = Action.objects.get(pk=self._action.pk)
@@ -173,6 +186,8 @@ class ActionViewTest(OpenActionViewTestCase):
         self._login(user)
 
         response = self._do_post_add_vote(query_string=query_string)
+        print "\n--------------add_vote_ready_action resp: %s\n" % response
+        
         self._check_for_success_response(response)
 
         action_voted = Action.objects.get(pk=self._action.pk)
@@ -180,6 +195,7 @@ class ActionViewTest(OpenActionViewTestCase):
         
     def test_add_vote_with_token(self):
         """Add a vote referenced by a user."""
+        print "--------------with_token" 
 
         # Generate token for author
         token = self._action.get_token_for_user(self._author)
@@ -196,7 +212,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         self.assertEqual(
             self._author, 
-            self._action.get_vote_for_user(self.u2).referra.referral
+            self._action.get_vote_for_user(self.u2).referral
         )
 
     def test_not_add_two_votes_for_the_same_action(self):
@@ -207,6 +223,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Answer is HTTP so no assertRaises work here
         response = self.test_add_vote_to_ready_action()
 
+        print "\n--------------no_add_two_votes_same_action resp: %s\n" % response
         self._check_for_error_response(response, e=UserCannotVoteTwice)
 
 #Matteo------------------------------------------------------------------------
@@ -216,10 +233,14 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         logged_in = self._login(user)
 
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+
         comment = "Ohi, che bel castello..."
     
         #Adding comment to action 
         response = self._do_post_add_comment(comment=comment)
+        #print "\n----------------add_comm_action resp: %s\n" % response
 
         if logged_in:
             # Success
@@ -229,52 +250,110 @@ class ActionViewTest(OpenActionViewTestCase):
             )
         else:
             # Unauthenticated user cannot post
-            self._check_for_error_response(response) #TODO Matteo add exception as parameter e=
+            
+            #self._check_for_error_response(response, 
+            #    e = PermissionDenied) 
+            self._check_for_redirect_response(response)
+
+    def test_add_comment_to_draft_action(self, user=None):
+ 
+        # Test for authenticated user
+        logged_in = self._login(user)
+
+        self._action.update_status(const.ACTION_STATUS_DRAFT)
+
+        comment = "Ohi, che bel castello..."
+    
+        #Adding comment to action 
+        response = self._do_post_add_comment(comment=comment)
+        #print "\n----------------add_comm_draft_action resp: %s\n" % response
+
+        if logged_in:
+            # cannot comment draft action
+            self._check_for_error_response(response, 
+                e = exceptions.CommentActionInvalidStatusException)
+        else:
+            # Unauthenticated user cannot post
+            
+            self._check_for_error_response(response, 
+                e = PermissionDenied)
 
     def test_unauthenticated_add_comment_to_action(self):
-
+        #print "\n---------------unauthenticated\n"
         self.test_add_comment_to_action(user=self.unloggable)
 
-    def test_add_blog_post_to_action(self, user=None):
-        
-        # test for authenticated user
-        self._login(user)
-        
-        #Adding blog_post to action 
-        text = "Articolo di blog relativo a action %s" % self._action
-        response = self._do_post_add_blog_post(text=text)
-        
-        # Success
-        self._check_for_success_response(response)
+#    def test_add_blog_post_to_action(self, user=None):
+#        
+#        # test for authenticated user
+#        self._login(user)
+#        
+         #restore action status 
+#        self._action.update_status(const.ACTION_STATUS_READY)
 
-    def test_add_comment_to_blog_post(self, user=None):
-
-        # test for authenticated user
-        self._login(user)
-
-        text = "Altro blog post su action %s" % self._action
-        self._do_post_add_blog_post(text=text)
-        blog_post = self._action.blog_posts.latest()
-
-        comment_text = "... marcondiro ndiro ndello"
-        
-        #Adding comment to blog_post
-        response = self._do_post_add_comment_to_blog_post(
-            blog_post=blog_post,
-            comment_text=comment_text
-        )
-
-        self._check_for_success_response(response)
-
-    def test_add_vote_to_action_comment(self, user=None):
-        
-        # Test for authenticated user
-        self._login(user)
-        
-        comment = "obj" # TODO: Matteo
-        response = self._do_post_comment_add_vote(comment=comment)
-
-        #Success
-        self._check_for_success_response(response)
-
-        #TODO: ready and draft differences...
+#        #Adding blog_post to action 
+#        text = "Articolo di blog relativo a action %s" % self._action
+#        response = self._do_post_add_blog_post(text=text)
+#        
+#        # Success
+#        self._check_for_success_response(response)
+#
+#    def test_add_comment_to_blog_post(self, user=None):
+#
+#        # test for authenticated user
+#        self._login(user)
+#
+#        text = "Altro blog post su action %s" % self._action
+#        self._do_post_add_blog_post(text=text)
+#        blog_post = self._action.blog_posts.latest()
+#
+#        comment_text = "... marcondiro ndiro ndello"
+#        
+#        #Adding comment to blog_post
+#        response = self._do_post_add_comment_to_blog_post(
+#            blog_post=blog_post,
+#            comment_text=comment_text
+#        )
+#
+#        self._check_for_success_response(response)
+#
+#    def test_add_vote_to_draft_action_comment(self, user=None):
+#        
+#        # Test for authenticated user
+#        self._login(user)
+#
+#        self._action.update_status(const.ACTION_STATUS_DRAFT)
+#
+#        #step1: add a comment to the action
+#        self._do_post_add_comment()
+#
+#        #step2: get the comment
+#        comment = self._action.comments.latest() # DONE: Matteo
+#
+#        #step3: vote the comment
+#        response = self._do_post_comment_add_vote(comment=comment)
+#
+#        #Cannot comment an action in a draft state
+#        self._check_for_error_response(response, 
+#            e = exceptions.VoteActionInvalidStatusException) #DONE Matteo add exception as parameter e=
+#    
+#    def test_add_vote_to_ready_action_comment(self, user=None):
+#        
+#        # Test for authenticated user
+#        self._login(user)
+#
+#        self._action.compute_threshold()
+#        self._action.update_status(const.ACTION_STATUS_READY)
+#        
+#        #step1: add a comment to the action
+#        self._do_post_add_comment()
+#
+#        #step2: get the comment
+#        comment = self._action.comments.latest() # DONE: Matteo
+#
+#        #step3: vote the comment
+#        response = self._do_post_comment_add_vote(comment=comment)
+#
+#        #Success
+#        self._check_for_success_response(response)
+#
+#        #DONE: ready and draft differences...

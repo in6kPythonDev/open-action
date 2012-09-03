@@ -4,14 +4,9 @@ except ImportError as e:
     # Using Django < 1.4
     from django.conf.urls.defaults import patterns, url
 
-from action.views import ActionDetailView, ActionVoteView, CommentVoteView,EditablePoliticianView,EditableParameterView
-#DELETE just for testing
-from action.views import test_post_view
+from action.views import ActionDetailView, ActionVoteView, CommentVoteView,EditablePoliticianView,EditableParameterView, ActionCommentView, BlogpostCommentView, ActionAnswerView
 
 urlpatterns = patterns('',
-    #DELETE just for testing
-    url(r'^$',test_post_view,name='test'),
-
     # Single action view
     url(r'^(?P<pk>\d+)/$', ActionDetailView.as_view(), 
         name='action-detail'
@@ -28,6 +23,16 @@ urlpatterns = patterns('',
     # Action related view (list of actions, comments for action, ...)
     url(r'^comment/(?P<pk>\d+)/vote/add/$', CommentVoteView.as_view(), 
         name='comment-vote-add'
+    ),
+    url(r'^(?P<pk>\d+)/comment/add/$', ActionCommentView.as_view(), 
+        name='action-comment-add'
+    ),
+    
+    url(r'^blogpost/(?P<pk>\d+)/comment/add/$', BlogpostCommentView.as_view(), 
+        name='blogpost-comment-add'
+    ),
+    url(r'^(?P<pk>\d+)/blogpost/add/$', ActionAnswerView.as_view(), 
+        name='action-blogpost-add'
     ),
 )
 

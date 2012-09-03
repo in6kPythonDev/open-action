@@ -21,6 +21,7 @@ template_error = Template("""
 
 HTTP_ERROR_INTERNAL = 505
 HTTP_SUCCESS = 200
+HTTP_REDIRECT = 302
 
 def response_error(request, msg="error", on_complete=""):
     context = { 

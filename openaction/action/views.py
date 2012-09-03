@@ -1,5 +1,5 @@
 from django.views.generic.detail import DetailView,SingleObjectMixin
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView,FormView
 from django.views.generic import View
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -11,23 +11,14 @@ from askbot.models import Post
 from askbot.models.repute import Vote
 from action.models import Action
 from action import const as action_const
-
-from action.exceptions import ActionInvalidStatusException
+from action.forms import ActionCommentForm
+from action.exceptions import VoteActionInvalidStatusException,CommentActionInvalidStatusException
 from lib import views_support
 
 import logging
 
 log = logging.getLogger("openaction")
 
-#DELETE just for testing
-from django.http import HttpResponse
-
-#DELETE just for testing
-def test_post_view(request):
-    html = "<html><head><title>VOTA l'AZIONE!</title></head> \
-        <body><form method=\"post\" action=\"question/1/vote/\"> \
-        <input type=\"submit\" value=\"submit\" /></form></body></html>"
-    return HttpResponse(html)
     
 class ActionDetailView(DetailView):
 
@@ -64,14 +55,14 @@ class VoteView(View, SingleObjectMixin):
       da chi e' stato inviato il link
     """
 
+    model = Action
+
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(VoteView, self).dispatch(*args, **kwargs)
 
 class ActionVoteView(VoteView):
     """Add a vote to an Action."""
-
-    model = Action
 
     def post(self, request, *args, **kwargs):
 
@@ -88,37 +79,86 @@ class ActionVoteView(VoteView):
                 action_const.ACTION_STATUS_READY, 
                 action_const.ACTION_STATUS_ACTIVE
             ):
-                return views_support.response_error(request, msg=ActionInvalidStatusException())
+                return views_support.response_error(request, msg=VoteActionInvalidStatusException(action.status))
 
             action.vote_add(request.user)
-            return views_support.response_success(request)
                 
+            return views_support.response_success(request)
         except Exception as e:
             log.debug("Exception raised %s" % e)
             return views_support.response_error(request, msg=e)
         
 class CommentVoteView(VoteView):
     """Add a vote to an Action comment."""
-
-    model = Post
     
     def post(self, request, *args, **kwargs):
         pass 
-        # comment = get_object()
-        # controlla post_type
-        #note: vote = request.user.upvote(comment) 
 
 #---------------------------------------------------------------------------------
 
-    class CommentView(View, SingleObjectMixin):
-        """ Add a comment to a post"""
-        pass
+class CommentView(FormView, SingleObjectMixin):
+    """ Add a comment to a post"""
+    
+    def get_object(self):
+        #The super calls the get_object() method of SingleObjectMixin
+        #However, this means that i have to provide the 'model'
+        #attribute to any subclass
+        self.instance = super(CommentView, self).get_object()
+        return self.instance
 
-    class ActionCommentView(CommentView):
-        """ Add a comment to an action"""
-        pass
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CommentView, self).dispatch(*args, **kwargs)
 
-    class 
+class ActionCommentView(CommentView):
+    """ Add a comment to an action"""
+
+    #to get the object
+    model = Action
+    template_name = ''
+    form_class = ActionCommentForm
+
+    def get(self, request, *args, **kwargs):
+        print "I'm receiving the get request for the form"
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+
+        return render(request, template_name, {
+            'form':form,
+        })
+
+    def post(self, request, *args, **kwargs):
+        print "I'm receiving a submitted form filled with data"
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+
+        if(form.is_valid()):
+            try:
+                print "process form data"
+                action = self.get_object()
+                action.comment_add(form.cleaned_data['comment'],request.user)
+                print "OK, redirect to car insurance list"
+                #self.form_valid(form)
+                return views_support.response_success(request)
+            except Exception as e:
+                log.debug("Exception raised %s" % e)
+                return views_support.response_error(request, msg=e)
+        self.form_invalid(form)
+
+    #def form_valid(self, form):
+    #    """ Redirect to get_success_url(). Must return an HttpResponse."""
+    #    pass
+
+class BlogpostCommentView(CommentView):
+    pass
+
+#---------------------------------------------------------------------------------
+
+class AnswerView(FormView):
+    pass
+
+class ActionAnswerView(AnswerView):
+    pass
 
 #---------------------------------------------------------------------------------
 
