@@ -107,47 +107,29 @@ class CommentView(FormView, SingleObjectMixin):
         return self.instance
 
     @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CommentView, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        self._request = request
+        return super(CommentView, self).dispatch(request, *args, **kwargs)
 
 class ActionCommentView(CommentView):
     """ Add a comment to an action"""
 
     #to get the object
     model = Action
-    template_name = ''
+    template_name = 'comment/add.html'
     form_class = ActionCommentForm
 
-    def get(self, request, *args, **kwargs):
-        print "I'm receiving the get request for the form"
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-
-        return render(request, template_name, {
-            'form':form,
-        })
-
-    def post(self, request, *args, **kwargs):
-        print "I'm receiving a submitted form filled with data"
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-
-        if(form.is_valid()):
-            try:
-                print "process form data"
-                action = self.get_object()
-                action.comment_add(form.cleaned_data['comment'],request.user)
-                print "OK, redirect to car insurance list"
-                #self.form_valid(form)
-                return views_support.response_success(request)
-            except Exception as e:
-                log.debug("Exception raised %s" % e)
-                return views_support.response_error(request, msg=e)
-        self.form_invalid(form)
-
-    #def form_valid(self, form):
-    #    """ Redirect to get_success_url(). Must return an HttpResponse."""
-    #    pass
+    def form_valid(self, form):
+        """ Redirect to get_success_url(). Must return an HttpResponse."""
+        try:
+            print "process form data"
+            action = self.get_object()
+            action.comment_add(form.cleaned_data['comment'], self._request.user)
+            print "OK, redirect to action page"
+            return views_support.response_success(self._request)
+        except Exception as e:
+            log.debug("Exception raised %s" % e)
+            return views_support.response_error(self._request, msg=e)
 
 class BlogpostCommentView(CommentView):
     pass

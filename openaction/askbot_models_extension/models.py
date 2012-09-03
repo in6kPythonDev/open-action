@@ -6,7 +6,7 @@ from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 
 from askbot.models import Thread, Vote, User, Post
-from action.exceptions import UserCannotVoteTwice,InvalidReferralError
+from action.exceptions import UserCannotVoteTwice, InvalidReferralError
 
 from lib.djangolib import ModelExtender
 
@@ -83,12 +83,16 @@ def vote_check_before_save(sender, **kwargs):
 
     # Retrieve vote for the same user on the same post
     # Do it in "askbot style" in order to reuse code also for vote on comments
-    try:
-        done_vote = vote.voted_post.votes.get(user=vote.user)
-    except ObjectDoesNotExist as e:
-        pass
-    else:
-        raise UserCannotVoteTwice(vote.user, vote.voted_post)
+
+    #WAS COMMENT AAA: cannot vote twice is checked by Askbot
+    #WAS try:
+    #WAS     done_vote = vote.voted_post.votes.get(user=vote.user)
+    #WAS except Post.DoesNotExist as e:
+    #WAS     pass
+    #WAS else:
+    #WAS     if vote.pk != done_vote.pk:
+    #WAS         # Check that we are not updating the same vote we have find
+    #WAS         raise UserCannotVoteTwice(vote.user, vote.voted_post)
 
     # Check referral
     if vote.referral:

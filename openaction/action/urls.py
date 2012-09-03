@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     url(r'^(?P<pk>\d+)/edit/(?P<attr>\w+)/$', EditableParameterView.as_view(), 
         name='edit-parameter'
     ),
+
     # Action related view (list of actions, comments for action, ...)
     url(r'^comment/(?P<pk>\d+)/vote/add/$', CommentVoteView.as_view(), 
         name='comment-vote-add'

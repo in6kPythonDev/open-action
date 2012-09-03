@@ -6,7 +6,8 @@ from askbot.models import Thread
 
 from base.models import Resource
 from base.utils import get_resource_icon_path
-from action import const
+
+from action import const, exceptions
 
 import logging
 
@@ -243,13 +244,26 @@ class Action(models.Model, Resource):
         # Check that user != referral
         vote = user.upvote(self.question) 
 
-        # Add referral 
-        vote.referral = referral
-        vote.save()
+        if vote:
 
-        log.debug("Vote added for user %s on action %s with referral %s" % (
-            user, self, referral
-        ))
+            # Add referral 
+            vote.referral = referral
+            vote.save()
+
+            log.debug("Vote added for user %s on action %s with referral %s" % (
+                user, self, referral
+            ))
+        else:
+            log.debug("Vote NOT added for user %s on action %s with referral %s" % (
+                user, self, referral
+            ))
+            try:
+                assert self.votes.get(user=user)
+            except Post.DoesNotExist as e:
+                raise exceptions.UserCannotVote(user, self.question)
+            else:
+                raise exceptions.UserCannotVoteTwice(user, self.question)
+
 
     def comment_add(self, comment, user):
         """ Have to check for:
@@ -257,7 +271,6 @@ class Action(models.Model, Resource):
             1- user login --> in the Views
             2- action status (has to not be draft)
         
-
             added_at and by_email are handled by post.add_comment
         """
 

@@ -15,7 +15,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 
 from askbot.models import Post, User
-from askbot.models.repute import Vote
+
 from action.models import Action
 from action import const, exceptions
 
@@ -40,6 +40,12 @@ class OpenActionViewTestCase(AskbotTestCase):
         cu.execute(sql_initial)
         cu.close()
 
+        # Create test user
+        username = 'user1'
+        self._author = self.create_user(username=username)
+
+        self._c = Client()
+
     def create_user(self, *args, **kw):
         """Make the user able to login."""
         u = super(OpenActionViewTestCase, self).create_user(*args, **kw)
@@ -51,20 +57,17 @@ class OpenActionViewTestCase(AskbotTestCase):
         # Create user with no password --> cannot login
         return super(OpenActionViewTestCase, self).create_user(*args, **kw)
 
-    def _create_action(self):
+    def _create_action(self, owner=None, title="Test action #1"):
 
-        # Create test user
-        username = 'user1'
-        self._author = self.create_user(username=username)
+        if not owner:
+            owner = self._author
 
         # Create action to operate on
-        self.__question = self.post_question(
+        question = self.post_question(
             user=self._author,
-            title="Test question #1"
+            title=title
         )
-        self._action = self.__question.thread.action 
-
-        self._c = Client()
+        return question.thread.action 
 
     def _logout(self):
         self._c.logout()
@@ -112,7 +115,7 @@ class ActionViewTest(OpenActionViewTestCase):
     def setUp(self):
 
         super(ActionViewTest, self).setUp()
-        self._create_action()
+        self._action = self._create_action()
         self.unloggable = self.create_user_unloggable("pluto")
 
     def _do_post_add_vote(self, query_string=""):
@@ -160,14 +163,12 @@ class ActionViewTest(OpenActionViewTestCase):
     
     def test_add_vote_to_draft_action(self, user=None):
 
+        self._action = self._create_action()
+
         # Test for authenticated user
         self._login(user)
-        
         self._action.update_status(const.ACTION_STATUS_DRAFT)
-        #CLEANING votes
-
         response = self._do_post_add_vote()
-        print "\n------------add_vote_draft_action resp: %s\n" % response
 
         # Error verified because invalid action status
         self._check_for_error_response(
@@ -186,7 +187,6 @@ class ActionViewTest(OpenActionViewTestCase):
         self._login(user)
 
         response = self._do_post_add_vote(query_string=query_string)
-        print "\n--------------add_vote_ready_action resp: %s\n" % response
         
         self._check_for_success_response(response)
 
@@ -195,7 +195,9 @@ class ActionViewTest(OpenActionViewTestCase):
         
     def test_add_vote_with_token(self):
         """Add a vote referenced by a user."""
-        print "--------------with_token" 
+        #print "--------------with_token" 
+
+        self._action = self._create_action(title="Action vote with token")
 
         # Generate token for author
         token = self._action.get_token_for_user(self._author)
@@ -208,7 +210,9 @@ class ActionViewTest(OpenActionViewTestCase):
         )
 
         self.u2 = self.create_user(username='user2')
-        self.test_add_vote_to_ready_action(user=self.u2)
+        self.test_add_vote_to_ready_action(
+            user=self.u2, query_string=query_string
+        )
 
         self.assertEqual(
             self._author, 
@@ -217,14 +221,20 @@ class ActionViewTest(OpenActionViewTestCase):
 
     def test_not_add_two_votes_for_the_same_action(self):
 
+        self._action = self._create_action(title="Action vote twice")
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+
+        # Test for authenticated user
+        self._login()
+
         # First vote
-        self.test_add_vote_to_ready_action()
+        self._do_post_add_vote()
+
         # Second vote
         # Answer is HTTP so no assertRaises work here
-        response = self.test_add_vote_to_ready_action()
-
-        print "\n--------------no_add_two_votes_same_action resp: %s\n" % response
-        self._check_for_error_response(response, e=UserCannotVoteTwice)
+        response = self._do_post_add_vote()
+        self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
 
 #Matteo------------------------------------------------------------------------
 
@@ -245,14 +255,17 @@ class ActionViewTest(OpenActionViewTestCase):
         if logged_in:
             # Success
             success = self._check_for_success_response(response)
-            self._comment_post = self._action.comments.get(
-                text=comment, author=self._author
-            )
+            try:
+                comment_obj = self._action.comments.get(
+                    text=comment, author=self._author
+                )
+            except Post.DoesNotExist as e:
+                comment_obj = False
+
+            self.assertTrue(comment_obj)
+            
         else:
             # Unauthenticated user cannot post
-            
-            #self._check_for_error_response(response, 
-            #    e = PermissionDenied) 
             self._check_for_redirect_response(response)
 
     def test_add_comment_to_draft_action(self, user=None):
@@ -274,9 +287,7 @@ class ActionViewTest(OpenActionViewTestCase):
                 e = exceptions.CommentActionInvalidStatusException)
         else:
             # Unauthenticated user cannot post
-            
-            self._check_for_error_response(response, 
-                e = PermissionDenied)
+            self._check_for_redirect_response(response)
 
     def test_unauthenticated_add_comment_to_action(self):
         #print "\n---------------unauthenticated\n"

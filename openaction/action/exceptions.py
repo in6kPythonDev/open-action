@@ -30,7 +30,6 @@ class InvalidReferralError(Exception):
 
 class UserCannotVoteTwice(Exception):
    
-    #TODO Matteo: take the post as attribute 
     def __init__(self, user, post):
         self.user = user
         if post.post_type == 'question':
@@ -42,5 +41,11 @@ class UserCannotVoteTwice(Exception):
 
     def __unicode__(self):
         return u"L'utente %s ha già votato %s." % (self.user,
+            self._post_type)
+        
+class UserCannotVote(UserCannotVoteTwice):
+
+    def __unicode__(self):
+        return u"L'utente %s non può votare %s." % (self.user,
             self._post_type)
         

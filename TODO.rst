@@ -15,6 +15,9 @@ Antonio
 Io - progetto
 =============
 
+* Definire protocollo per gestire risposte di errore, redirect, eccezioni, ...
+* Decoratore: se la vista è ajax wrappa le eccezioni in response_error, e i successi in response_success
+
 Setter
 ------
 
