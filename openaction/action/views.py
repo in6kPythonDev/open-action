@@ -1,18 +1,20 @@
 from django.views.generic.detail import DetailView,SingleObjectMixin
-from django.views.generic.edit import UpdateView,FormView
+from django.views.generic.edit import FormView, CreateView, UpdateView
 from django.views.generic import View
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+from django.db import transaction
 
 from django.utils.decorators import method_decorator
 
 from askbot.models import Post
 from askbot.models.repute import Vote
+import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as action_const
-from action.forms import ActionCommentForm
-from action.exceptions import VoteActionInvalidStatusException,CommentActionInvalidStatusException
+from action import forms
+
 from lib import views_support
 
 import logging
@@ -117,7 +119,7 @@ class ActionCommentView(CommentView):
     #to get the object
     model = Action
     template_name = 'comment/add.html'
-    form_class = ActionCommentForm
+    form_class = forms.ActionCommentForm
 
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
@@ -196,75 +198,61 @@ class EditablePoliticianView(EditableParameterView):
 
 #---------------------------------------------------------------------------------
 
-#@decorators.check_spam('text')
-#def ask(request):#view used to ask a new question
-#    """a view to ask a new question
-#    gives space for q title, body, tags and checkbox for to post as wiki
-#
-#    user can start posting a question anonymously but then
-#    must login/register in order for the question go be shown
-#    """
-#    form = forms.AskForm(request.REQUEST)
-#    if request.method == 'POST':
-#        if form.is_valid():
-#            timestamp = datetime.datetime.now()
-#            title = form.cleaned_data['title']
-#            wiki = form.cleaned_data['wiki']
-#            tagnames = form.cleaned_data['tags']
-#            text = form.cleaned_data['text']
-#            ask_anonymously = form.cleaned_data['ask_anonymously']
-#
-#            if request.user.is_authenticated():
-#                
-#                user = form.get_post_user(request.user)
-#                try:
-#                    question = user.post_question(
-#                        title = title,
-#                        body_text = text,
-#                        tags = tagnames,
-#                        wiki = wiki,
-#                        is_anonymous = ask_anonymously,
-#                        timestamp = timestamp
-#                    )
-#                    return HttpResponseRedirect(question.get_absolute_url())
-#                except exceptions.PermissionDenied, e:
-#                    request.user.message_set.create(message = unicode(e))
-#                    return HttpResponseRedirect(reverse('index'))
-#
-#            else:
-#                request.session.flush()
-#                session_key = request.session.session_key
-#                summary = strip_tags(text)[:120]
-#                models.AnonymousQuestion.objects.create(
-#                    session_key = session_key,
-#                    title       = title,
-#                    tagnames = tagnames,
-#                    wiki = wiki,
-#                    is_anonymous = ask_anonymously,
-#                    text = text,
-#                    summary = summary,
-#                    added_at = timestamp,
-#                    ip_addr = request.META['REMOTE_ADDR'],
-#                )
-#                return HttpResponseRedirect(url_utils.get_login_url())
-#
-#    if request.method == 'GET':
-#        form = forms.AskForm()
-#
-#    form.initial = {
-#        'title': request.REQUEST.get('title', ''),
-#        'text': request.REQUEST.get('text', ''),
-#        'tags': request.REQUEST.get('tags', ''),
-#        'wiki': request.REQUEST.get('wiki', False),
-#        'is_anonymous': request.REQUEST.get('is_anonymous', False),
-#    }
-#
-#    data = {
-#        'active_tab': 'ask',
-#        'page_class': 'ask-page',
-#        'form' : form,
-#        'mandatory_tags': models.tag.get_mandatory_tags(),
-#        'email_validation_faq_url':reverse('faq') + '#validate',
-#    }
-#    return render_into_skin('ask.html', data, request)
-#
+class ActionCreateView(FormView):
+    """Create a new action
+
+    """
+
+    form_class = forms.ActionForm
+    template_name = "action/create.html"
+    
+    @method_decorator(login_required)
+    @method_decorator(askbot_decorators.check_spam('text'))
+    def dispatch(self, request, *args, **kwargs):
+        self._request = request
+        self._user = request.user
+        return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
+
+    def get_form(self, form_class):
+        form = super(ActionCreateView, self).get_form(form_class)
+        form.hide_field('openid')
+        form.hide_field('post_author_email')
+        form.hide_field('post_author_username')
+        return form
+        
+    @transaction.commit_on_success
+    def form_valid(self, form):
+        """Create askbot question --> then set action relations"""
+
+        timestamp = datetime.datetime.now()
+        title = form.cleaned_data['title']
+        tagnames = form.cleaned_data['tags']
+        text = form.cleaned_data['text']
+
+        question = self._user.post_question(
+            title = title,
+            body_text = text,
+            tags = tagnames,
+            wiki = False,
+            is_anonymous = False,
+            timestamp = timestamp
+        )
+
+        action = question.thread.action 
+
+        for m2m_attr in ('geoname_set', 'category_set'):
+            m2m_value = form.cleaned_data.get(m2m_attr)
+            if m2m_value:
+                getattr(action, m2m_attr).add(*m2m_value)
+
+        return super(ActionCreateView, self).form_valid(form)
+
+    def get_initial(self):
+        return {
+            'title': self._request.REQUEST.get('title', ''),
+            'text': self._request.REQUEST.get('text', ''),
+            'tags': self._request.REQUEST.get('tags', ''),
+            'wiki': False,
+            'is_anonymous': False,
+        }
+

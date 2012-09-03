@@ -2,6 +2,9 @@
 Matteo
 ------
 
+* ActionCreateView: creazione politici e media come categorie e territori 
+* ActionUpdateView: aggiornamento del post e dei campi ManyToManyField. Verificare che non è posibile aggiornarlo in un certo stato.
+* test per ActionCreateView e ActionUpdateView
 
 Antonio
 -------
@@ -15,6 +18,12 @@ Antonio
 Io - progetto
 =============
 
+CHIEDERE
+--------
+
+* Territori --> autocompletamento con django-ajax-autocomplete?
+* Categorie --> Condivisione modello e fixtures di default
+* In generale tutto quello che non deve essere tradotto all'utente ok in inglese, ma per il resto risparmio della traduzione ok? 
 * Definire protocollo per gestire risposte di errore, redirect, eccezioni, ...
 * Decoratore: se la vista è ajax wrappa le eccezioni in response_error, e i successi in response_success
 
@@ -27,6 +36,11 @@ temporaneamente gli attributi. Ad esempio v. property "score".
 Posso definire il setter di score, ma lo devo salvare subito in "question"
 altrimenti se da fuori faccio action.save(), non salvo lo score dato che è in "question"
 
+Mini_views
+----------
+
+* Modulo action.mini_views per isolare le parti ajax singole
+
 Action
 ------
 
@@ -34,13 +48,11 @@ Action
 * Edit della action alla jeditable
 * Calcolo del threshold 
 
-
 User
 ----
 
 * Global impact factor generale del sistema <--- lo studiano loro e mi danno le specifiche
 * Local impact factor <-- quanto ho influenzato in una action
-
 * Login --> connect user to social network e notifiche
 
 

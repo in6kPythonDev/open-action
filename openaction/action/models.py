@@ -1,6 +1,6 @@
 from django.db import models, transaction
 from django.utils.translation import ugettext, ugettext_lazy as _
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 
 from askbot.models import Thread
 
@@ -28,8 +28,12 @@ class Action(models.Model, Resource):
     def __unicode__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse("action-detail", args=(self.pk,))
+    
+
     # Status can be 
-    # CREATED, DRAFT, CANCELED DRAFT, ACTIVE, CLOSED, VICTORY
+    # DRAFT, READY, CANCELED, ACTIVE, CLOSED, VICTORY
     @property
     def status(self):
 
@@ -233,7 +237,7 @@ class Action(models.Model, Resource):
     def get_vote_for_user(self, user):
         """Return vote for user on this action.
 
-        raises Vote.ObjectDoesNotExist"""
+        raises Vote.DoesNotExist"""
         
         return self.votes.get(user=user)
         
