@@ -124,10 +124,8 @@ class ActionCommentView(CommentView):
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         try:
-            print "process form data"
             action = self.get_object()
             action.comment_add(form.cleaned_data['comment'], self._request.user)
-            print "OK, redirect to action page"
             return views_support.response_success(self._request)
         except Exception as e:
             log.debug("Exception raised %s" % e)
@@ -138,11 +136,33 @@ class BlogpostCommentView(CommentView):
 
 #---------------------------------------------------------------------------------
 
-class AnswerView(FormView):
-    pass
+class BlogpostView(FormView, SingleObjectMixin):
 
-class ActionAnswerView(AnswerView):
-    pass
+    def get_object(self):
+        self.instance = super(BlogpostView, self).get_object()
+        return self.instance
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        self._request = request
+        return super(BlogpostView, self).dispatch(request, *args, **kwargs)
+
+class ActionBlogpostView(BlogpostView):
+
+    model = Action
+    form_class = forms.ActionBlogpostForm
+    template_name = 'blogpost/add.html'
+ 
+    def form_valid(self, form):
+        try:
+            action = self.get_object()
+            action.blog_post_add(form.cleaned_data['text'], self._request.user)
+
+            return views_support.response_success(self._request)
+        except Exception as e:
+            log.debug("Exception raised %s" % e)
+            return views_support.response_error(self._request, msg=e)
+
 
 #---------------------------------------------------------------------------------
 

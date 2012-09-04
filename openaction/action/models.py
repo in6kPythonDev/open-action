@@ -3,13 +3,14 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
 from askbot.models import Thread
+from askbot.models.post import Post
 
 from base.models import Resource
 from base.utils import get_resource_icon_path
 
 from action import const, exceptions
 
-import logging
+import logging, datetime
 
 log = logging.getLogger("openaction")
 
@@ -287,6 +288,23 @@ class Action(models.Model, Resource):
         log.debug("Comment added for user %s on action %s" % (
             user, self
         ))
+
+    def blog_post_add(self, text, user):
+        """ Add a blog post to an Action. """
+
+        Post.objects.create_new_answer(thread=self.thread,
+            author=user,
+            added_at=datetime.datetime.now(),
+            text=text,
+            wiki=False,
+            email_notify = False,
+            by_email = False
+        )
+
+        log.debug("Blog post added for user %s on action %s" % (
+            user, self
+        ))
+        
 
 #--------------------------------------------------------------------------------
 

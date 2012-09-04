@@ -23,6 +23,11 @@ class CommentActionInvalidStatusException(ActionInvalidStatusException):
     def __unicode__(self):
         return u"L'azione non può essere commentata perchè è %s." % self._status
 
+class BlogpostActionInvalidStatusException(ActionInvalidStatusException):
+    
+    def __unicode__(self):
+        return u"Non è possibile aggiungere un articol al blog dell'azione perchè questa è %s." % self._status
+
 class InvalidReferralError(Exception):
     
     def __unicode__(self):

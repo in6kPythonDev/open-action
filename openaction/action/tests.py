@@ -293,20 +293,41 @@ class ActionViewTest(OpenActionViewTestCase):
         #print "\n---------------unauthenticated\n"
         self.test_add_comment_to_action(user=self.unloggable)
 
-#    def test_add_blog_post_to_action(self, user=None):
-#        
-#        # test for authenticated user
-#        self._login(user)
-#        
-         #restore action status 
-#        self._action.update_status(const.ACTION_STATUS_READY)
+    def test_add_blog_post_to_action(self, user=None):
+        
+        # test for authenticated user
+        logged_in = self._login(user)
+        
+        #restore action status 
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
 
-#        #Adding blog_post to action 
-#        text = "Articolo di blog relativo a action %s" % self._action
-#        response = self._do_post_add_blog_post(text=text)
-#        
-#        # Success
-#        self._check_for_success_response(response)
+        #Adding blog_post to action 
+        text = "Articolo di blog relativo a action %s" % self._action
+        response = self._do_post_add_blog_post(text=text)
+        #print "------------- %s" % response
+        
+        #WAS: # Success
+        #WAS: self._check_for_success_response(response)
+        
+        if logged_in:
+            # Success
+            success = self._check_for_success_response(response)
+            try:
+                blogpost_obj = self._action.blog_posts.get(
+                    text=text, author=self._author
+                )
+            except Post.DoesNotExist as e:
+                blogpost_obj = False
+
+            self.assertTrue(blogpost_obj)
+        else:
+            # Unauthenticated user cannot post
+            self._check_for_redirect_response(response)
+    
+    def test_unauthenticated_add_blog_post_to_action(self):
+        #print "\n---------------unauthenticated\n"
+        self.test_add_blog_post_to_action(user=self.unloggable)
 #
 #    def test_add_comment_to_blog_post(self, user=None):
 #

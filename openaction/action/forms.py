@@ -18,3 +18,6 @@ class ActionForm(askbot_forms.AskForm):
 class ActionCommentForm(forms.Form):
     comment = forms.CharField(widget=forms.Textarea)
 
+class ActionBlogpostForm(forms.Form):
+    text = forms.CharField(widget=forms.Textarea)
+

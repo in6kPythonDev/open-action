@@ -57,12 +57,24 @@ def comment_check_before_save(sender, **kwargs):
 
     post = kwargs['instance']
     
-    if not post.is_question():
+    #WAS: if not post.is_question():
+    #WAS:     if post.thread.action.status in (
+    #WAS:         action_const.ACTION_STATUS_DRAFT
+    #WAS:     ):
+    #WAS:         #DONE Matteo: define appropriate arguments
+    #WAS:         raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+
+    if post.is_comment():
         if post.thread.action.status in (
             action_const.ACTION_STATUS_DRAFT
         ):
-            #DONE Matteo: define appropriate arguments
             raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+    elif post.is_answer():
+        if post.thread.action.status in (
+            action_const.ACTION_STATUS_DRAFT
+        ):
+            raise BlogpostActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+        
 
 @receiver(pre_save, sender=Vote)
 def vote_check_before_save(sender, **kwargs):
