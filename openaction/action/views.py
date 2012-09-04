@@ -125,7 +125,7 @@ class ActionCommentView(CommentView):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         try:
             action = self.get_object()
-            action.comment_add(form.cleaned_data['comment'], 
+            action.comment_add(form.cleaned_data['text'], 
             self._request.user
             )
             return views_support.response_success(self._request)
@@ -146,7 +146,7 @@ class BlogpostCommentView(CommentView):
         try:
             action = self.get_object().thread.action
             action.blogpost_comment_add(self.get_object(),
-                form.cleaned_data['comment'], 
+                form.cleaned_data['text'], 
                 self._request.user
             )
             return views_support.response_success(self._request)

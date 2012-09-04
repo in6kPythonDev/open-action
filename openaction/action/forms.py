@@ -15,12 +15,17 @@ class ActionForm(askbot_forms.AskForm):
         required=False
     )
 
-class ActionCommentForm(forms.Form):
-    comment = forms.CharField(widget=forms.Textarea)
+#----------------------------------------------------------------------------------
 
-class BlogpostCommentForm(forms.Form):
-    comment = forms.CharField(widget=forms.Textarea)
-
-class ActionBlogpostForm(forms.Form):
+class SingleTextareaForm(forms.Form):
     text = forms.CharField(widget=forms.Textarea)
+
+class ActionCommentForm(SingleTextareaForm):
+    pass
+
+class BlogpostCommentForm(SingleTextareaForm):
+    pass
+
+class ActionBlogpostForm(SingleTextareaForm):
+    pass
 
