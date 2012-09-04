@@ -10,6 +10,15 @@ from django.http import HttpResponse
 from django.template import Template
 from django.template.response import TemplateResponse
 
+from django.views.generic import View
+from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+
+import logging
+
+log = logging.getLogger(settings.PROJECT_NAME)
+
 # Naive implementation to be tuned as data protocol exchange for Ajax requests
 template_success = Template("""
     <div id="response" class="success" {{ extra_attrs }}>{{ msg }}</div>
@@ -43,4 +52,31 @@ def response_success(request, msg="ok", on_complete=""):
         context['extra_attrs'] = 'on_complete="%s"' % on_complete
     return TemplateResponse(request, template_success, context)
 
+
+#--------------------------------------------------------------------------------
+
+class ResponseWrappedView(View):
+
+    def dispatch(self, request, *args, **kwargs):
+
+        view_name = self.__class__.__name__.lower()
+        method = request.method.upper()
+        log.debug("%s:%s user %s args=%s kw=%s" % (
+            view_name, method, request.user, args, kw
+        ))
+        try:
+            rv = super(ResponseWrappedView, self).dispatch(request, *args, **kwargs)
+        except Exception as e:
+            log.debug("%s:%s exception raised %s" % (
+                view_name, method, request.user, e
+            ))
+            rv = response_error(request, msg=e)
+        return rv
+        
+
+class LoginRequiredView(ResponseWrappedView):
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(LoginRequiredView, self).dispatch(*args, **kw)
 

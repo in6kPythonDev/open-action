@@ -7,6 +7,7 @@ from django.http import HttpResponseRedirect
 from django.db import transaction
 
 from django.utils.decorators import method_decorator
+from django.conf import settings
 
 from askbot.models import Post
 from askbot.models.repute import Vote
@@ -19,9 +20,9 @@ from lib import views_support
 
 import logging
 
-log = logging.getLogger("openaction")
+log = logging.getLogger(settings.PROJECT_NAME)
 
-    
+
 class ActionDetailView(DetailView):
 
     model = Action
@@ -41,7 +42,7 @@ class ActionDetailView(DetailView):
 
 #---------------------------------------------------------------------------------
 
-class VoteView(View, SingleObjectMixin):
+class VoteView(SingleObjectMixin, LoginRequiredView):
     """Add a vote to a post  
       
     This means that the Action score will be incremented by 1
@@ -57,62 +58,39 @@ class VoteView(View, SingleObjectMixin):
       da chi e' stato inviato il link
     """
 
-    model = Action
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(VoteView, self).dispatch(*args, **kwargs)
-
 class ActionVoteView(VoteView):
     """Add a vote to an Action."""
 
+    model = Action
+
     def post(self, request, *args, **kwargs):
 
-        try:
-            action = self.get_object()
-            log.debug("%s:user %s voting action %s" % (
-                self.__class__.__name__.lower(),
-                request.user, action
-            ))
-            
-            #QUESTION: should an action which reached 'victory' status
-            # still be votable?
-            if action.status not in (
-                action_const.ACTION_STATUS_READY, 
-                action_const.ACTION_STATUS_ACTIVE
-            ):
-                return views_support.response_error(request, msg=VoteActionInvalidStatusException(action.status))
-
-            action.vote_add(request.user)
-                
-            return views_support.response_success(request)
-        except Exception as e:
-            log.debug("Exception raised %s" % e)
-            return views_support.response_error(request, msg=e)
+        action = self.get_object()
         
+        #QUESTION: should an action which reached 'victory' status
+        # still be votable?
+        if action.status not in (
+            action_const.ACTION_STATUS_READY, 
+            action_const.ACTION_STATUS_ACTIVE
+        ):
+            return views_support.response_error(request, msg=VoteActionInvalidStatusException(action.status))
+
+        action.vote_add(request.user)
+        return views_support.response_success(request)
+
 class CommentVoteView(VoteView):
     """Add a vote to an Action comment."""
     
+    model = Post
+
     def post(self, request, *args, **kwargs):
         pass 
 
 #---------------------------------------------------------------------------------
 
-class CommentView(FormView, SingleObjectMixin):
+class CommentView(FormView, SingleObjectMixin, LoginRequiredView):
     """ Add a comment to a post"""
     
-    def get_object(self):
-        #The super calls the get_object() method of SingleObjectMixin
-        #However, this means that i have to provide the 'model'
-        #attribute to any subclass
-        self.instance = super(CommentView, self).get_object()
-        return self.instance
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        self._request = request
-        return super(CommentView, self).dispatch(request, *args, **kwargs)
-
 class ActionCommentView(CommentView):
     """ Add a comment to an action"""
 
@@ -123,15 +101,10 @@ class ActionCommentView(CommentView):
 
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
-        try:
-            action = self.get_object()
-            action.comment_add(form.cleaned_data['text'], 
-            self._request.user
-            )
-            return views_support.response_success(self._request)
-        except Exception as e:
-            log.debug("Exception raised %s" % e)
-            return views_support.response_error(self._request, msg=e)
+        action = self.get_object()
+        action.comment_add(form.cleaned_data['text'], self.request.user)
+        return views_support.response_success(self.request)
+
 
 class BlogpostCommentView(CommentView):
     """ Add a comment to an action blogpost"""
@@ -143,29 +116,17 @@ class BlogpostCommentView(CommentView):
 
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
-        try:
-            action = self.get_object().thread.action
-            action.blogpost_comment_add(self.get_object(),
-                form.cleaned_data['text'], 
-                self._request.user
-            )
-            return views_support.response_success(self._request)
-        except Exception as e:
-            log.debug("Exception raised %s" % e)
-            return views_support.response_error(self._request, msg=e)
+        action = self.get_object().thread.action
+        action.blogpost_comment_add(self.get_object(),
+            form.cleaned_data['text'], 
+            self.request.user
+        )
+        return views_support.response_success(self.request)
 
 #---------------------------------------------------------------------------------
 
-class BlogpostView(FormView, SingleObjectMixin):
-
-    def get_object(self):
-        self.instance = super(BlogpostView, self).get_object()
-        return self.instance
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        self._request = request
-        return super(BlogpostView, self).dispatch(request, *args, **kwargs)
+class BlogpostView(FormView, SingleObjectMixin, LoginRequiredView):
+    pass
 
 class ActionBlogpostView(BlogpostView):
 
@@ -174,14 +135,10 @@ class ActionBlogpostView(BlogpostView):
     template_name = 'blogpost/add.html'
  
     def form_valid(self, form):
-        try:
-            action = self.get_object()
-            action.blog_post_add(form.cleaned_data['text'], self._request.user)
 
-            return views_support.response_success(self._request)
-        except Exception as e:
-            log.debug("Exception raised %s" % e)
-            return views_support.response_error(self._request, msg=e)
+        action = self.get_object()
+        action.blog_post_add(form.cleaned_data['text'], self.request.user)
+        return views_support.response_success(self.request)
 
 
 #---------------------------------------------------------------------------------
@@ -238,7 +195,7 @@ class EditablePoliticianView(EditableParameterView):
 
 #---------------------------------------------------------------------------------
 
-class ActionCreateView(FormView):
+class ActionCreateView(FormView, LoginRequiredView):
     """Create a new action
 
     """
@@ -246,11 +203,8 @@ class ActionCreateView(FormView):
     form_class = forms.ActionForm
     template_name = "action/create.html"
     
-    @method_decorator(login_required)
     @method_decorator(askbot_decorators.check_spam('text'))
     def dispatch(self, request, *args, **kwargs):
-        self._request = request
-        self._user = request.user
         return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
 
     def get_form(self, form_class):
@@ -269,7 +223,7 @@ class ActionCreateView(FormView):
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
 
-        question = self._user.post_question(
+        question = self.request.user.post_question(
             title = title,
             body_text = text,
             tags = tagnames,
@@ -289,9 +243,9 @@ class ActionCreateView(FormView):
 
     def get_initial(self):
         return {
-            'title': self._request.REQUEST.get('title', ''),
-            'text': self._request.REQUEST.get('text', ''),
-            'tags': self._request.REQUEST.get('tags', ''),
+            'title': self.request.REQUEST.get('title', ''),
+            'text': self.request.REQUEST.get('text', ''),
+            'tags': self.request.REQUEST.get('tags', ''),
             'wiki': False,
             'is_anonymous': False,
         }
