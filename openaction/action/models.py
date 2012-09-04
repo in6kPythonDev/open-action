@@ -305,24 +305,27 @@ class Action(models.Model, Resource):
             user, self
         ))
     
-    def blogpost_comment_add(self, blogpost, comment, user):
-        """ Have to check for:
-        
-            1- user login --> in the Views
-            2- action status (has to not be draft)
-        
-            added_at and by_email are handled by post.add_comment
-        """
-
-        blogpost.add_comment(comment, 
-            user, 
-            added_at=None, 
-            by_email=False
-        )
-        
-        log.debug("Comment added for user %s on blog article %s" % (
-            user, blogpost
-        ))
+#WAS: This method is confusing: you do not need to know Action to comment a blog post.
+#WAS: Pretending to know action AND blog post could lead to incoherent situation.
+#WAS: If there is no needing to know a detail to do something, don't ask for the detail.
+#WAS:    def blogpost_comment_add(self, blogpost, comment, user):
+#WAS:        """ Have to check for:
+#WAS:        
+#WAS:            1- user login --> in the Views
+#WAS:            2- action status (has to not be draft)
+#WAS:        
+#WAS:            added_at and by_email are handled by post.add_comment
+#WAS:        """
+#WAS:
+#WAS:        blogpost.add_comment(comment, 
+#WAS:            user, 
+#WAS:            added_at=None, 
+#WAS:            by_email=False
+#WAS:        )
+#WAS:        
+#WAS:        log.debug("Comment added for user %s on blog article %s" % (
+#WAS:            user, blogpost
+#WAS:        ))
         
 
 #--------------------------------------------------------------------------------

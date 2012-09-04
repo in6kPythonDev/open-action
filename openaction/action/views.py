@@ -116,11 +116,8 @@ class BlogpostCommentView(CommentView):
 
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
-        action = self.get_object().thread.action
-        action.blogpost_comment_add(self.get_object(),
-            form.cleaned_data['text'], 
-            self.request.user
-        )
+        post = self.get_object()
+        post.comment_add(form.cleaned_data['text'], self.request.user)
         return views_support.response_success(self.request)
 
 #---------------------------------------------------------------------------------
