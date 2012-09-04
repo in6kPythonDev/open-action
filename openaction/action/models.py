@@ -304,6 +304,25 @@ class Action(models.Model, Resource):
         log.debug("Blog post added for user %s on action %s" % (
             user, self
         ))
+    
+    def blogpost_comment_add(self, blogpost, comment, user):
+        """ Have to check for:
+        
+            1- user login --> in the Views
+            2- action status (has to not be draft)
+        
+            added_at and by_email are handled by post.add_comment
+        """
+
+        blogpost.add_comment(comment, 
+            user, 
+            added_at=None, 
+            by_email=False
+        )
+        
+        log.debug("Comment added for user %s on blog article %s" % (
+            user, blogpost
+        ))
         
 
 #--------------------------------------------------------------------------------

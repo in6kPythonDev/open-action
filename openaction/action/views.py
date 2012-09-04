@@ -125,14 +125,34 @@ class ActionCommentView(CommentView):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         try:
             action = self.get_object()
-            action.comment_add(form.cleaned_data['comment'], self._request.user)
+            action.comment_add(form.cleaned_data['comment'], 
+            self._request.user
+            )
             return views_support.response_success(self._request)
         except Exception as e:
             log.debug("Exception raised %s" % e)
             return views_support.response_error(self._request, msg=e)
 
 class BlogpostCommentView(CommentView):
-    pass
+    """ Add a comment to an action blogpost"""
+
+    #to get the object
+    model = Post
+    template_name = 'comment/add.html'
+    form_class = forms.BlogpostCommentForm
+
+    def form_valid(self, form):
+        """ Redirect to get_success_url(). Must return an HttpResponse."""
+        try:
+            action = self.get_object().thread.action
+            action.blogpost_comment_add(self.get_object(),
+                form.cleaned_data['comment'], 
+                self._request.user
+            )
+            return views_support.response_success(self._request)
+        except Exception as e:
+            log.debug("Exception raised %s" % e)
+            return views_support.response_error(self._request, msg=e)
 
 #---------------------------------------------------------------------------------
 

@@ -148,6 +148,7 @@ class ActionViewTest(OpenActionViewTestCase):
             reverse('action-blogpost-add', args=(self._action.pk,)),
             kwargs
         )
+        #print response
         return response
 
     
@@ -307,9 +308,6 @@ class ActionViewTest(OpenActionViewTestCase):
         response = self._do_post_add_blog_post(text=text)
         #print "------------- %s" % response
         
-        #WAS: # Success
-        #WAS: self._check_for_success_response(response)
-        
         if logged_in:
             # Success
             success = self._check_for_success_response(response)
@@ -328,46 +326,50 @@ class ActionViewTest(OpenActionViewTestCase):
     def test_unauthenticated_add_blog_post_to_action(self):
         #print "\n---------------unauthenticated\n"
         self.test_add_blog_post_to_action(user=self.unloggable)
+
+    def test_add_comment_to_blog_post(self, user=None):
+
+        # test for authenticated user
+        logged_in = self._login(user)
+
+        #restore action status 
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+        #already tested, does not need asserts
+        text = "Altro blog post su action %s" % self._action
+        self._do_post_add_blog_post(text=text)
+        blog_post = self._action.blog_posts.get(
+            text=text, author=self._author
+        )
+        comment_text = "... marcondiro ndiro ndello"
+        
+        #Adding comment to blog_post
+        response = self._do_post_add_comment_to_blog_post(
+            blog_post=blog_post,
+            comment=comment_text
+        )
+        #print response
+
+        if logged_in:
+            # Success
+            success = self._check_for_success_response(response)
+            try:
+                comment_obj = blog_post.comments.get(
+                    text=comment_text, author=self._author
+                )
+            except Post.DoesNotExist as e:
+                comment_obj = False
+
+            self.assertTrue(comment_obj)
+            
+        else:
+            # Unauthenticated user cannot post
+            self._check_for_redirect_response(response)
+
+#    def test_add_unauthenticated_comment_to_blog_post(self, user=None):
+#        #print "\n---------------unauthenticated\n"
+#        self.test_add_comment_to_blog_post(user=self.unloggable)
 #
-#    def test_add_comment_to_blog_post(self, user=None):
-#
-#        # test for authenticated user
-#        self._login(user)
-#
-#        text = "Altro blog post su action %s" % self._action
-#        self._do_post_add_blog_post(text=text)
-#        blog_post = self._action.blog_posts.latest()
-#
-#        comment_text = "... marcondiro ndiro ndello"
-#        
-#        #Adding comment to blog_post
-#        response = self._do_post_add_comment_to_blog_post(
-#            blog_post=blog_post,
-#            comment_text=comment_text
-#        )
-#
-#        self._check_for_success_response(response)
-#
-#    def test_add_vote_to_draft_action_comment(self, user=None):
-#        
-#        # Test for authenticated user
-#        self._login(user)
-#
-#        self._action.update_status(const.ACTION_STATUS_DRAFT)
-#
-#        #step1: add a comment to the action
-#        self._do_post_add_comment()
-#
-#        #step2: get the comment
-#        comment = self._action.comments.latest() # DONE: Matteo
-#
-#        #step3: vote the comment
-#        response = self._do_post_comment_add_vote(comment=comment)
-#
-#        #Cannot comment an action in a draft state
-#        self._check_for_error_response(response, 
-#            e = exceptions.VoteActionInvalidStatusException) #DONE Matteo add exception as parameter e=
-#    
 #    def test_add_vote_to_ready_action_comment(self, user=None):
 #        
 #        # Test for authenticated user
@@ -388,4 +390,5 @@ class ActionViewTest(OpenActionViewTestCase):
 #        #Success
 #        self._check_for_success_response(response)
 #
-#        #DONE: ready and draft differences...
+
+
