@@ -56,6 +56,13 @@ def response_success(request, msg="ok", on_complete=""):
 #--------------------------------------------------------------------------------
 
 class ResponseWrappedView(View):
+    """Wrap the dispatcher in order to apply Ajax protocol for data exchange.
+
+    Used also as entry point for logging.
+
+    Now can be implemented also as a Middleware. 
+    Let's see if we need some more customization or not...
+    """
 
     def dispatch(self, request, *args, **kwargs):
 
@@ -70,7 +77,10 @@ class ResponseWrappedView(View):
             log.debug("%s:%s exception raised %s" % (
                 view_name, method, request.user, e
             ))
-            rv = response_error(request, msg=e)
+            if request.is_ajax():
+                rv = response_error(request, msg=e)
+            else:
+                raise
         return rv
         
 
