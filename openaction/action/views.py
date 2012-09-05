@@ -17,6 +17,7 @@ from action import const as action_const
 from action import forms
 
 from lib import views_support
+from lib.views_support import LoginRequiredView
 
 import logging
 

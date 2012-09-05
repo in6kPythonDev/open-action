@@ -69,12 +69,12 @@ class ResponseWrappedView(View):
         view_name = self.__class__.__name__.lower()
         method = request.method.upper()
         log.debug("%s:%s user %s args=%s kw=%s" % (
-            view_name, method, request.user, args, kw
+            view_name, method, request.user, args, kwargs
         ))
         try:
             rv = super(ResponseWrappedView, self).dispatch(request, *args, **kwargs)
         except Exception as e:
-            log.debug("%s:%s exception raised %s" % (
+            log.debug("%s:%s user %s exception raised %s" % (
                 view_name, method, request.user, e
             ))
             if request.is_ajax():
@@ -88,5 +88,5 @@ class LoginRequiredView(ResponseWrappedView):
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
-        return super(LoginRequiredView, self).dispatch(*args, **kw)
+        return super(LoginRequiredView, self).dispatch(*args, **kwargs)
 
