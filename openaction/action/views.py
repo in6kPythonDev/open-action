@@ -15,9 +15,9 @@ import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as action_const
 from action import forms
+import exceptions
 
 from lib import views_support
-from lib.views_support import LoginRequiredView
 
 import logging
 
@@ -65,7 +65,6 @@ class ActionVoteView(VoteView):
     model = Action
 
     def post(self, request, *args, **kwargs):
-
         action = self.get_object()
         
         #QUESTION: should an action which reached 'victory' status
@@ -74,7 +73,7 @@ class ActionVoteView(VoteView):
             action_const.ACTION_STATUS_READY, 
             action_const.ACTION_STATUS_ACTIVE
         ):
-            return views_support.response_error(request, msg=VoteActionInvalidStatusException(action.status))
+            return views_support.response_error(request, msg=exceptions.VoteActionInvalidStatusException(action.status))
 
         action.vote_add(request.user)
         return views_support.response_success(request)
@@ -85,7 +84,31 @@ class CommentVoteView(VoteView):
     model = Post
 
     def post(self, request, *args, **kwargs):
-        pass 
+        comment = self.get_object()
+        user = request.user
+        
+        vote = user.upvote(comment)
+        referral =  kwargs.pop('referral',None)
+        
+        if vote:
+            # Add referral
+            vote.referral = referral 
+            vote.save()
+
+            log.debug("Vote added for user %s on comment %s with referral %s" % (
+                user, comment, referral
+            ))
+        else:
+            log.debug("Vote NOT added for user %s on comment %s with referral %s" % (
+                user, comment, referral
+            ))
+            try:
+                assert comment.votes.get(user=user)
+            except Post.DoesNotExist as e:
+                return views_support.response_error(request, msg=exceptions.UserCannotVote(user, comment))
+            else:
+                return views_support.response_error(request, msg=exceptions.UserCannotVoteTwice(user, comment))
+        return views_support.response_success(request) 
 
 #---------------------------------------------------------------------------------
 

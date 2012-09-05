@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 
 from askbot.models import Post, User
+from askbot.models.repute import Vote
 
 from action.models import Action
 from action import const, exceptions
@@ -353,7 +354,7 @@ class ActionViewTest(OpenActionViewTestCase):
             blog_post=blog_post,
             text=comment_text
         )
-        print response
+        #print response
 
         if logged_in:
             # Success
@@ -375,25 +376,68 @@ class ActionViewTest(OpenActionViewTestCase):
         #print "\n---------------unauthenticated\n"
         self.test_add_comment_to_blog_post(user=self.unloggable)
 
-#    def test_add_vote_to_ready_action_comment(self, user=None):
-#        
-#        # Test for authenticated user
-#        self._login(user)
-#
-#        self._action.compute_threshold()
-#        self._action.update_status(const.ACTION_STATUS_READY)
-#        
-#        #step1: add a comment to the action
-#        self._do_post_add_comment()
-#
-#        #step2: get the comment
-#        comment = self._action.comments.latest() # DONE: Matteo
-#
-#        #step3: vote the comment
-#        response = self._do_post_comment_add_vote(comment=comment)
-#
-#        #Success
-#        self._check_for_success_response(response)
-#
+    def test_add_vote_to_action_comment(self, user=None):
+        
+        # Test for authenticated user
+        self._login(self._author)
 
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+        
+        comment_text = "Aggiungo dell'utente &s" % self._author
+        
+        #Adding comment to action
+        response = self._do_post_add_comment(text=comment_text)
+        comment = self._action.comments.get(text=comment_text,
+            author=self._author
+        )
+        #print response
+
+        logged_in = self._login(user)
+
+        response = self._do_post_comment_add_vote(comment=comment)
+
+        if logged_in:
+            #Success
+            self._check_for_success_response(response)
+            try:
+                vote_obj = comment.votes.get(user=self._author)
+            except Vote.DoesNotExist as e:
+                vote_obj = False
+
+            self.assertTrue(vote_obj)
+            
+        else:
+            # Unauthenticated user cannot post
+            self._check_for_redirect_response(response)
+                
+
+    def test_add_unauthenticated_vote_to_action_comment(self):
+        #print "\n---------------unauthenticated\n"
+        self.test_add_vote_to_action_comment(user=self.unloggable)
+
+    def test_not_add_two_votes_for_the_same_comment(self):
+
+        # Test for authenticated user
+        self._login()
+
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+
+        comment_text = "Aggiungo dell'utente &s" % self._author
+        
+        #Adding comment to action
+        response = self._do_post_add_comment(text=comment_text)
+        comment = self._action.comments.get(text=comment_text,
+            author=self._author
+        )
+        #print response
+
+        # First vote
+        self._do_post_comment_add_vote(comment=comment)
+
+        # Second vote
+        # Answer is HTTP so no assertRaises work here
+        response = self._do_post_comment_add_vote(comment=comment)
+        self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
 
