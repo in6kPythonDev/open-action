@@ -1,0 +1,3 @@
+[submodule "submodules/askbot-devel"]
+	path = submodules/askbot-devel
+	url = git@github.com:feroda/askbot-devel.git
