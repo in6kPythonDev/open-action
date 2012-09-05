@@ -11,7 +11,10 @@ class ActionInvalidStatusException(Exception):
             self._status = "stata cancellata"
         elif status == action_const.ACTION_STATUS['closed']:
             self._status = "stata chiusa"
-         
+        elif status == action_const.ACTION_STATUS_ACTIVE:
+            self._status = "già attiva"
+        elif status == action_const.ACTION_STATUS_READY:
+            self._status = "già pronta per essere votata"
 
 class VoteActionInvalidStatusException(ActionInvalidStatusException):
     
@@ -22,6 +25,11 @@ class CommentActionInvalidStatusException(ActionInvalidStatusException):
     
     def __unicode__(self):
         return u"L'azione non può essere commentata perchè è %s." % self._status
+
+class EditActionInvalidStatusException(ActionInvalidStatusException):
+    
+    def __unicode__(self):
+        return u"L'azione non può essere modificata perchè è %s." % self._status
 
 class BlogpostActionInvalidStatusException(ActionInvalidStatusException):
     

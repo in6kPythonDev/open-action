@@ -19,7 +19,7 @@ import exceptions
 
 from lib import views_support
 
-import logging
+import logging, datetime
 
 log = logging.getLogger(settings.PROJECT_NAME)
 
@@ -221,24 +221,51 @@ class EditablePoliticianView(EditableParameterView):
 
 #---------------------------------------------------------------------------------
 
-class ActionCreateView(FormView, views_support.LoginRequiredView):
-    """Create a new action
-
-    """
+class ActionView(FormView, views_support.LoginRequiredView):
+    """ Superclass to create/edit Actions """
 
     form_class = forms.ActionForm
-    template_name = "action/create.html"
+    template_name = "action/update.html"
     
     @method_decorator(askbot_decorators.check_spam('text'))
     def dispatch(self, request, *args, **kwargs):
-        return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
+        return super(ActionView, self).dispatch(request, *args, **kwargs)
 
+    def get_initial(self):
+        return {
+            'title': self.request.REQUEST.get('title', ''),
+            'text': self.request.REQUEST.get('text', ''),
+            'tags': self.request.REQUEST.get('tags', ''),
+            'wiki': False,
+            'is_anonymous': False,
+        }
+    
     def get_form(self, form_class):
         form = super(ActionCreateView, self).get_form(form_class)
         form.hide_field('openid')
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
         return form
+    
+
+class ActionCreateView(ActionView):#FormViewFormView, views_support.LoginRequiredView):
+    """Create a new action
+
+    """
+
+#    form_class = forms.ActionForm
+#    template_name = "action/create.html"
+    
+#    @method_decorator(askbot_decorators.check_spam('text'))
+#    def dispatch(self, request, *args, **kwargs):
+#        return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
+#
+#    def get_form(self, form_class):
+#        form = super(ActionCreateView, self).get_form(form_class)
+#        form.hide_field('openid')
+#        form.hide_field('post_author_email')
+#        form.hide_field('post_author_username')
+#        return form
         
     @transaction.commit_on_success
     def form_valid(self, form):
@@ -260,19 +287,77 @@ class ActionCreateView(FormView, views_support.LoginRequiredView):
 
         action = question.thread.action 
 
-        for m2m_attr in ('geoname_set', 'category_set'):
+        for m2m_attr in (
+            'geoname_set', 
+            'category_set',
+            'politician_set',
+            'media_set'
+        ):
             m2m_value = form.cleaned_data.get(m2m_attr)
             if m2m_value:
                 getattr(action, m2m_attr).add(*m2m_value)
 
-        return super(ActionCreateView, self).form_valid(form)
+        #return super(ActionCreateView, self).form_valid(form)
+        return views_support.response_success(self.request)
 
-    def get_initial(self):
-        return {
-            'title': self.request.REQUEST.get('title', ''),
-            'text': self.request.REQUEST.get('text', ''),
-            'tags': self.request.REQUEST.get('tags', ''),
-            'wiki': False,
-            'is_anonymous': False,
-        }
+#    def get_initial(self):
+#        return {
+#            'title': self.request.REQUEST.get('title', ''),
+#            'text': self.request.REQUEST.get('text', ''),
+#            'tags': self.request.REQUEST.get('tags', ''),
+#            'wiki': False,
+#            'is_anonymous': False,
+#        }
+
+class ActionUpdateView(ActionView, SingleObjectMixin):
+    """update an action
+
+    """
+    model = Action
+        
+    def get_form(self, form_class):
+        form = super(ActionUpdateView, self).get_form(form_class)
+        form.hide_field('openid')
+        form.hide_field('post_author_email')
+        form.hide_field('post_author_username')
+        return form
+    
+    @transaction.commit_on_success
+    def form_valid(self, form):
+        """Edit askbot question --> then set action relations"""
+
+        action = self.get_object()
+        
+        if action.status not in (action_const.ACTION_STATUS_DRAFT):
+            return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status)
+        
+        question = action.question 
+
+        title = form.cleaned_data['title']
+        tagnames = form.cleaned_data['tags']
+        text = form.cleaned_data['text']
+
+        self.request.user.edit_question(
+            question = question,
+            title = title,
+            body_text = text,
+            revision_comment = None,
+            tags = tagnames,
+            wiki = False, 
+            edit_anonymously = False,
+        )   
+
+
+        for m2m_attr in (
+            'geoname_set', 
+            'category_set',
+            'politician_set',
+            'media_set'
+        ):
+            m2m_value = form.cleaned_data.get(m2m_attr)
+            if m2m_value:
+                getattr(action, m2m_attr).add(*m2m_value)
+
+        #return super(ActionCreateView, self).form_valid(form)
+        return views_support.response_success(self.request)
 

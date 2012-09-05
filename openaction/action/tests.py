@@ -161,6 +161,22 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         return response
 
+    def _do_post_create_action(self, **kwargs):
+
+        response = self._c.post(
+            reverse('action-create', args=()),
+            kwargs
+        )
+        return response
+
+    def _do_post_update_action(self, action, **kwargs):
+
+        response = self._c.post(
+            reverse('action-update', args=(action.pk,)),
+            kwargs
+        )
+        return response
+
 #------------------------------------------------------------------------------
     
     def test_add_vote_to_draft_action(self, user=None):
@@ -441,3 +457,62 @@ class ActionViewTest(OpenActionViewTestCase):
         response = self._do_post_comment_add_vote(comment=comment)
         self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
 
+    def test_create_action(self, user=None):
+
+        logged_in = self._login(user)
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+
+        response = self._do_post_create_action(title=title,
+            tagnames=tagnames,
+            text=text
+        )
+        #print "-------------------response: %s" % response
+
+        if logged_in:
+            self._check_for_success_response(response)
+
+            try:
+                action_obj = Action.objects.get(pk=1)
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+        else:
+            self._check_for_redirect_response(response)
+        
+    def test_update_action(self, user=None):
+
+        logged_in = self._login(user)
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+
+        #create action
+        self._do_post_create_action(title=title,
+            tagnames=tagnames,
+            text=text
+        )
+        action = Action.objects.get(pk=1)
+        #update action
+        updated_text = "Gluglugluglugluglugluglu"
+        response = self._do_post_update_action(action=action, 
+            title=title,
+            tags=tagnames,
+            summary=None,
+            text=updated_text
+        ) 
+        #print "-------------------response: %s" % response
+
+        if logged_in:
+            self._check_for_success_response(response)
+            
+            question_obj = action.question
+
+            self.assertEqual(question_obj.text, updated_text)
+        else:
+            self._check_for_redirect_response(response)
+        

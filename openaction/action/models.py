@@ -25,6 +25,8 @@ class Action(models.Model, Resource):
 
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
+    politician_set = models.ManyToManyField('Politician', null=True, blank=True)
+    media_set = models.ManyToManyField('Media', null=True, blank=True)
 
     def __unicode__(self):
         return self.title
@@ -368,6 +370,16 @@ class ActionCategory(models.Model, Resource):
         return self.image or super(ActionCategory, self).icon
 
 
+#--------------------------------------------------------------------------------
+
+class Politician(models.Model):
+    pass
+
+#--------------------------------------------------------------------------------
+
+class Media(models.Model):
+    pass
+    
 #--------------------------------------------------------------------------------
 # Askbot signal handling
 
