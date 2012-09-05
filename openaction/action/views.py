@@ -241,7 +241,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
         }
     
     def get_form(self, form_class):
-        form = super(ActionCreateView, self).get_form(form_class)
+        form = super(ActionView, self).get_form(form_class)
         form.hide_field('openid')
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
@@ -329,7 +329,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         action = self.get_object()
         
         if action.status not in (action_const.ACTION_STATUS_DRAFT):
-            return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status)
+            return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status))
         
         question = action.question 
 

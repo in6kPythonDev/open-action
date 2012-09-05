@@ -475,7 +475,8 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_success_response(response)
 
             try:
-                action_obj = Action.objects.get(pk=1)
+                #action_obj = Action.objects.get(pk=1)
+                action_obj = Action.objects.latest()
             except Action.DoesNotExist as e:
                 action_obj = False
 
@@ -483,9 +484,12 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
         
+    def test_create_unauthenticated_action(self):
+        self.test_create_action(user=self.unloggable)
+
     def test_update_action(self, user=None):
 
-        logged_in = self._login(user)
+        self._login(self._author)
 
         title = "Aggiungo una nuova action"
         tagnames = None
@@ -496,7 +500,10 @@ class ActionViewTest(OpenActionViewTestCase):
             tagnames=tagnames,
             text=text
         )
-        action = Action.objects.get(pk=1)
+        #print "-------------------response: %s" % r
+        action = Action.objects.latest()
+
+        logged_in = self._login(user)
         #update action
         updated_text = "Gluglugluglugluglugluglu"
         response = self._do_post_update_action(action=action, 
@@ -516,3 +523,5 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
         
+    def test_update_unauthenticated_action(self):
+        self.test_update_action(user=self.unloggable)

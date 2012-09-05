@@ -28,6 +28,9 @@ class Action(models.Model, Resource):
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
     media_set = models.ManyToManyField('Media', null=True, blank=True)
 
+    class Meta:
+        get_latest_by = "thread"
+
     def __unicode__(self):
         return self.title
 
