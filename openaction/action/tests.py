@@ -250,7 +250,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = "Ohi, che bel castello..."
     
         #Adding comment to action 
-        response = self._do_post_add_comment(comment=comment)
+        response = self._do_post_add_comment(text=comment)
         #print "\n----------------add_comm_action resp: %s\n" % response
 
         if logged_in:
@@ -279,7 +279,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = "Ohi, che bel castello..."
     
         #Adding comment to action 
-        response = self._do_post_add_comment(comment=comment)
+        response = self._do_post_add_comment(text=comment)
         #print "\n----------------add_comm_draft_action resp: %s\n" % response
 
         if logged_in:
@@ -329,8 +329,10 @@ class ActionViewTest(OpenActionViewTestCase):
 
     def test_add_comment_to_blog_post(self, user=None):
 
-        # test for authenticated user
-        logged_in = self._login(user)
+        # test for authenticated user. The user has to be authenticated
+        # at this point since i need to add a post before commenting it
+        #WAS: logged_in = self._login(user)
+        self._login(self._author)
 
         #restore action status 
         self._action.compute_threshold()
@@ -341,14 +343,17 @@ class ActionViewTest(OpenActionViewTestCase):
         blog_post = self._action.blog_posts.get(
             text=text, author=self._author
         )
+
+        logged_in = self._login(user)
+
         comment_text = "... marcondiro ndiro ndello"
         
         #Adding comment to blog_post
         response = self._do_post_add_comment_to_blog_post(
             blog_post=blog_post,
-            comment=comment_text
+            text=comment_text
         )
-        #print response
+        print response
 
         if logged_in:
             # Success
@@ -366,10 +371,10 @@ class ActionViewTest(OpenActionViewTestCase):
             # Unauthenticated user cannot post
             self._check_for_redirect_response(response)
 
-#    def test_add_unauthenticated_comment_to_blog_post(self, user=None):
-#        #print "\n---------------unauthenticated\n"
-#        self.test_add_comment_to_blog_post(user=self.unloggable)
-#
+    def test_add_unauthenticated_comment_to_blog_post(self):
+        #print "\n---------------unauthenticated\n"
+        self.test_add_comment_to_blog_post(user=self.unloggable)
+
 #    def test_add_vote_to_ready_action_comment(self, user=None):
 #        
 #        # Test for authenticated user

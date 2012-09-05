@@ -43,7 +43,7 @@ class ActionDetailView(DetailView):
 
 #---------------------------------------------------------------------------------
 
-class VoteView(SingleObjectMixin, LoginRequiredView):
+class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
     """Add a vote to a post  
       
     This means that the Action score will be incremented by 1
@@ -89,7 +89,7 @@ class CommentVoteView(VoteView):
 
 #---------------------------------------------------------------------------------
 
-class CommentView(FormView, SingleObjectMixin, LoginRequiredView):
+class CommentView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ Add a comment to a post"""
     
 class ActionCommentView(CommentView):
@@ -118,12 +118,17 @@ class BlogpostCommentView(CommentView):
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         post = self.get_object()
-        post.comment_add(form.cleaned_data['text'], self.request.user)
+        #WAS: post.comment_add(form.cleaned_data['text'], self.request.user)
+        post.add_comment(form.cleaned_data['text'], 
+            self.request.user,
+            added_at=None, 
+            by_email=False
+        )
         return views_support.response_success(self.request)
 
 #---------------------------------------------------------------------------------
 
-class BlogpostView(FormView, SingleObjectMixin, LoginRequiredView):
+class BlogpostView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     pass
 
 class ActionBlogpostView(BlogpostView):
@@ -193,7 +198,7 @@ class EditablePoliticianView(EditableParameterView):
 
 #---------------------------------------------------------------------------------
 
-class ActionCreateView(FormView, LoginRequiredView):
+class ActionCreateView(FormView, views_support.LoginRequiredView):
     """Create a new action
 
     """
