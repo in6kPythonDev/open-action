@@ -120,6 +120,16 @@ class UserExtension(ModelExtender):
     def _askbot_ext_assert_can_vote_action(self, action):
         """Check permission. If invalid --> raise exception"""
         #TODO Matteo. Take a look to askbot assert_ implementations
+        # QUESTION: should an action which reached 'victory' status
+        # still be votable?
+        if action.status not in (
+            action_const.ACTION_STATUS_READY, 
+            action_const.ACTION_STATUS_ACTIVE
+        ):
+            raise exceptions.PermissionDenied(
+                exceptions.VoteActionInvalidStatusException(action.status)
+            )
+
         return True
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
@@ -139,7 +149,10 @@ class UserExtension(ModelExtender):
             if action.status not in (
                 action_const.ACTION_STATUS_DRAFT, 
             ):
-                raise exceptions.PermissionDenied(u"TODO Matteo")
+                # TODO Matteo: verify exceptions
+                raise exceptions.PermissionDenied(
+                    exceptions.EditActionInvalidStatusException(action.status)
+                )
 
         if attrs:
             # NOTE: ... fine-grained check... let's see with OpenPolis if it is needed

@@ -66,20 +66,8 @@ class ActionVoteView(VoteView):
 
     def post(self, request, *args, **kwargs):
         action = self.get_object()
-        
-        #QUESTION: should an action which reached 'victory' status
-        # still be votable?
-        if action.status not in (
-            action_const.ACTION_STATUS_READY, 
-            action_const.ACTION_STATUS_ACTIVE
-        ):
-            return views_support.response_error(request, msg=exceptions.VoteActionInvalidStatusException(action.status))
-
-        #have to catch the exception raised from the presave signal
-        try:
-            action.vote_add(request.user)
-        except exceptions.UserCannotVoteTwice as e:
-            return views_support.response_error(self.request, msg=e)
+        request.user.assert_can_vote_action(action)
+        action.vote_add(request.user)
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
@@ -109,9 +97,10 @@ class CommentVoteView(VoteView):
             try:
                 assert comment.votes.get(user=user)
             except Post.DoesNotExist as e:
-                return views_support.response_error(request, msg=exceptions.UserCannotVote(user, comment))
+                raise exceptions.UserCannotVote(user, comment)
             else:
-                return views_support.response_error(request, msg=exceptions.UserCannotVoteTwice(user, comment))
+                raise exceptions.UserCannotVoteTwice(user, comment)
+
         return views_support.response_success(request) 
 
 #---------------------------------------------------------------------------------
@@ -130,13 +119,7 @@ class ActionCommentView(CommentView):
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         action = self.get_object()
-        #have to catch the exception raised from the presave signal
-        try:
-            action.comment_add(form.cleaned_data['text'], self.request.user)
-        except exceptions.CommentActionInvalidStatusException as e:
-            return views_support.response_error(self.request, msg=e)
-        return views_support.response_success(self.request)
-
+        return action.comment_add(form.cleaned_data['text'], self.request.user)
 
 class BlogpostCommentView(CommentView):
     """ Add a comment to an action blogpost"""
