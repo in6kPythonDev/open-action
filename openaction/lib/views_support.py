@@ -52,6 +52,11 @@ def response_success(request, msg="ok", on_complete=""):
         context['extra_attrs'] = 'on_complete="%s"' % on_complete
     return TemplateResponse(request, template_success, context)
 
+def response_redirect(request, url):
+    context = { 
+        'http_status_code' : HTTP_REDIRECT,
+    }
+    return TemplateResponse(request, template_success, context)
 
 #--------------------------------------------------------------------------------
 
