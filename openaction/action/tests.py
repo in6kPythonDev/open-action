@@ -349,7 +349,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # test for authenticated user. The user has to be authenticated
         # at this point since i need to add a post before commenting it
         #WAS: logged_in = self._login(user)
-        self._login(self._author)
+        self._login()
 
         #restore action status 
         self._action.compute_threshold()
@@ -395,12 +395,12 @@ class ActionViewTest(OpenActionViewTestCase):
     def test_add_vote_to_action_comment(self, user=None):
         
         # Test for authenticated user
-        self._login(self._author)
+        self._login()
 
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
         
-        comment_text = "Aggiungo dell'utente &s" % self._author
+        comment_text = "Aggiungo voto dell'utente %s" % self._author
         
         #Adding comment to action
         response = self._do_post_add_comment(text=comment_text)
@@ -440,7 +440,7 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
-        comment_text = "Aggiungo dell'utente &s" % self._author
+        comment_text = "Aggiungo dell'utente %s" % self._author
         
         #Adding comment to action
         response = self._do_post_add_comment(text=comment_text)
@@ -485,18 +485,19 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response)
         
     def test_create_unauthenticated_action(self):
+        #print "unauthenticated"
         self.test_create_action(user=self.unloggable)
 
     def test_update_action(self, user=None):
 
-        self._login(self._author)
+        self._login()
 
         title = "Aggiungo una nuova action"
         tagnames = None
         text = "Blablablablablablabla" 
 
         #create action
-        self._do_post_create_action(title=title,
+        r = self._do_post_create_action(title=title,
             tagnames=tagnames,
             text=text
         )
@@ -516,7 +517,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         if logged_in:
             self._check_for_success_response(response)
-            
+    
             question_obj = action.question
 
             self.assertEqual(question_obj.text, updated_text)
@@ -524,4 +525,39 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response)
         
     def test_update_unauthenticated_action(self):
+        #print "unauthenticated"
         self.test_update_action(user=self.unloggable)
+    
+    def test_update_not_draft_action(self):
+
+        self._login()
+
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+
+        #create action
+        r = self._do_post_create_action(title=title,
+            tagnames=tagnames,
+            text=text
+        )
+        #print "-------------------response: %s" % r
+        action = Action.objects.latest()
+        
+        action.compute_threshold()
+        action.update_status(const.ACTION_STATUS_READY)
+
+        #update action
+        updated_text = "Gluglugluglugluglugluglu"
+        response = self._do_post_update_action(action=action, 
+            title=title,
+            tags=tagnames,
+            summary=None,
+            text=updated_text
+        ) 
+        #print "-------------------response: %s" % response
+
+        self._check_for_error_response(response,
+            exceptions.EditActionInvalidStatusException
+        )

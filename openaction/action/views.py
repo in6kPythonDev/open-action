@@ -75,7 +75,11 @@ class ActionVoteView(VoteView):
         ):
             return views_support.response_error(request, msg=exceptions.VoteActionInvalidStatusException(action.status))
 
-        action.vote_add(request.user)
+        #have to catch the exception raised from the presave signal
+        try:
+            action.vote_add(request.user)
+        except exceptions.UserCannotVoteTwice as e:
+            return views_support.response_error(self.request, msg=e)
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
@@ -126,7 +130,11 @@ class ActionCommentView(CommentView):
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         action = self.get_object()
-        action.comment_add(form.cleaned_data['text'], self.request.user)
+        #have to catch the exception raised from the presave signal
+        try:
+            action.comment_add(form.cleaned_data['text'], self.request.user)
+        except exceptions.CommentActionInvalidStatusException as e:
+            return views_support.response_error(self.request, msg=e)
         return views_support.response_success(self.request)
 
 

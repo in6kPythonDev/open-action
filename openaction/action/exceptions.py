@@ -6,15 +6,15 @@ class ActionInvalidStatusException(Exception):
     
     def __init__(self, status):
         if status == action_const.ACTION_STATUS_DRAFT:
-            self._status = "in stato bozza"
+            self._status = u"in stato bozza"
         elif status == action_const.ACTION_STATUS['deleted']:
-            self._status = "stata cancellata"
+            self._status = u"stata cancellata"
         elif status == action_const.ACTION_STATUS['closed']:
-            self._status = "stata chiusa"
+            self._status = u"stata chiusa"
         elif status == action_const.ACTION_STATUS_ACTIVE:
-            self._status = "già attiva"
+            self._status = u"già attiva"
         elif status == action_const.ACTION_STATUS_READY:
-            self._status = "già pronta per essere votata"
+            self._status = u"già pronta per essere votata"
 
 class VoteActionInvalidStatusException(ActionInvalidStatusException):
     
