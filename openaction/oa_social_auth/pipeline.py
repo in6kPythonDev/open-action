@@ -1,10 +1,11 @@
 from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
 
 
 def redirect_to_form(*args, **kwargs):
     if not kwargs['request'].session.get('saved_username') and \
        kwargs.get('user') is None:
-        return HttpResponseRedirect('/form/')
+        return HttpResponseRedirect(reverse('form'))
 
 
 def username(request, *args, **kwargs):
@@ -17,7 +18,7 @@ def username(request, *args, **kwargs):
 
 def redirect_to_form2(*args, **kwargs):
     if not kwargs['request'].session.get('saved_first_name'):
-        return HttpResponseRedirect('/form2/')
+        return HttpResponseRedirect(reverse('form2'))
 
 
 def first_name(request, *args, **kwargs):

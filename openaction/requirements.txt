@@ -1,2 +1,3 @@
 PIL
 -e git://github.com/revsys/django-friendship.git#egg=django-friendship
+django-social-auth
