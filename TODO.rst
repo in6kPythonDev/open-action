@@ -64,4 +64,8 @@ User
 * Local impact factor <-- quanto ho influenzato in una action
 * Login --> connect user to social network e notifiche
 
+note...
+--------
+
+* Tell Django BTS to s/user/obj parameter in TokenGenerator and add get_timeout_days method to PasswordResetTokenGenerator
 

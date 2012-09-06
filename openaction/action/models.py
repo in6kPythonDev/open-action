@@ -8,15 +8,12 @@ from askbot.models.post import Post
 from base.models import Resource
 from base.utils import get_resource_icon_path
 
-from action import const, exceptions
+from action import const, exceptions, tokens
 
 import askbot_extensions
-
 import logging, datetime
 
 log = logging.getLogger("openaction")
-
-TOKEN_SEPARATOR = ':&~0'
 
 #TODO fero
 class TokenGenerator(object):
@@ -240,28 +237,36 @@ class Action(models.Model, Resource):
                 self.compute_threshold() 
         return self._threshold
 
+    token_generator = tokens.ActionReferralTokenGenerator()
     def get_token_for_user(self, user):
         """Return token for user to share that action.
 
-        In this way the user can be recognized as referrer for a vote,
-        or just (maybe in future) for viewing the action page"""
+        In this way the user can be recognized as referral for a vote,
+        or just (maybe in future) for viewing the action page.
 
-        #TODO
-        token = "TODO fero"
-        return token
+        Token is generated on couple (action, user)
+        """
+        
+        return self.token_generator.make_token((self, user))
 
     def get_user_from_token(self, token):
         """Return User instance corresponding to token.
 
         If invalid raise InvalidReferralTokenException.
         """
-        token_part, user_pk = token.split(TOKEN_SEPARATOR)
-        if token_generator.is_valid(token_part):
-            # scorporate user
-            user = User.objects.get(pk=user_pk)
+        try:
+            # get the User instance
+            user_pk = self.token_generator.get_user_pk_from_token(token)
+            user_calling_for_action = User.objects.get(pk=user_pk)
+        except Exception as e:
+            raise exceptions.InvalidReferralTokenException()
+
+        checked = self.token_generator.check_token((self, user_calling_for_action), token)
+
+        if checked:
+            return user
         else:
             raise exceptions.InvalidReferralTokenException()
-        return user
 
 
     def get_vote_for_user(self, user):
