@@ -126,9 +126,7 @@ class UserExtension(ModelExtender):
             action_const.ACTION_STATUS_READY, 
             action_const.ACTION_STATUS_ACTIVE
         ):
-            raise exceptions.PermissionDenied(
-                exceptions.VoteActionInvalidStatusException(action.status)
-            )
+            raise exceptions.VoteActionInvalidStatusException(action.status)
 
         return True
 
@@ -137,9 +135,7 @@ class UserExtension(ModelExtender):
         try:
             self.assert_can_vote_action(comment.thread.action)
         except exceptions.PermissionDenied as e:
-            raise exceptions.PermissionDenied(
-                exceptions.VoteOnUnauthorizedCommentException()
-            )
+            raise exceptions.VoteOnUnauthorizedCommentException()
             
         return True
 
@@ -161,9 +157,7 @@ class UserExtension(ModelExtender):
                     exceptions.EditActionInvalidStatusException(action.status)
                 )
             elif self != action.owner:
-                raise exceptions.PermissionDenied(
-                    exceptions.UserIsNotActionOwnerException(self, action)
-                )
+                raise exceptions.UserIsNotActionOwnerException(self, action)
                 
 
         if attrs:

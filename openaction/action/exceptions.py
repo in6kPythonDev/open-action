@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from django.core import exceptions
 from action import const as action_const
 
-class ActionInvalidStatusException(Exception):
+class ActionInvalidStatusException(exceptions.PermissionDenied):
     
     def __init__(self, status):
         if status == action_const.ACTION_STATUS_DRAFT:
@@ -36,12 +37,12 @@ class BlogpostActionInvalidStatusException(ActionInvalidStatusException):
     def __unicode__(self):
         return u"Non è possibile aggiungere un articol al blog dell'azione perchè questa è %s." % self._status
 
-class InvalidReferralError(Exception):
+class InvalidReferralError(exceptions.PermissionDenied):
     
     def __unicode__(self):
         return u"Un utente non può avere se stesso come referente del voto."
 
-class UserCannotVoteTwice(Exception):
+class UserCannotVoteTwice(exceptions.PermissionDenied):
    
     def __init__(self, user, post):
         self.user = user
@@ -62,12 +63,12 @@ class UserCannotVote(UserCannotVoteTwice):
         return u"L'utente %s non può votare %s." % (self.user,
             self._post_type)
 
-class VoteOnUnauthorizedCommentException(Exception):
+class VoteOnUnauthorizedCommentException(exceptions.PermissionDenied):
     
     def __unicode__(self):
         return u"Sorry, you're trying to vote an unauthorized comment" 
 
-class UserIsNotActionOwnerException(Exception):
+class UserIsNotActionOwnerException(exceptions.PermissionDenied):
 
     def __init__(self, user, action):
         self.user = user
