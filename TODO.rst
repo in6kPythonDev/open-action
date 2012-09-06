@@ -22,6 +22,9 @@ TODO
 * nelle view e nei test: solo l'owner della Action la puo modificare (text)                                                                          25 min
 * nelle eccezioni: aggiungere eccezioni 'VoteUnauthorizedOnComment'e 'InvalidReferralError'                                                           5 min 
 
+* aggiungere campo created_by nella Action e settarlo nella creazione (nella Action.save())
+* leggere a cosa servono i moderatori?
+
 NOTE
 ^^^^
 
@@ -42,11 +45,10 @@ Io - progetto
 CHIEDERE
 --------
 
-* Territori --> autocompletamento con django-ajax-autocomplete?
-* Categorie --> Condivisione modello e fixtures di default
-* In generale tutto quello che non deve essere tradotto all'utente ok in inglese, ma per il resto risparmio della traduzione ok? 
-* Definire protocollo per gestire risposte di errore, redirect, eccezioni, ...
-* Decoratore: se la vista è ajax wrappa le eccezioni in response_error, e i successi in response_success
+* Territori --> autocompletamento con django-ajax-autocomplete (lo forniscono loro)
+* Categorie --> Basta il nome della categoria e la aggiungono ad admin interface
+* In generale tutto quello che non deve essere tradotto all'utente ok in inglese, ma per il resto risparmio della traduzione. OK
+* TODO: Definire protocollo per gestire risposte di errore, redirect, eccezioni, ...
 
 Setter
 ------
@@ -57,17 +59,14 @@ temporaneamente gli attributi. Ad esempio v. property "score".
 Posso definire il setter di score, ma lo devo salvare subito in "question"
 altrimenti se da fuori faccio action.save(), non salvo lo score dato che è in "question"
 
+Settare un attributo dizionario che mappa gli attributi modificati e riutilizzarlo nella save()
+
 Mini_views
 ----------
 
 * Modulo action.mini_views per isolare le parti ajax singole
-
-Action
-------
-
-* Creazione --> aggiungere la scelta delle categorie
+* Decoratore: se la vista è ajax wrappa le eccezioni in response_error, e i successi in response_success
 * Edit della action alla jeditable
-* Calcolo del threshold 
 
 User
 ----
@@ -80,4 +79,10 @@ note...
 --------
 
 * Tell Django BTS to s/user/obj parameter in TokenGenerator and add get_timeout_days method to PasswordResetTokenGenerator
+
+DONE
+-----
+* Action: Creazione --> aggiungere la scelta delle categorie
+* Action: Calcolo del threshold 
+* Action: token
 
