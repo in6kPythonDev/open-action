@@ -1,10 +1,60 @@
-"""Just some notes. Cut&Past to settings.py. Usually we use default_settings.py"""
+"""Just some notes. Cut&Paste content to settings.py. Usually we use default_settings.py"""
 
 import settings
+
+#--------------------------------------------------------------------------------
+# Social auth authentication
+
+AUTHENTICATION_BACKENDS = (
+    'social_auth.backends.twitter.TwitterBackend',
+    'social_auth.backends.facebook.FacebookBackend',
+    'social_auth.backends.google.GoogleOAuthBackend',
+    'social_auth.backends.google.GoogleOAuth2Backend',
+    'social_auth.backends.google.GoogleBackend',
+    'social_auth.backends.yahoo.YahooBackend',
+) + settings.AUTHENTICATION_BACKENDS
+
+TWITTER_CONSUMER_KEY         = ''
+TWITTER_CONSUMER_SECRET      = ''
+FACEBOOK_APP_ID              = ''
+FACEBOOK_API_SECRET          = ''
+LINKEDIN_CONSUMER_KEY        = ''
+LINKEDIN_CONSUMER_SECRET     = ''
+ORKUT_CONSUMER_KEY           = ''
+ORKUT_CONSUMER_SECRET        = ''
+GOOGLE_CONSUMER_KEY          = ''
+GOOGLE_CONSUMER_SECRET       = ''
+GOOGLE_OAUTH2_CLIENT_ID      = ''
+GOOGLE_OAUTH2_CLIENT_SECRET  = ''
+FOURSQUARE_CONSUMER_KEY      = ''
+FOURSQUARE_CONSUMER_SECRET   = ''
+VK_APP_ID                    = ''
+VK_API_SECRET                = ''
+LIVE_CLIENT_ID = ''
+LIVE_CLIENT_SECRET = ''
+SKYROCK_CONSUMER_KEY      = ''
+SKYROCK_CONSUMER_SECRET   = ''
+YAHOO_CONSUMER_KEY        = ''
+YAHOO_CONSUMER_SECRET     = ''
+
+LOGIN_URL          = '/login-form/'
+LOGIN_REDIRECT_URL = '/logged-in/'
+LOGIN_ERROR_URL    = '/login-error/'
+
+TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
+    'social_auth.context_processors.social_auth_by_name_backends',
+    'social_auth.context_processors.social_auth_backends',
+    'social_auth.context_processors.social_auth_by_type_backends',
+    'social_auth.context_processors.social_auth_login_redirect',
+)
+
+#--------------------------------------------------------------------------------
 
 INSTALLED_APPS = list(settings.INSTALLED_APPS)
 INSTALLED_APPS.append('askbot_models_extension')
 INSTALLED_APPS.append('action')
+INSTALLED_APPS.append('social_auth')
+INSTALLED_APPS.append('oa_social_auth')
 
 
 PROJECT_NAME = "openaction"

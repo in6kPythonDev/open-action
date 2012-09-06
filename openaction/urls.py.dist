@@ -2,4 +2,5 @@
 #importa gli urls di askbot
 
 #aggiungi in testa nei pattern
-    #(r'^action/', include('action.urls')),
+    #url(r'^%ssocial_auth/' % settings.ASKBOT_URL, include('oa_social_auth.urls')),
+    #(r'^%saction/' % settings.ASKBOT_URL, include('action.urls')),
