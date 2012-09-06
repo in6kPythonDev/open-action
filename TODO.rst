@@ -14,7 +14,6 @@ TODO
 ^^^^
 
 * Verifica come fa askbot metodi "assert" e revisione check permessi modifica azione
-* verificare try/except nelle view
 
 Antonio
 -------

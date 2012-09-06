@@ -2,7 +2,7 @@ from django.db import models, transaction
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
-from askbot.models import Thread
+from askbot.models import Thread, User
 from askbot.models.post import Post
 
 from base.models import Resource
@@ -10,9 +10,19 @@ from base.utils import get_resource_icon_path
 
 from action import const, exceptions
 
+import askbot_extensions
+
 import logging, datetime
 
 log = logging.getLogger("openaction")
+
+TOKEN_SEPARATOR = ':&~0'
+
+#TODO fero
+class TokenGenerator(object):
+    def is_valid(self, token):
+        return True
+token_generator = TokenGenerator()
 
 class Action(models.Model, Resource):
 
@@ -89,7 +99,7 @@ class Action(models.Model, Resource):
 
         It is an askbot Post of type ``question``
         """
-        #DONE: thread extension (see `askbot_models_extension` app)
+        #DONE: thread extension (see `askbot_extensions.models` app)
         return self.thread.question
         
 
@@ -240,6 +250,20 @@ class Action(models.Model, Resource):
         token = "TODO fero"
         return token
 
+    def get_user_from_token(self, token):
+        """Return User instance corresponding to token.
+
+        If invalid raise InvalidReferralTokenException.
+        """
+        token_part, user_pk = token.split(TOKEN_SEPARATOR)
+        if token_generator.is_valid(token_part):
+            # scorporate user
+            user = User.objects.get(pk=user_pk)
+        else:
+            raise exceptions.InvalidReferralTokenException()
+        return user
+
+
     def get_vote_for_user(self, user):
         """Return vote for user on this action.
 
@@ -247,33 +271,8 @@ class Action(models.Model, Resource):
         
         return self.votes.get(user=user)
         
-    @transaction.commit_on_success
     def vote_add(self, user, referral=None):
-
-        # Check that user cannot vote twice... 
-        # Check that user != referral
-        vote = user.upvote(self.question) 
-
-        if vote:
-
-            # Add referral 
-            vote.referral = referral
-            vote.save()
-
-            log.debug("Vote added for user %s on action %s with referral %s" % (
-                user, self, referral
-            ))
-        else:
-            log.debug("Vote NOT added for user %s on action %s with referral %s" % (
-                user, self, referral
-            ))
-            try:
-                assert self.votes.get(user=user)
-            except Post.DoesNotExist as e:
-                raise exceptions.UserCannotVote(user, self.question)
-            else:
-                raise exceptions.UserCannotVoteTwice(user, self.question)
-
+        return askbot_extensions.utils.vote_add(self.question, user, referral)
 
     def comment_add(self, comment, user):
         """ Have to check for:

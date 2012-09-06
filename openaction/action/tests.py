@@ -219,7 +219,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         # Generate token for author
         token = self._action.get_token_for_user(self._author)
-        query_string = "?token=%s" % token
+        query_string = "?ref_token=%s" % token
 
         # Test that adding vote with logged user as referral fails
         self.assertRaises(

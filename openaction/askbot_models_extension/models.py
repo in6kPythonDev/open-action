@@ -134,8 +134,15 @@ class UserExtension(ModelExtender):
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
         """Check permission. If invalid --> raise exception"""
-        #TODO Matteo. Take a look to askbot assert_ implementations
+        try:
+            self.assert_can_vote_action(comment.thread.action)
+        except exceptions.PermissionDenied as e:
+            raise exceptions.PermissionDenied(
+                exceptions.VoteOnUnauthorizedCommentException(e)
+            )
+            
         return True
+
 
     def _askbot_ext_assert_can_edit_action(self, action, attrs=None):
         """Check permission. If invalid --> raise exception.

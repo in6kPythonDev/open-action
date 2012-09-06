@@ -59,6 +59,16 @@ class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
       da chi e' stato inviato il link
     """
 
+    def get_referral(self, action):
+        """Get referral token from url and return referral User"""
+
+        token = self.request.REQUEST.get('ref_token')
+        if token:
+            referral = action.get_user_from_token(token)
+        else:
+            referral = None
+        return referral
+
 class ActionVoteView(VoteView):
     """Add a vote to an Action."""
 
@@ -67,6 +77,7 @@ class ActionVoteView(VoteView):
     def post(self, request, *args, **kwargs):
         action = self.get_object()
         request.user.assert_can_vote_action(action)
+        referral = self.get_referral(action)
         action.vote_add(request.user)
         return views_support.response_success(request)
 
@@ -77,30 +88,9 @@ class CommentVoteView(VoteView):
 
     def post(self, request, *args, **kwargs):
         comment = self.get_object()
-        user = request.user
-        
-        vote = user.upvote(comment)
-        referral =  kwargs.pop('referral',None)
-        
-        if vote:
-            # Add referral
-            vote.referral = referral 
-            vote.save()
-
-            log.debug("Vote added for user %s on comment %s with referral %s" % (
-                user, comment, referral
-            ))
-        else:
-            log.debug("Vote NOT added for user %s on comment %s with referral %s" % (
-                user, comment, referral
-            ))
-            try:
-                assert comment.votes.get(user=user)
-            except Post.DoesNotExist as e:
-                raise exceptions.UserCannotVote(user, comment)
-            else:
-                raise exceptions.UserCannotVoteTwice(user, comment)
-
+        request.user.assert_can_vote_comment(comment)
+        referral = self.get_referral(comment.thread.action)
+        askbot_extensions.utils.vote_add(comment, request.user, referral)
         return views_support.response_success(request) 
 
 #---------------------------------------------------------------------------------
