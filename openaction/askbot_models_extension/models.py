@@ -3,10 +3,12 @@
 """
 
 from django.db import models
-from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.signals import pre_save
+from django.dispatch import receiver 
 
 from askbot.models import Thread, Vote, User, Post
-from action.exceptions import UserCannotVoteTwice, InvalidReferralError
+from action import exceptions 
+from action import const as action_const
 
 from lib.djangolib import ModelExtender
 
@@ -22,7 +24,7 @@ class ThreadExtension(ModelExtender):
         return self._question_post()
 
 
-Thread.add_to_class('thread_ext_noattr', ThreadExtension())
+Thread.add_to_class('ext_noattr', ThreadExtension())
 
 #--------------------------------------------------------------------------------
 
@@ -46,11 +48,6 @@ Vote.add_to_class('referral',
 #--------------------------------------------------------------------------------
 # Askbot signal handling
 
-from django.db.models.signals import pre_save
-from django.dispatch import receiver 
-from action import const as action_const
-from action.exceptions import CommentActionInvalidStatusException
-
 @receiver(pre_save, sender=Post)
 def comment_check_before_save(sender, **kwargs):
     """ Overload Askbot.post.Post.save """
@@ -68,7 +65,7 @@ def comment_check_before_save(sender, **kwargs):
         if post.thread.action.status in (
             action_const.ACTION_STATUS_DRAFT
         ):
-            raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+            raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
     elif post.is_answer():
         if post.thread.action.status in (
             action_const.ACTION_STATUS_DRAFT
@@ -111,5 +108,59 @@ def vote_check_before_save(sender, **kwargs):
         if vote.referral == vote.user:
             # TODO Matteo: define specific exception
             #WAS: raise PermissionDenied("Cannot be referred by yourself")
-            raise InvalidReferralError()
+            raise exceptions.InvalidReferralError()
+
+#---------------------------------------------------------------------------------
+
+
+class UserExtension(ModelExtender):
+
+    ext_prefix = '_askbot_ext_'
+
+    def _askbot_ext_assert_can_vote_action(self, action):
+        """Check permission. If invalid --> raise exception"""
+        #TODO Matteo. Take a look to askbot assert_ implementations
+        return True
+
+    def _askbot_ext_assert_can_vote_comment(self, comment):
+        """Check permission. If invalid --> raise exception"""
+        #TODO Matteo. Take a look to askbot assert_ implementations
+        return True
+
+    def _askbot_ext_assert_can_edit_action(self, action, attrs=None):
+        """Check permission. If invalid --> raise exception.
+
+        attrs can be a list of action attributes. 
+        If some attr is specified do 'fine-grained' check,
+        if attrs is None --> generic edit check.
+        """
+
+        def do_default_edit_action_check():
+            if action.status not in (
+                action_const.ACTION_STATUS_DRAFT, 
+            ):
+                raise exceptions.PermissionDenied(u"TODO Matteo")
+
+        if attrs:
+            # NOTE: ... fine-grained check... let's see with OpenPolis if it is needed
+            # FUTURE: maybe we can add some setting on "joining action" that
+            # could give us some ability to change action even if is joined by
+            # some users
+            for attr in attrs:
+                if attr == 'geoname_set':
+                    #TODO
+                    pass
+                elif attr == 'politician_set':
+                    #TODO
+                    pass
+                else:
+                    do_default_edit_action_check()
+        else:
+            do_default_edit_action_check()
+
+        return True
+
+User.add_to_class('ext_noattr', UserExtension())
+
+
 
