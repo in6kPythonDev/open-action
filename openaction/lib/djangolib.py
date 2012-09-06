@@ -24,10 +24,14 @@ class ModelExtender(object):
                 # print("Aggiungo il metodo %s" % method_name)
                 orig_method_name = method_name[len(prefix):]
                 self._orig_method = getattr(cls, method_name, None)
-                setattr(
-                    cls, orig_method_name,
-                    getattr(self.__class__, method_name)
-                )
+
+                meth = getattr(self.__class__, method_name)
+                try:
+                    func = meth.__func__
+                except AttributeError as e:
+                    func = meth
+                    
+                setattr(cls, orig_method_name, func)
 
 #--------------------------------------------------------------------------------
 
