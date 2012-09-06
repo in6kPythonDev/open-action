@@ -233,7 +233,6 @@ class ActionView(FormView, views_support.LoginRequiredView):
     """ Superclass to create/edit Actions """
 
     form_class = forms.ActionForm
-    template_name = "action/update.html"
     
     @method_decorator(askbot_decorators.check_spam('text'))
     def dispatch(self, request, *args, **kwargs):
@@ -254,27 +253,14 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
         return form
-    
 
-class ActionCreateView(ActionView):#FormViewFormView, views_support.LoginRequiredView):
+class ActionCreateView(ActionView):
     """Create a new action
 
     """
 
-#    form_class = forms.ActionForm
-#    template_name = "action/create.html"
+    template_name = "action/create.html"
     
-#    @method_decorator(askbot_decorators.check_spam('text'))
-#    def dispatch(self, request, *args, **kwargs):
-#        return super(ActionCreateView, self).dispatch(request, *args, **kwargs)
-#
-#    def get_form(self, form_class):
-#        form = super(ActionCreateView, self).get_form(form_class)
-#        form.hide_field('openid')
-#        form.hide_field('post_author_email')
-#        form.hide_field('post_author_username')
-#        return form
-        
     @transaction.commit_on_success
     def form_valid(self, form):
         """Create askbot question --> then set action relations"""
@@ -305,40 +291,27 @@ class ActionCreateView(ActionView):#FormViewFormView, views_support.LoginRequire
             if m2m_value:
                 getattr(action, m2m_attr).add(*m2m_value)
 
-        #return super(ActionCreateView, self).form_valid(form)
-        return views_support.response_success(self.request)
-
-#    def get_initial(self):
-#        return {
-#            'title': self.request.REQUEST.get('title', ''),
-#            'text': self.request.REQUEST.get('text', ''),
-#            'tags': self.request.REQUEST.get('tags', ''),
-#            'wiki': False,
-#            'is_anonymous': False,
-#        }
+        success_url = action.get_absolute_url()
+        return views_support.response_redirect(self.request, success_url)
 
 class ActionUpdateView(ActionView, SingleObjectMixin):
-    """update an action
+    """Update an action
 
     """
     model = Action
+    template_name = "action/update.html"
         
-    def get_form(self, form_class):
-        form = super(ActionUpdateView, self).get_form(form_class)
-        form.hide_field('openid')
-        form.hide_field('post_author_email')
-        form.hide_field('post_author_username')
-        return form
-    
     @transaction.commit_on_success
     def form_valid(self, form):
         """Edit askbot question --> then set action relations"""
 
         action = self.get_object()
         
-        if action.status not in (action_const.ACTION_STATUS_DRAFT):
-            return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status))
-        
+        #WAS: if action.status not in (action_const.ACTION_STATUS_DRAFT, ):
+        #WAS:     return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status))
+
+        self.request.user.assert_can_edit_action(action)
+
         question = action.question 
 
         title = form.cleaned_data['title']
@@ -355,7 +328,6 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             edit_anonymously = False,
         )   
 
-
         for m2m_attr in (
             'geoname_set', 
             'category_set',
@@ -363,9 +335,9 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
-            if m2m_value:
-                getattr(action, m2m_attr).add(*m2m_value)
+            #ERROR TODO Matteo: if m2m_value:
+            #ERROR TODO Matteo:     getattr(action, m2m_attr).add(*m2m_value)
 
-        #return super(ActionCreateView, self).form_valid(form)
-        return views_support.response_success(self.request)
+        success_url = action.get_absolute_url()
+        return views_support.response_redirect(self.request, success_url)
 
