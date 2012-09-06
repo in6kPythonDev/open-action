@@ -13,7 +13,19 @@ DONE
 TODO
 ^^^^
 
-* Verifica come fa askbot metodi "assert" e revisione check permessi modifica azione
+* refactoring: Rinomina app askbot_model_extension in askbot_extension --> modificare anche la guida di installazione                                10 min 5 min
+* doc: Verifica come fa askbot metodi "assert" e revisione check permessi modifica azione                                                            25 min 10 min
+* nei test: Verifica possibità richiesta ajax dal test-client                                                                                        20 min 
+* nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action                                                          30 min 
+* nei test: sostituire add_for con add_to nei nomi dei metodi di test                                                                                 5 min 
+* nei test: nei motodi che testano l'aggiunta di un voto, controllare anche che il conto dei voti nella Action/commento sia davvero aumentato di uno 20 min 
+* nelle view e nei test: solo l'owner della Action la puo modificare (text)                                                                          25 min
+* nelle eccezioni: aggiungere eccezioni 'VoteUnauthorizedOnComment'e 'InvalidReferralError'                                                           5 min 
+
+NOTE
+^^^^
+
+* get_latest_by nella classe Meta di Action prende il thread come primo - e unico - parametro 
 
 Antonio
 -------

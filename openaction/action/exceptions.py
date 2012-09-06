@@ -61,4 +61,18 @@ class UserCannotVote(UserCannotVoteTwice):
     def __unicode__(self):
         return u"L'utente %s non può votare %s." % (self.user,
             self._post_type)
+
+class VoteOnUnauthorizedCommentException(Exception):
+    
+    def __unicode__(self):
+        return u"Sorry, you're trying to vote an unauthorized comment" 
+
+class UserIsNotActionOwnerException(Exception):
+
+    def __init__(self, user, action):
+        self.user = user
+        self.action = action
+
+    def __unicode__(self):
+        return "L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore" % (user, action)
         

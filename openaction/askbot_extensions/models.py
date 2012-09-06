@@ -138,7 +138,7 @@ class UserExtension(ModelExtender):
             self.assert_can_vote_action(comment.thread.action)
         except exceptions.PermissionDenied as e:
             raise exceptions.PermissionDenied(
-                exceptions.VoteOnUnauthorizedCommentException(e)
+                exceptions.VoteOnUnauthorizedCommentException()
             )
             
         return True
@@ -160,6 +160,11 @@ class UserExtension(ModelExtender):
                 raise exceptions.PermissionDenied(
                     exceptions.EditActionInvalidStatusException(action.status)
                 )
+            elif self != action.owner:
+                raise exceptions.PermissionDenied(
+                    exceptions.UserIsNotActionOwnerException(self, action)
+                )
+                
 
         if attrs:
             # NOTE: ... fine-grained check... let's see with OpenPolis if it is needed
