@@ -23,7 +23,9 @@ TODO
 * nelle eccezioni: aggiungere eccezioni 'VoteUnauthorizedOnComment'e 'InvalidReferralError'                                                           5 min 
 
 * aggiungere campo created_by nella Action e settarlo nella creazione (nella Action.save())
-* leggere a cosa servono i moderatori?
+* NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica
+* NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?, poi modello (moderator_set), poi viste ActionModeratorsAdd, ActionModeratorsManage
+* NEW: Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 
 NOTE
 ^^^^
@@ -42,14 +44,6 @@ Antonio
 Io - progetto
 =============
 
-CHIEDERE
---------
-
-* Territori --> autocompletamento con django-ajax-autocomplete (lo forniscono loro)
-* Categorie --> Basta il nome della categoria e la aggiungono ad admin interface
-* In generale tutto quello che non deve essere tradotto all'utente ok in inglese, ma per il resto risparmio della traduzione. OK
-* TODO: Definire protocollo per gestire risposte di errore, redirect, eccezioni, ...
-
 Setter
 ------
 
@@ -65,7 +59,6 @@ Mini_views
 ----------
 
 * Modulo action.mini_views per isolare le parti ajax singole
-* Decoratore: se la vista è ajax wrappa le eccezioni in response_error, e i successi in response_success
 * Edit della action alla jeditable
 
 User
@@ -85,4 +78,5 @@ DONE
 * Action: Creazione --> aggiungere la scelta delle categorie
 * Action: Calcolo del threshold 
 * Action: token
+* Viste: se la vista è ajax wrappa le eccezioni in response_error, e i successi in response_success
 
