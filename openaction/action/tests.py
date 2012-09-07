@@ -17,7 +17,7 @@ from django.core.exceptions import PermissionDenied
 from askbot.models import Post, User
 from askbot.models.repute import Vote
 
-from action.models import Action
+from action.models import Action, Geoname
 from action import const, exceptions
 
 from askbot_extensions import models
@@ -103,10 +103,16 @@ class OpenActionViewTestCase(AskbotTestCase):
             views_support.HTTP_SUCCESS
         )
     
-    def _check_for_redirect_response(self,response):
+    def _check_for_redirect_response(self,response, is_ajax=False):
         """ HTTP response is 302, in case the server redirects to another page"""
-        self.assertEqual(response.status_code, views_support.HTTP_REDIRECT)
-        
+        if is_ajax:
+            self.assertEqual(response.status_code, views_support.HTTP_SUCCESS)
+            self.assertEqual(
+                response.context_data['http_status_code'], 
+                views_support.HTTP_REDIRECT
+            )
+        else:
+            self.assertEqual(response.status_code, views_support.HTTP_REDIRECT)
 
 #---------------------------------------------------------------------------------
 
@@ -214,6 +220,12 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         return response
 
+    def _create_geoname(self, pk, name, kind):
+
+        Geoname.objects.create(pk=pk,
+            name=name,
+            kind=kind 
+        )
 
 #------------------------------------------------------------------------------
     
@@ -311,7 +323,7 @@ class ActionViewTest(OpenActionViewTestCase):
     
         #Adding comment to action 
         response = self._do_post_add_comment(ajax=True, text=comment)
-        print "\n----------------add_comm_action resp: %s\n" % response
+        #print "\n----------------add_comm_action resp: %s\n" % response
 
         if logged_in:
             # Success
@@ -340,7 +352,7 @@ class ActionViewTest(OpenActionViewTestCase):
     
         #Adding comment to action 
         response = self._do_post_add_comment(ajax=True, text=comment)
-        print "\n----------------add_comm_draft_action resp: %s\n" % response
+        #print "\n----------------add_comm_draft_action resp: %s\n" % response
 
         if logged_in:
             # cannot comment draft action
@@ -366,7 +378,7 @@ class ActionViewTest(OpenActionViewTestCase):
         #Adding blog_post to action 
         text = "Articolo di blog relativo a action %s" % self._action
         response = self._do_post_add_blog_post(ajax=True, text=text)
-        print "------------- %s" % response
+        #print "------------- %s" % response
         
         if logged_in:
             # Success
@@ -414,7 +426,7 @@ class ActionViewTest(OpenActionViewTestCase):
             blog_post=blog_post,
             text=comment_text
         )
-        print response
+        #print response
 
         if logged_in:
             # Success
@@ -451,7 +463,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = self._action.comments.get(text=comment_text,
             author=self._author
         )
-        print response
+        #print response
 
         logged_in = self._login(user)
 
@@ -496,7 +508,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = self._action.comments.get(text=comment_text,
             author=self._author
         )
-        print response
+        #print response
 
         # First vote
         self._do_post_comment_add_vote(ajax=True, comment=comment)
@@ -524,7 +536,7 @@ class ActionViewTest(OpenActionViewTestCase):
             tagnames=tagnames,
             text=text
         )
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         if logged_in:
             self._check_for_success_response(response)
@@ -549,37 +561,57 @@ class ActionViewTest(OpenActionViewTestCase):
 
         title = "Aggiungo una nuova action"
         tagnames = None
-        text = "Blablablablablablabla" 
+        text = "Blablablablablablabla"
+        #Create geonames
+        self._create_geoname(pk=1, 
+            name='Italia', 
+            kind='Stato'
+        )
+        self._create_geoname(pk=2, 
+            name='Ancona', 
+            kind='Provincia'
+        )
+        geoname_set = [1, 2] 
 
         #create action
         r = self._do_post_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
-            text=text
+            text=text,
+            geoname_set=geoname_set
         )
-        print "-------------------response: %s" % r
+        #print "-------------------response: %s" % r
         action = Action.objects.latest()
 
         logged_in = self._login(user)
         #update action
         updated_text = "Gluglugluglugluglugluglu"
+        self._create_geoname(pk=3, 
+            name='Fabriano', 
+            kind='Comune'
+        )
+        updated_geoname_set = [3]
+
         response = self._do_post_update_action( 
-            ajax=True,
             action=action,
+            ajax=True,
             title=title,
             tags=tagnames,
             summary=None,
-            text=updated_text
+            text=updated_text,
+            geoname_set=updated_geoname_set
         ) 
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         if logged_in:
-            self._check_for_success_response(response)
+            self._check_for_redirect_response(response, is_ajax=True)
     
             question_obj = action.question
 
             self.assertEqual(question_obj.text, updated_text)
+            geoname_set = action.geoname_set.all()
+            self.assertEqual('Fabriano', geoname_set.get(pk=3).name)
         else:
             self._check_for_redirect_response(response)
         
@@ -602,7 +634,7 @@ class ActionViewTest(OpenActionViewTestCase):
             tagnames=tagnames,
             text=text
         )
-        print "-------------------response: %s" % r
+        #print "-------------------response: %s" % r
         action = Action.objects.latest()
         
         action.compute_threshold()
@@ -618,7 +650,7 @@ class ActionViewTest(OpenActionViewTestCase):
             summary=None,
             text=updated_text
         ) 
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         self._check_for_error_response(response,
             exceptions.EditActionInvalidStatusException
@@ -635,7 +667,7 @@ class ActionViewTest(OpenActionViewTestCase):
             action=self._action,
             ajax=True
         )
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         if logged_in:
             #success
@@ -656,7 +688,7 @@ class ActionViewTest(OpenActionViewTestCase):
             action=self._action,
             ajax=True
         )
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         if logged_in:
             self._check_for_error_response(response, e=exceptions.FollowActionInvalidStatusException)
@@ -677,7 +709,7 @@ class ActionViewTest(OpenActionViewTestCase):
             action=self._action,
             ajax=True
         )
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         if logged_in:
             #success
@@ -700,7 +732,7 @@ class ActionViewTest(OpenActionViewTestCase):
             action=self._action,
             ajax=True
         )
-        print "-------------------response: %s" % response
+        #print "-------------------response: %s" % response
 
         if logged_in:
             self._check_for_error_response(response, e=exceptions.ParanoidException)

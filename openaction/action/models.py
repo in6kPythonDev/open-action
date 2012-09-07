@@ -405,3 +405,17 @@ def create_action(sender, **kwargs):
         except Action.DoesNotExist as e:
             action = Action(thread=kwargs['instance'])
             action.save()
+
+@receiver(post_save, sender=Post)
+def set_action_author(sender, **kwargs):
+    if kwargs['created']:
+        post = kwargs['instance']
+        if post.is_question():
+            try:
+                assert(post.thread.action)
+                action = post.thread.action
+                action.created_by = post.author
+                action.save()
+            except Action.DoesNotExist as e:
+                pass
+            
