@@ -9,23 +9,25 @@ DONE
 * test per ActionCreateView 
 * ActionUpdateView: aggiornamento del post e dei campi ManyToManyField. Verificare che non è posibile aggiornarlo in un certo stato.
 * test per ActionUpdateView
+* refactoring: Rinomina app askbot_model_extension in askbot_extension --> modificare anche la guida di installazione
+* doc: Verifica come fa askbot metodi "assert" e revisione check permessi modifica azione
+* nei test: Verifica possibità richiesta ajax dal test-client 
+* nei test: sostituire add_for con add_to nei nomi dei metodi di test 
+* nei test: nei motodi che testano l'aggiunta di un voto, controllare anche che il conto dei voti nella Action/commento sia davvero aumentato di uno
+* nelle eccezioni: aggiungere eccezioni 'VoteUnauthorizedOnComment'e 'InvalidReferralError' 
 
 TODO
 ^^^^
 
-* refactoring: Rinomina app askbot_model_extension in askbot_extension --> modificare anche la guida di installazione                                10 min 5 min
-* doc: Verifica come fa askbot metodi "assert" e revisione check permessi modifica azione                                                            25 min 10 min
-* nei test: Verifica possibità richiesta ajax dal test-client                                                                                        20 min 
-* nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action                                                          30 min 
-* nei test: sostituire add_for con add_to nei nomi dei metodi di test                                                                                 5 min 
-* nei test: nei motodi che testano l'aggiunta di un voto, controllare anche che il conto dei voti nella Action/commento sia davvero aumentato di uno 20 min 
-* nelle view e nei test: solo l'owner della Action la puo modificare (text)                                                                          25 min
-* nelle eccezioni: aggiungere eccezioni 'VoteUnauthorizedOnComment'e 'InvalidReferralError'                                                           5 min 
+* nelle view e nei test: solo l'owner della Action la puo modificare (text)
 
 * aggiungere campo created_by nella Action e settarlo nella creazione (nella Action.save())
-* NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica
+* nei test, scrivere una funzione per la gestione di richieste ajax (migliorare la gestione già implementata) v
+* nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action v 
+* NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica 
 * NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?, poi modello (moderator_set), poi viste ActionModeratorsAdd, ActionModeratorsManage
 * NEW: Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
+* commenti nelle viste
 
 NOTE
 ^^^^

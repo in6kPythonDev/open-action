@@ -44,5 +44,12 @@ urlpatterns = patterns('',
     url(r'^comment/(?P<pk>\d+)/vote/add/$', action_views.CommentVoteView.as_view(), 
         name='comment-vote'
     ),
+    #follow/unfollow action
+    url(r'^(?P<pk>\d+)/follow/$', action_views.ActionFollowView.as_view(), 
+        name='action-follow'
+    ),
+    url(r'^(?P<pk>\d+)/unfollow/$', action_views.ActionUnfollowView.as_view(), 
+        name='action-unfollow'
+    ),
 )
 

@@ -122,6 +122,7 @@ class UserExtension(ModelExtender):
         #TODO Matteo. Take a look to askbot assert_ implementations
         # QUESTION: should an action which reached 'victory' status
         # still be votable?
+        # ANSWER: no, it shouldn't
         if action.status not in (
             action_const.ACTION_STATUS_READY, 
             action_const.ACTION_STATUS_ACTIVE
@@ -178,6 +179,33 @@ class UserExtension(ModelExtender):
             do_default_edit_action_check()
 
         return True
+#Matteo--------------------------------------------------------------------------
+    def _askbot_ext_assert_can_follow_action(self, action):
+        """Check permission. If invalid --> raise exception"""
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+        ):
+            raise exceptions.FollowActionInvalidStatusException(action.status)
+
+        return True
+
+    def _askbot_ext_assert_can_unfollow_action(self, action):
+        """Check permission. If invalid --> raise exception"""
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+        ):
+            raise exceptions.ParanoidException()
+
+        return True
+
+    def _askbot_ext_follow_action(self, action=None):
+        self.followed_threads.add(action.thread)
+
+    def _askbot_ext_unfollow_action(self, action=None):
+        self.followed_threads.remove(action.thread)
+
+    def _askbot_ext_is_following_action(self, action=None):
+        return action.thread.followed_by.filter(id=self.id).exists()
 
 User.add_to_class('ext_noattr', UserExtension())
 

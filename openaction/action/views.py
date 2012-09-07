@@ -314,3 +314,30 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
+class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
+    
+    model = Action
+   
+    def post(self, request, *args, **kwargs):
+
+        action = self.get_object()
+        user = request.user
+
+        user.assert_can_follow_action(action)
+        user.follow_action(action)
+        
+        return views_support.response_success(request)
+
+class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
+    
+    model = Action
+   
+    def post(self, request, *args, **kwargs):
+
+        action = self.get_object()
+        user = request.user
+
+        user.assert_can_unfollow_action(action)
+        user.unfollow_action(action)
+        
+        return views_support.response_success(request)

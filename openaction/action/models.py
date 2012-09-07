@@ -30,6 +30,9 @@ class Action(models.Model, Resource):
 
     _threshold = models.PositiveIntegerField(blank=True, null=True)
 
+    #TODO: fill this when the action is created
+    created_by = models.ForeignKey(User, null=True)
+
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
