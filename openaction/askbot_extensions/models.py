@@ -157,7 +157,8 @@ class UserExtension(ModelExtender):
                 raise exceptions.PermissionDenied(
                     exceptions.EditActionInvalidStatusException(action.status)
                 )
-            elif self != action.owner:
+            elif action.created_by != self:
+                #only action author can update it
                 raise exceptions.UserIsNotActionOwnerException(self, action)
                 
 
@@ -179,7 +180,9 @@ class UserExtension(ModelExtender):
             do_default_edit_action_check()
 
         return True
+
 #Matteo--------------------------------------------------------------------------
+
     def _askbot_ext_assert_can_follow_action(self, action):
         """Check permission. If invalid --> raise exception"""
         if action.status in (

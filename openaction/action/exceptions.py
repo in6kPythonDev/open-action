@@ -85,5 +85,5 @@ class UserIsNotActionOwnerException(exceptions.PermissionDenied):
         self.action = action
 
     def __unicode__(self):
-        return "L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore" % (user, action)
+        return u"L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore" % (self.user, self.action)
         

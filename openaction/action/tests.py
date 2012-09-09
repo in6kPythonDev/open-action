@@ -656,6 +656,44 @@ class ActionViewTest(OpenActionViewTestCase):
             exceptions.EditActionInvalidStatusException
         )
 
+    def test_update_action_user_is_not_author(self):
+
+        self._login()
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+
+        #create action
+        r = self._do_post_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text
+        )
+        #print "-------------------response: %s" % r
+        action = Action.objects.latest()
+        
+        # a user from the one who created the action tries to update it
+        user2 = self.create_user(username='user2')
+        self._login(user2)
+
+        #update action
+        updated_text = "Gluglugluglugluglugluglu"
+        response = self._do_post_update_action(
+            action=action, 
+            ajax=True,
+            title=title,
+            tags=tagnames,
+            summary=None,
+            text=updated_text
+        ) 
+        #print "-------------------response: %s" % response
+
+        self._check_for_error_response(response,
+            exceptions.UserIsNotActionOwnerException
+        )
+
     def test_follow_action(self, user=None):
         
         logged_in = self._login(user)

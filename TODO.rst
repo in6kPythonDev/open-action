@@ -23,9 +23,10 @@ TODO
 * nei test, scrivere una funzione per la gestione di richieste ajax (migliorare la gestione già implementata)   | OK testato
 * nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action                     | OK testato 
 * NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica                       | OK testato
+* nelle view e nei test: solo l'owner della Action la puo modificare (text)                                     | OK testato
 
-* nelle view e nei test: solo l'owner della Action la puo modificare (text)
 * NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?, poi modello (moderator_set), poi viste ActionModeratorsAdd, ActionModeratorsManage
+
 * NEW: Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 * commenti nelle viste
 
