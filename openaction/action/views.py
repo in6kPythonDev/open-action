@@ -308,9 +308,12 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
-            if m2m_value:
+
+            if m2m_value is not None:
+                #TODO Matteo: retest. 
+                # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
-                m2m_values_new = form.cleaned_data.get(m2m_attr)
+                m2m_values_new = m2m_value
 
                 for obj in m2m_values_old:
                     if m2m_values_new.count() == 0:
@@ -322,9 +325,6 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                     getattr(action, m2m_attr).add(*m2m_values_new)
                 elif m2m_values_old.count() != 0:
                     getattr(action, m2m_attr).remove(*m2m_values_old)
-
-            #ERROR TODO Matteo: if m2m_value:
-            #ERROR TODO Matteo:     getattr(action, m2m_attr).add(*m2m_value)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
