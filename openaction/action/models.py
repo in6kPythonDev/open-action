@@ -30,6 +30,9 @@ class Action(models.Model, Resource):
 
     _threshold = models.PositiveIntegerField(blank=True, null=True)
 
+    #TODO: fill this when the action is created
+    created_by = models.ForeignKey(User, null=True)
+
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
@@ -402,3 +405,17 @@ def create_action(sender, **kwargs):
         except Action.DoesNotExist as e:
             action = Action(thread=kwargs['instance'])
             action.save()
+
+@receiver(post_save, sender=Post)
+def set_action_author(sender, **kwargs):
+    if kwargs['created']:
+        post = kwargs['instance']
+        if post.is_question():
+            try:
+                assert(post.thread.action)
+                action = post.thread.action
+                action.created_by = post.author
+                action.save()
+            except Action.DoesNotExist as e:
+                pass
+            

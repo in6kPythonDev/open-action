@@ -308,9 +308,51 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
-            #ERROR TODO Matteo: if m2m_value:
-            #ERROR TODO Matteo:     getattr(action, m2m_attr).add(*m2m_value)
+
+            if m2m_value is not None:
+                #TODO Matteo: retest. 
+                # Values can be overlapping or non overlapping
+                m2m_values_old = getattr(action, m2m_attr).all()
+                m2m_values_new = m2m_value
+
+                for obj in m2m_values_old:
+                    if m2m_values_new.count() == 0:
+                        break
+                    if m2m_values_new.filter(id=obj.id):
+                        m2m_values_new.get(id=obj.id).delete()
+
+                if m2m_values_new.count() != 0:
+                    getattr(action, m2m_attr).add(*m2m_values_new)
+                elif m2m_values_old.count() != 0:
+                    getattr(action, m2m_attr).remove(*m2m_values_old)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
+class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
+    
+    model = Action
+   
+    def post(self, request, *args, **kwargs):
+
+        action = self.get_object()
+        user = request.user
+
+        user.assert_can_follow_action(action)
+        user.follow_action(action)
+        
+        return views_support.response_success(request)
+
+class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
+    
+    model = Action
+   
+    def post(self, request, *args, **kwargs):
+
+        action = self.get_object()
+        user = request.user
+
+        user.assert_can_unfollow_action(action)
+        user.unfollow_action(action)
+        
+        return views_support.response_success(request)

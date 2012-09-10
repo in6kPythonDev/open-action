@@ -120,9 +120,9 @@ class UserExtension(ModelExtender):
 
     def _askbot_ext_assert_can_vote_action(self, action):
         """Check permission. If invalid --> raise exception"""
-        #TODO Matteo. Take a look to askbot assert_ implementations
         # QUESTION: should an action which reached 'victory' status
         # still be votable?
+        # ANSWER: no, it shouldn't
         if action.status not in (
             action_const.ACTION_STATUS_READY, 
             action_const.ACTION_STATUS_ACTIVE
@@ -153,11 +153,9 @@ class UserExtension(ModelExtender):
             if action.status not in (
                 action_const.ACTION_STATUS_DRAFT, 
             ):
-                # TODO Matteo: verify exceptions
-                raise exceptions.PermissionDenied(
-                    exceptions.EditActionInvalidStatusException(action.status)
-                )
-            elif self != action.owner:
+                raise exceptions.EditActionInvalidStatusException(action.status)
+            elif action.created_by != self:
+                #only action author can update it
                 raise exceptions.UserIsNotActionOwnerException(self, action)
                 
 
@@ -179,6 +177,33 @@ class UserExtension(ModelExtender):
             do_default_edit_action_check()
 
         return True
+
+    def _askbot_ext_assert_can_follow_action(self, action):
+        """Check permission. If invalid --> raise exception"""
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+        ):
+            raise exceptions.FollowActionInvalidStatusException(action.status)
+
+        return True
+
+    def _askbot_ext_assert_can_unfollow_action(self, action):
+        """Check permission. If invalid --> raise exception"""
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+        ):
+            raise exceptions.ParanoidException()
+
+        return True
+
+    def _askbot_ext_follow_action(self, action=None):
+        self.followed_threads.add(action.thread)
+
+    def _askbot_ext_unfollow_action(self, action=None):
+        self.followed_threads.remove(action.thread)
+
+    def _askbot_ext_is_following_action(self, action=None):
+        return action.thread.followed_by.filter(id=self.id).exists()
 
 User.add_to_class('ext_noattr', UserExtension())
 

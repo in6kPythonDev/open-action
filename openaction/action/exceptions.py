@@ -3,6 +3,11 @@
 from django.core import exceptions
 from action import const as action_const
 
+class ParanoidException(exceptions.PermissionDenied):
+    
+    def __unicode__(self):
+        return u"Oops, qualcosa è andato storto, l'operazione che si sta provando a eseguire non è consntita."
+
 class ActionInvalidStatusException(exceptions.PermissionDenied):
     
     def __init__(self, status):
@@ -32,10 +37,15 @@ class EditActionInvalidStatusException(ActionInvalidStatusException):
     def __unicode__(self):
         return u"L'azione non può essere modificata perchè è %s." % self._status
 
+class FollowActionInvalidStatusException(ActionInvalidStatusException):
+    
+    def __unicode__(self):
+        return u"L'azione non può essere seguita perchè è %s." % self._status
+
 class BlogpostActionInvalidStatusException(ActionInvalidStatusException):
     
     def __unicode__(self):
-        return u"Non è possibile aggiungere un articol al blog dell'azione perchè questa è %s." % self._status
+        return u"Non è possibile aggiungere un articolo al blog dell'azione perchè questa è %s." % self._status
 
 class InvalidReferralError(exceptions.PermissionDenied):
     
@@ -75,5 +85,5 @@ class UserIsNotActionOwnerException(exceptions.PermissionDenied):
         self.action = action
 
     def __unicode__(self):
-        return "L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore" % (user, action)
+        return u"L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore" % (self.user, self.action)
         
