@@ -1,0 +1,2 @@
+
+Una action riguardante il territorio (regione, provincia o comune) ha appena raggiunto uno step di livello.

@@ -66,6 +66,7 @@ def comment_check_before_save(sender, **kwargs):
             action_const.ACTION_STATUS_DRAFT
         ):
             raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+
     elif post.is_answer():
         if post.thread.action.status in (
             action_const.ACTION_STATUS_DRAFT
