@@ -25,6 +25,7 @@ log = logging.getLogger(settings.PROJECT_NAME)
 
 
 class ActionDetailView(DetailView):
+    """ List the fields of an Action """
 
     model = Action
     context_object_name="action" 
@@ -46,14 +47,7 @@ class ActionDetailView(DetailView):
 class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
     """Add a vote to a post  
       
-    This means that the Action score will be incremented by 1
-    and that a new vote will be added to the Action question votes
-    * accessibile solo tramite POST
-    * recupera la action in "def get_object(self)" v
-    * aggiungere un voto ad una action v
-    * aggiungere un voto solo se in uno stato ammissibile v
-    * l'utente sia autenticato v
-   
+    **TODO**
     SUCCESSIVAMENTE (ma non lo fare)
     * prenderemo via url HTTP il parametro "token" per capire
       da chi e' stato inviato il link
@@ -70,7 +64,18 @@ class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
         return referral
 
 class ActionVoteView(VoteView):
-    """Add a vote to an Action."""
+    """Add a vote to an Action.
+
+    An Action can be voted only from an authenticated User, and only
+    if the Action is in a valid state. The valid states are:
+        * ready
+        * active
+
+    If the condition above are satisfied, the Action score will be incremented 
+    by 1 and a new vote will be added to the Action question votes
+
+    This view accepts only POST requests.
+    """
 
     model = Action
 
@@ -82,7 +87,21 @@ class ActionVoteView(VoteView):
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
-    """Add a vote to an Action comment."""
+    """Add a vote to an Action comment.
+
+    A Comment can be voted only from an authenticated User, and only
+    if the Action the Comment is child of is in a valid state. The valid states 
+    are:
+        * ready
+        * active
+        * closed
+        * victory
+
+    If the condition above are satisfied, the Comment score will be incremented 
+    by 1 and a new vote will be added to the Comment post votes
+
+    This view accepts only POST requests.
+    """
     
     model = Post
 
@@ -99,7 +118,7 @@ class CommentView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ Add a comment to a post"""
     
 class ActionCommentView(CommentView):
-    """ Add a comment to an action"""
+    """ Add a comment to an Action"""
 
     #to get the object
     model = Action
@@ -311,20 +330,20 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
 
-            #if m2m_value is not None:
+            #WAS: if m2m_value is not None:
             if len(m2m_value) != 0:
-                #TODO Matteo: retest. 
+                #DONE Matteo: retest. 
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
-                for o in m2m_values_old:
-                    print "m2m_o %s" % o.id
+                #for o in m2m_values_old:
+                #    print "m2m_o %s" % o.id
                 m2m_values_new = m2m_value
-                for o in m2m_values_new:
-                    print "m2m_n %s" % o.id
+                #for o in m2m_values_new:
+                #    print "m2m_n %s" % o.id
 
                 to_add = []
                 to_remove = []
-                to_keep = []
+                #WAS: to_keep = []
                 count = 0
                 values_new_length = len(m2m_values_new)
 
@@ -332,9 +351,9 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                     to_add.append(obj_new)
 
                 for obj_old in m2m_values_old:
-                    print "old %s" % obj_old.id
+                    #print "old %s" % obj_old.id
                     for obj_new in m2m_values_new:
-                        print "new %s" % obj_new.id
+                        #print "new %s" % obj_new.id
                         if obj_old.id == obj_new.id:
                             #already present, does not need 
                             #to be added
@@ -347,18 +366,18 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                         #the old value is not present in the new set
                         #of selected values
                         to_remove.append(obj_old)
-                    else:
-                        #the old value is present in the new set
-                        #of selected values
-                        to_keep.append(obj_old)
+                    #WAS: else:
+                    #WAS:     #the old value is present in the new set
+                    #WAS:     #of selected values
+                    #WAS:     to_keep.append(obj_old)
                     count = 0
 
-                for o in to_add:
-                    print "-----------TO_ADD------------%s" % o.id
-                for o in to_remove:
-                    print "-----------TO_REMOVE------------%s" % o.id
-                for o in to_keep:
-                    print "-----------TO_KEEP------------%s" % o.id
+                #for o in to_add:
+                #    print "-----------TO_ADD------------%s" % o.id
+                #for o in to_remove:
+                #    print "-----------TO_REMOVE------------%s" % o.id
+                #for o in to_keep:
+                #    print "-----------TO_KEEP------------%s" % o.id
 
                 getattr(action, m2m_attr).add(*to_add)
                 getattr(action, m2m_attr).remove(*to_remove)
