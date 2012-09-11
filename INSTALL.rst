@@ -13,6 +13,7 @@ OpenAction installation guide
     2.3 Link the 'lib' app into the Askbot installation
     2.4 Link the 'askbot_extensions' app into the Askbot installation
     2.5 Link the 'oa_social_auth' app into the Askbot installation
+    2.6 Link the 'external_resource' app into the Askbot installation
 
 3. Install django-social-auth (pip install django-social-auth)
 
