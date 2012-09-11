@@ -359,10 +359,9 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                     print "-----------TO_REMOVE------------%s" % o.id
                 for o in to_keep:
                     print "-----------TO_KEEP------------%s" % o.id
-                for obj in to_add:
-                    getattr(action, m2m_attr).add(obj)
-                for obj in to_remove:
-                    getattr(action, m2m_attr).get(id=obj.id).delete()
+
+                getattr(action, m2m_attr).add(*to_add)
+                getattr(action, m2m_attr).remove(*to_remove)
     
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)

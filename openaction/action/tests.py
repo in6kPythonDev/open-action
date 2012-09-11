@@ -222,7 +222,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
     def _create_geoname(self, pk, name, kind):
 
-        Geoname.objects.create(pk=pk,
+        Geoname.objects.get_or_create(pk=pk,
             name=name,
             kind=kind 
         )
@@ -605,7 +605,8 @@ class ActionViewTest(OpenActionViewTestCase):
         #print "unauthenticated"
         self.test_create_action(user=self.unloggable)
 
-    def test_update_action(self, user=None):
+    
+    def create_test_geonames(self):
 
         self._login()
 
@@ -637,58 +638,36 @@ class ActionViewTest(OpenActionViewTestCase):
         for geo in Geoname.objects.all():
             print "geo: %s" % geo.id
 
+
+    def test_update_action_add_geonames(self, user=None):
+
+        self._login()
+        self.create_test_geonames()
+
         #TEST #1
         self._test_edit_set([1], [1,2], user) 
+
+    def test_update_action_remove_geonames(self, user=None):
+
+        self._login()
+        self.create_test_geonames()
         #TEST #2
         self._test_edit_set([1,2,3], [1,2], user) 
+
+    def test_update_action_same_geonames(self, user=None):
+
+        self._login()
+        self.create_test_geonames()
         #TEST #3
         self._test_edit_set([1,2], [1,2], user) 
+
+    def test_update_action_not_overlapping_geonames(self, user=None):
+
+        self._login()
+        self.create_test_geonames()
         #TEST #4
-        #WAS: self._test_edit_set([1,3,5], [2,4], user) 
-        self._test_edit_set([1,5], [2,4], user) 
-        #TEST #5
-        #WAS: self._test_edit_set([2,4], [1,3,5], user) 
-        self._test_edit_set([2,4], [1,5], user) 
-#        geoname_set = [1, 2] 
-#
-#        #create action
-#        r = self._do_post_create_action(
-#            ajax=True,
-#            title=title,
-#            tagnames=tagnames,
-#            text=text,
-#            geoname_set=geoname_set
-#        )
-#        #print "-------------------response: %s" % r
-#        action = Action.objects.latest()
-#
-#        logged_in = self._login(user)
-#        #update action
-#        updated_text = "Gluglugluglugluglugluglu"
-#        updated_geoname_set = [3]
-#
-#        response = self._do_post_update_action( 
-#            action=action,
-#            ajax=True,
-#            title=title,
-#            tags=tagnames,
-#            summary=None,
-#            text=updated_text,
-#            geoname_set=updated_geoname_set
-#        ) 
-#        #print "-------------------response: %s" % response
-#
-#        if logged_in:
-#            self._check_for_redirect_response(response, is_ajax=True)
-#    
-#            question_obj = action.question
-#
-#            self.assertEqual(question_obj.text, updated_text)
-#            geoname_set = action.geoname_set.all()
-#            self.assertEqual('Fabriano', geoname_set.get(pk=3).name)
-#        else:
-#            self._check_for_redirect_response(response)
-        
+        self._test_edit_set([1,3,5], [2,4], user) 
+
     def test_update_unauthenticated_action(self):
         #print "unauthenticated"
         self.test_update_action(user=self.unloggable)

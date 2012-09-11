@@ -29,6 +29,7 @@ TODO
 
 * NEW: Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 * commenti nelle viste
+* Controllare campi della form da eliminare
 
 NOTE
 ^^^^
