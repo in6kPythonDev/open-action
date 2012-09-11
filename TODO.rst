@@ -25,7 +25,7 @@ TODO
 * NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica                       | OK testato
 * nelle view e nei test: solo l'owner della Action la puo modificare (text)                                     | OK testato
 
-* NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?, poi modello (moderator_set), poi viste ActionModeratorsAdd, ActionModeratorsManage
+* [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?, poi modello (moderator_set), poi viste ActionModeratorsAdd, ActionModeratorsManage
 
 * NEW: Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 * commenti nelle viste

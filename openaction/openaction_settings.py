@@ -123,3 +123,26 @@ LOGGING = {
 }
 
 REFERRAL_TOKEN_RESET_TIMEOUT_DAYS = 5
+
+#--------------------------------------------------------------------------------
+
+DEFAULT_FROM_EMAIL = "openaction@localhost.befair.it"
+NOTIFICATION_BACKENDS = (
+    ("email", "notification.backends.email.EmailBackend"),
+    ("facebook_inbox", "oa_notification.backends.facebook.FBInboxBackend"),
+    #("twitter_message", "oa_notification.backends.twitter.TWMessageBackend"),
+)
+
+#--------------------------------------------------------------------------------
+
+EXTERNAL_API_BACKENDS_D = {
+    "facebook" : "external_resource.backends.FBExternalResourceInfo",
+    #"twitter" : "external_resource.backends.TwitterExternalResourceInfo",
+    "openpolis" : "external_resource.backends.OpenPolisExternalResourceInfo",
+}
+
+# Map correspondance of backend names from social_auth to external_resource
+SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP = {
+    "facebook" : "facebook",
+}
+

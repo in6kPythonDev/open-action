@@ -33,4 +33,29 @@ def get_params_from_template(tmpl):
     attr_names = r.findall(tmpl)
     return attr_names
 
+#--------------------------------------------------------------------------------
+
+def load_symbol(path):
+
+    # Split path in 'module' and 'class'
+    path = str(path) # avoid unicode
+    i = path.rfind('.')
+    module, attr = path[:i], path[i + 1:]
+
+    #print ("loading " + module + " attr: " + attr)
+    # Load module (dlopen())
+    try:
+        mod = __import__(module, {}, {}, [attr])
+    except ImportError, e:
+        raise Exception('Error importing handler %s: "%s"' % (module, e))
+    except ValueError, e:
+        raise Exception('Error importing handler! Invalid Value')
+
+    # get symbol (dlsym())
+    try:
+        symbol = getattr(mod, attr)
+    except AttributeError:
+        raise Exception('Module "%s" does not define a "%s" table! ' % (module, attr))
+
+    return symbol
 
