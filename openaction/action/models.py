@@ -356,6 +356,10 @@ class Geoname(models.Model):
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
 
+    #added by Matteo
+    def __unicode__(self):
+        return u"%s (%s)" % (self.name, self.kind)
+
 #--------------------------------------------------------------------------------
 
 class ActionCategory(models.Model, Resource):

@@ -227,6 +227,56 @@ class ActionViewTest(OpenActionViewTestCase):
             kind=kind 
         )
 
+    def _test_edit_set(self, geoname_set, updated_geoname_set, user=None, **kwargs):
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla"
+
+        #geoname_set = geoname_set
+
+        #create action
+        r = self._do_post_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text,
+            geoname_set=geoname_set
+        )
+        print "-------------------response_create: %s" % r
+        action = Action.objects.latest()
+
+        logged_in = self._login(user)
+        #update action
+        updated_text = "Gluglugluglugluglugluglu"
+        #updated_geoname_set = updated_geoname_set
+
+        response = self._do_post_update_action( 
+            action=action,
+            ajax=True,
+            title=title,
+            tags=tagnames,
+            summary=None,
+            text=updated_text,
+            geoname_set=updated_geoname_set
+        ) 
+        print "\n\n\nTest with old geo_names: %s and new geo_names: %s . Response: %s" % (geoname_set, updated_geoname_set, response)
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+    
+            geoname_list = []
+            question_obj = action.question
+
+            self.assertEqual(question_obj.text, updated_text)
+            for obj in action.geoname_set.all():
+                geoname_list.append(obj.pk)
+            geoname_list.sort()
+            #geoname_set = action.geoname_set.all()
+            self.assertEqual(updated_geoname_set, geoname_list)
+        else:
+            self._check_for_redirect_response(response)
+
 #------------------------------------------------------------------------------
     
     def test_add_vote_to_draft_action(self, user=None):
@@ -536,10 +586,10 @@ class ActionViewTest(OpenActionViewTestCase):
             tagnames=tagnames,
             text=text
         )
-        #print "-------------------response: %s" % response
+        print "-------------------response: %s" % response
 
         if logged_in:
-            self._check_for_success_response(response)
+            self._check_for_redirect_response(response, is_ajax=True)
 
             try:
                 #action_obj = Action.objects.get(pk=1)
@@ -559,10 +609,10 @@ class ActionViewTest(OpenActionViewTestCase):
 
         self._login()
 
-        title = "Aggiungo una nuova action"
-        tagnames = None
-        text = "Blablablablablablabla"
-        #Create geonames
+#        title = "Aggiungo una nuova action"
+#        tagnames = None
+#        text = "Blablablablablablabla"
+#        #Create geonames
         self._create_geoname(pk=1, 
             name='Italia', 
             kind='Stato'
@@ -570,50 +620,74 @@ class ActionViewTest(OpenActionViewTestCase):
         self._create_geoname(pk=2, 
             name='Ancona', 
             kind='Provincia'
-        )
-        geoname_set = [1, 2] 
-
-        #create action
-        r = self._do_post_create_action(
-            ajax=True,
-            title=title,
-            tagnames=tagnames,
-            text=text,
-            geoname_set=geoname_set
-        )
-        #print "-------------------response: %s" % r
-        action = Action.objects.latest()
-
-        logged_in = self._login(user)
-        #update action
-        updated_text = "Gluglugluglugluglugluglu"
+	    )
         self._create_geoname(pk=3, 
             name='Fabriano', 
             kind='Comune'
         )
-        updated_geoname_set = [3]
+        self._create_geoname(pk=4, 
+            name='Macerata', 
+            kind='Provincia'
+	    )
+        self._create_geoname(pk=5, 
+            name='Camerino', 
+            kind='Comune'
+        )
 
-        response = self._do_post_update_action( 
-            action=action,
-            ajax=True,
-            title=title,
-            tags=tagnames,
-            summary=None,
-            text=updated_text,
-            geoname_set=updated_geoname_set
-        ) 
-        #print "-------------------response: %s" % response
+        for geo in Geoname.objects.all():
+            print "geo: %s" % geo.id
 
-        if logged_in:
-            self._check_for_redirect_response(response, is_ajax=True)
-    
-            question_obj = action.question
-
-            self.assertEqual(question_obj.text, updated_text)
-            geoname_set = action.geoname_set.all()
-            self.assertEqual('Fabriano', geoname_set.get(pk=3).name)
-        else:
-            self._check_for_redirect_response(response)
+        #TEST #1
+        self._test_edit_set([1], [1,2], user) 
+        #TEST #2
+        self._test_edit_set([1,2,3], [1,2], user) 
+        #TEST #3
+        self._test_edit_set([1,2], [1,2], user) 
+        #TEST #4
+        #WAS: self._test_edit_set([1,3,5], [2,4], user) 
+        self._test_edit_set([1,5], [2,4], user) 
+        #TEST #5
+        #WAS: self._test_edit_set([2,4], [1,3,5], user) 
+        self._test_edit_set([2,4], [1,5], user) 
+#        geoname_set = [1, 2] 
+#
+#        #create action
+#        r = self._do_post_create_action(
+#            ajax=True,
+#            title=title,
+#            tagnames=tagnames,
+#            text=text,
+#            geoname_set=geoname_set
+#        )
+#        #print "-------------------response: %s" % r
+#        action = Action.objects.latest()
+#
+#        logged_in = self._login(user)
+#        #update action
+#        updated_text = "Gluglugluglugluglugluglu"
+#        updated_geoname_set = [3]
+#
+#        response = self._do_post_update_action( 
+#            action=action,
+#            ajax=True,
+#            title=title,
+#            tags=tagnames,
+#            summary=None,
+#            text=updated_text,
+#            geoname_set=updated_geoname_set
+#        ) 
+#        #print "-------------------response: %s" % response
+#
+#        if logged_in:
+#            self._check_for_redirect_response(response, is_ajax=True)
+#    
+#            question_obj = action.question
+#
+#            self.assertEqual(question_obj.text, updated_text)
+#            geoname_set = action.geoname_set.all()
+#            self.assertEqual('Fabriano', geoname_set.get(pk=3).name)
+#        else:
+#            self._check_for_redirect_response(response)
         
     def test_update_unauthenticated_action(self):
         #print "unauthenticated"

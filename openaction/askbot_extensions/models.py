@@ -154,7 +154,7 @@ class UserExtension(ModelExtender):
                 action_const.ACTION_STATUS_DRAFT, 
             ):
                 raise exceptions.EditActionInvalidStatusException(action.status)
-            elif action.created_by != self:
+            elif action.question.author != self:
                 #only action author can update it
                 raise exceptions.UserIsNotActionOwnerException(self, action)
                 

@@ -261,7 +261,9 @@ class ActionCreateView(ActionView):
             'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
-            if m2m_value:
+            for o in m2m_value:
+                print "m2m_added %s" % o.id
+            if len(m2m_value) != 0:
                 getattr(action, m2m_attr).add(*m2m_value)
 
         success_url = action.get_absolute_url()
@@ -295,8 +297,8 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             question = question,
             title = title,
             body_text = text,
-            revision_comment = None,
-            tags = tagnames,
+        revision_comment = None,
+        tags = tagnames,
             wiki = False, 
             edit_anonymously = False,
         )   
@@ -309,23 +311,59 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
 
-            if m2m_value is not None:
+            #if m2m_value is not None:
+            if len(m2m_value) != 0:
                 #TODO Matteo: retest. 
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
+                for o in m2m_values_old:
+                    print "m2m_o %s" % o.id
                 m2m_values_new = m2m_value
+                for o in m2m_values_new:
+                    print "m2m_n %s" % o.id
 
-                for obj in m2m_values_old:
-                    if m2m_values_new.count() == 0:
-                        break
-                    if m2m_values_new.filter(id=obj.id):
-                        m2m_values_new.get(id=obj.id).delete()
+                to_add = []
+                to_remove = []
+                to_keep = []
+                count = 0
+                values_new_length = len(m2m_values_new)
 
-                if m2m_values_new.count() != 0:
-                    getattr(action, m2m_attr).add(*m2m_values_new)
-                elif m2m_values_old.count() != 0:
-                    getattr(action, m2m_attr).remove(*m2m_values_old)
+                for obj_new in m2m_values_new:
+                    to_add.append(obj_new)
 
+                for obj_old in m2m_values_old:
+                    print "old %s" % obj_old.id
+                    for obj_new in m2m_values_new:
+                        print "new %s" % obj_new.id
+                        if obj_old.id == obj_new.id:
+                            #already present, does not need 
+                            #to be added
+                            to_add.remove(obj_new)
+                            break
+                        else:
+                            count = count + 1
+
+                    if values_new_length == count:
+                        #the old value is not present in the new set
+                        #of selected values
+                        to_remove.append(obj_old)
+                    else:
+                        #the old value is present in the new set
+                        #of selected values
+                        to_keep.append(obj_old)
+                    count = 0
+
+                for o in to_add:
+                    print "-----------TO_ADD------------%s" % o.id
+                for o in to_remove:
+                    print "-----------TO_REMOVE------------%s" % o.id
+                for o in to_keep:
+                    print "-----------TO_KEEP------------%s" % o.id
+                for obj in to_add:
+                    getattr(action, m2m_attr).add(obj)
+                for obj in to_remove:
+                    getattr(action, m2m_attr).get(id=obj.id).delete()
+    
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
