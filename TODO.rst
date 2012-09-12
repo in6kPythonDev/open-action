@@ -25,17 +25,17 @@ TODO
 * NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica                       | OK testato
 * nelle view e nei test: solo l'owner della Action la puo modificare (text)                                     | OK testato
 
-* [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori? ;
+* [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?:
     viste:
         * ActionModeratorsAdd, 
         * ActionModeratorsManage
 
-* NEW: Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
-* commenti nelle viste
-* Controllare campi della form da eliminare
-* solo owner e moderatori (referrers) possono scrivere blogpost per una action--> nel modello modello (moderator_set) 
-* property referrers restituisce un QS di utenti che sono l'owner e i moderators per l'azione
-* [non prioritario] modifica dei tag di una azione
+* Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
+* Commenti nelle viste
+
+* solo owner e moderatori (che insieme compongono i -- referrers --) possono scrivere blogpost per una action--> nel modello Action (-- moderator_set --). In seguito implementare il controllo nelle assert nel modello User.
+* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione
+* controllare campi da nascondere nelle form
 * tutti i referrers possono settare lo stato victory che però dovà essere verificato ed eventualmente accettato dallo staff:
     fare un modello "ActionRequest" con campi:
         * Action, 
@@ -43,6 +43,7 @@ TODO
         * le note,
         * 'requested_at' datetime,
         * un campo 'is_processed' per considerare la richiesta processata e non visualizzarla piu nell'admin
+* [non prioritario] modifica dei tag di una azione
 
 NOTE
 ^^^^
