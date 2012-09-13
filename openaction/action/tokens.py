@@ -1,14 +1,16 @@
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import int_to_base36, base36_to_int
-from django.utils.crypto import salted_hmac
+from django.utils.crypto import salted_hmac, constant_time_compare
 
 from django.conf import settings
 
-import base64
+import base64,logging
 
 TOKEN_UID_PREFIX = ':&~0'
 TOKEN_UID_POSTFIX = '|ab'
+
+log = logging.getLogger(settings.PROJECT_NAME)
 
 class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
     """Strategy object used to generate tokens for referral of an action join.
@@ -51,9 +53,14 @@ class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
             return False
 
         # Check that the timestamp/uid has not been tampered with
-        if not constant_time_compare(self._make_token_with_timestamp(user, ts), token):
+        recomputed_token = self._make_token_with_timestamp(user, ts)
+
+        print "ricalcolo re_token=%s token=%s" % (recomputed_token, token)
+        if not constant_time_compare(recomputed_token, token):
+            print ("CIELCIO")
             return False
 
+        print "tempo comparato"
         # Check the timestamp is within limit
         if (self._num_days(self._today()) - ts) > settings.REFERRAL_TOKEN_RESET_TIMEOUT_DAYS:
             return False
@@ -65,6 +72,7 @@ class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
         # IMPORTANT: Django API user parameter = OpenAction (action, user)!
         # The user is the one that called for action
         action, user = user
+        log.debug("MAKE TOKEN: action=%s, user=%s, timestamp=%s" % (action,user, timestamp))
 
         # timestamp is number of days since 2001-1-1.  Converted to
         # base 36, this gives us a 3 digit string until about 2121
@@ -74,12 +82,15 @@ class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
         # because there is no invalidation method
         key_salt = "django.contrib.auth.tokens.PasswordResetTokenGenerator"
         value = unicode(user.id) + unicode(action.id) + \
-            user.password + user.last_login.strftime('%Y-%m-%d %H:%M:%S') + \
-            unicode(timestamp)
+            unicode(action.bare_title) + unicode(timestamp)
+            #KO: this would invalidate the token
+            #KO: user.password + user.last_login.strftime('%Y-%m-%d %H:%M:%S') + \
         hash = salted_hmac(key_salt, value).hexdigest()[::2]
 
         # UID PART to recognize user by token
         uid_part = base64.encodestring("%s%s" % (TOKEN_UID_PREFIX, user.id))
+
+        print "\nts_b36:%s!\nuid_part:%s!\nTOK_UID_POSTFIX:%s!\nhash:%s!\n" % (ts_b36, uid_part, TOKEN_UID_POSTFIX, hash)
 
         return "%s-%s%s%s" % (ts_b36, uid_part, TOKEN_UID_POSTFIX, hash)
 

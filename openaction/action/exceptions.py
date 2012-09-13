@@ -81,7 +81,7 @@ class UserCannotVote(UserCannotVoteTwice):
 class VoteOnUnauthorizedCommentException(exceptions.PermissionDenied):
     
     def __unicode__(self):
-        return u"Sorry, you're trying to vote an unauthorized comment" 
+        return u"L'utente sta tentando di votare un commento non autorizzato" 
 
 class UserIsNotActionOwnerException(exceptions.PermissionDenied):
 

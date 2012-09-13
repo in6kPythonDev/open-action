@@ -10,16 +10,13 @@ from base.utils import get_resource_icon_path
 
 from action import const, exceptions, tokens
 
-import askbot_extensions
+import askbot_extensions.utils
 import logging, datetime
 
-log = logging.getLogger("openaction")
+from django.conf import settings
 
-#TODO fero
-class TokenGenerator(object):
-    def is_valid(self, token):
-        return True
-token_generator = TokenGenerator()
+log = logging.getLogger(settings.PROJECT_NAME)
+
 
 #--------------------------------------------------------------------------------
 
@@ -181,7 +178,11 @@ class Action(models.Model, Resource):
         status = ""
         if self.status != const.ACTION_STATUS_ACTIVE:
             status = u" [%s]" % self.status
-        return u"%s%s" % (self.thread.title, status)
+        return u"%s%s" % (self.bare_title, status)
+
+    @property
+    def bare_title(self):
+        return self.thread.title
 
     def update_title(self, value):
         self.thread.title = value
@@ -292,17 +293,20 @@ class Action(models.Model, Resource):
         """
         try:
             # get the User instance
-            #print "\nToken: %s\n" % token
+            print "\nToken: !%s!\n" % token
             user_pk = self.token_generator.get_user_pk_from_token(token)
             user_calling_for_action = User.objects.get(pk=user_pk)
         except Exception as e:
-            #print "\nexception raised: %s\n" % e
+            print "\nexception raised: %s\n" % e
             raise exceptions.InvalidReferralTokenException()
 
         checked = self.token_generator.check_token((self, user_calling_for_action), token)
 
+        log.debug("Token checked=%s for action=%s, user=%s" % (checked, self, user_calling_for_action))
+
         if checked:
-            return user
+            #return user
+            return user_calling_for_action
         else:
             raise exceptions.InvalidReferralTokenException()
 

@@ -24,7 +24,7 @@ from askbot_extensions import models
 
 from lib import views_support
 
-import os
+import os, urllib2
 
 class OpenActionViewTestCase(AskbotTestCase):
 
@@ -296,9 +296,38 @@ class ActionViewTest(OpenActionViewTestCase):
         action_voted = Action.objects.get(pk=self._action.pk)
         self.assertEqual(action_voted.score, self._action.score)
 
-    def test_add_vote_to_ready_action(self, user=None, query_string=""):
+    def test_add_vote_to_ready_action_user_equal_to_referral(self, user=None, query_string="", action=None):
+        """ Try to add a vote to an Action in a ready status with
+        the voting user equal to the referral
+        """
 
-        self._action = self._create_action()
+        if not action:
+            self._action = self._create_action()
+        else:
+            self._action = action
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+
+        # Test for authenticated user
+        self._login(user)
+
+        response = self._do_post_action_add_vote(self._action, 
+            query_string=query_string,
+            ajax=True
+        )
+        print "\ntest_add_vote_to_ready_action %s\n" % response
+        print "\nSELF ACTION SCORE:   %s \n" % self._action.score
+
+        self._check_for_error_response(response, e=exceptions.InvalidReferralError)
+        action_voted = Action.objects.get(pk=self._action.pk)
+        self.assertEqual(action_voted.score, self._action.score)
+
+    def test_add_vote_to_ready_action(self, user=None, query_string="", action=None):
+        """ Add a vote to an Action in a ready status """ 
+        if not action:
+            self._action = self._create_action()
+        else:
+            self._action = action
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
@@ -311,12 +340,9 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         print "\ntest_add_vote_to_ready_action %s\n" % response
 
-        #if query_string == "":
         self._check_for_success_response(response)
         action_voted = Action.objects.get(pk=self._action.pk)
         self.assertEqual(action_voted.score, self._action.score+1)
-        #else:
-        #    self._check_for_success_response(response)
         
     def test_add_vote_with_token(self):
         """Add a vote referenced by a user."""
@@ -324,16 +350,18 @@ class ActionViewTest(OpenActionViewTestCase):
 
         self._action = self._create_action(title="Action vote with token")
 
+        print "\nSELF ACTION SCORE:   %s \n" % self._action.score
+
         # Generate token for author
         token = self._action.get_token_for_user(self._author)
-        query_string = "?ref_token=%s" % token
+        query_string = "?ref_token=%s" % urllib2.quote(token)
 
         print "\nQS: %s\n" % query_string 
 
         # Test that adding vote with logged user as referral fails
         self.assertRaises(
             Exception,
-            self.test_add_vote_to_ready_action(query_string=query_string)
+            self.test_add_vote_to_ready_action_user_equal_to_referral(query_string=query_string, action=self._action)
         )
 
         self.u2 = self.create_user(username='user2')

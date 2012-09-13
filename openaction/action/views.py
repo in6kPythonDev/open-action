@@ -58,11 +58,12 @@ class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
         """Get referral token from url and return referral User"""
 
         token = self.request.REQUEST.get('ref_token')
-        #print "\nToken_arrived_from_req: %s\n" % token
+        print "\nToken_arrived_from_req: %s\n" % token
         if token:
             referral = action.get_user_from_token(token)
         else:
             referral = None
+        log.debug("FOUND REFERRAL %s" % referral)
         return referral
 
 class ActionVoteView(VoteView):
@@ -85,7 +86,8 @@ class ActionVoteView(VoteView):
         action = self.get_object()
         request.user.assert_can_vote_action(action)
         referral = self.get_referral(action)
-        action.vote_add(request.user)
+        log.debug("PIPPPOOOOOO")
+        action.vote_add(request.user, referral=referral)
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
@@ -185,6 +187,10 @@ class ActionBlogpostView(BlogpostView):
 
     An article can be added only from Users who are Action referrers, and only
     if the Action is in a valid status. The valid status are:
+        * ready
+        * active
+        * closed
+        * victory
     """
 
     model = Action

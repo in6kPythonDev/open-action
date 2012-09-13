@@ -83,6 +83,7 @@ def vote_check_before_save(sender, **kwargs):
     """
 
     vote = kwargs['instance']
+    print("STOCAZZO %s" % vote)
 
     #WAS "openaction style" 
     #WAS "openaction style"if vote.voted_post.post_type == 'question':
@@ -111,6 +112,7 @@ def vote_check_before_save(sender, **kwargs):
             #WAS: raise PermissionDenied("Cannot be referred by yourself")
             raise exceptions.InvalidReferralError()
 
+    print("STACIPPA %s" % vote)
 #---------------------------------------------------------------------------------
 
 

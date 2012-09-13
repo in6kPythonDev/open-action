@@ -13,11 +13,14 @@ def vote_add(askbot_post, user, referral=None):
     
     # Check that user cannot vote twice... 
     # Check that user != referral
+    log.debug("Vado a votare il post %s" % askbot_post)
     vote = user.upvote(askbot_post) 
+    log.debug("Risposta da upvote %s" % vote)
 
     if vote:
 
-        # Add referral 
+        # Add referral
+        print "\nI'm inside vote\n"
         vote.referral = referral
         vote.save()
 
