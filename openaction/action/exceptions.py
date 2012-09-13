@@ -52,6 +52,11 @@ class InvalidReferralError(exceptions.PermissionDenied):
     def __unicode__(self):
         return u"Un utente non può avere se stesso come referente del voto."
 
+class InvalidReferralTokenException(exceptions.PermissionDenied):
+    
+    def __unicode__(self):
+        return u"All'utente non risulta associato nessun referente per il voto."
+
 class UserCannotVoteTwice(exceptions.PermissionDenied):
    
     def __init__(self, user, post):
@@ -85,5 +90,9 @@ class UserIsNotActionOwnerException(exceptions.PermissionDenied):
         self.action = action
 
     def __unicode__(self):
-        return u"L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore" % (self.user, self.action)
-        
+        return u"L'utente %s non può modificare il contenuto dell'azione %s poichè non ne è l'autore." % (self.user, self.action)
+ 
+class UserIsNotActionReferralException(UserIsNotActionOwnerException):
+
+    def __unicode__(self):
+        return u"L'utente %s non può aggiungere un articolo nel blog dell'azione %s poichè non ne è né autore né moderatore." % (self.user, self.action)

@@ -21,6 +21,26 @@ class TokenGenerator(object):
         return True
 token_generator = TokenGenerator()
 
+#--------------------------------------------------------------------------------
+
+class ActionRequest(models.Model, Resource):
+    """ A request,from moderators to the staff,to make operations on an Action
+    
+    An ActionRequest is raised from an Action moderator whether he wants 
+    to make some operation on it, only if the operation requires the staff 
+    permissions 
+    """
+    
+    action = models.ForeignKey('Action')
+
+    request_type = models.CharField(max_length=256, null=True, blank=True)
+
+    notes = models.TextField(max_length=1024, null=True, blank=True)
+
+    requested_at = models.DateTimeField(default=datetime.datetime.now())
+
+    is_processed = models.BooleanField(default=False)
+
 class Action(models.Model, Resource):
 
     # Extending Askbot model!
@@ -31,7 +51,9 @@ class Action(models.Model, Resource):
     _threshold = models.PositiveIntegerField(blank=True, null=True)
 
     #TODO: fill this when the action is created
-    created_by = models.ForeignKey(User, null=True)
+    created_by = models.ForeignKey(User, null=True, related_name="created_action")
+
+    moderator_set = models.ManyToManyField(User, null=True, blank=True,related_name="moderators")
 
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
@@ -95,7 +117,7 @@ class Action(models.Model, Resource):
 
     @property
     def question(self):
-        """QUestion holds the main content for an action.
+        """ Question holds the main content for an Action.
 
         It is an askbot Post of type ``question``
         """
@@ -105,13 +127,20 @@ class Action(models.Model, Resource):
 
     @property
     def owner(self):
-        ''' 
-            The owner is the User who posted this action
-            question. 
-        '''
+        """ The owner is the User who posted this action question. """
+
         #WAS: post = self.thread.posts.get(post_type='question')
         #WAS: return post.author
         return self.question.author
+    
+    @property
+    def referrers(self):
+        """ The owner of the Action togheter with the Action moderators """
+
+        owner = User.objects.filter(pk=self.owner.pk)
+        moderators = self.moderator_set.all()
+
+        return owner | moderators
 
     @property
     def pingbacks(self):
@@ -250,7 +279,11 @@ class Action(models.Model, Resource):
         Token is generated on couple (action, user)
         """
         
-        return self.token_generator.make_token((self, user))
+        #return self.token_generator.make_token((self, user)) 
+        return self.token_generator._make_token_with_timestamp(
+            (self, user), 
+            int(datetime.datetime.now().strftime("%s"))
+        ) 
 
     def get_user_from_token(self, token):
         """Return User instance corresponding to token.
@@ -259,9 +292,11 @@ class Action(models.Model, Resource):
         """
         try:
             # get the User instance
+            #print "\nToken: %s\n" % token
             user_pk = self.token_generator.get_user_pk_from_token(token)
             user_calling_for_action = User.objects.get(pk=user_pk)
         except Exception as e:
+            #print "\nexception raised: %s\n" % e
             raise exceptions.InvalidReferralTokenException()
 
         checked = self.token_generator.check_token((self, user_calling_for_action), token)
