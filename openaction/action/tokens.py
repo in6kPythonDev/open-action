@@ -79,7 +79,7 @@ class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
         hash = salted_hmac(key_salt, value).hexdigest()[::2]
 
         # UID PART to recognize user by token
-        uid_part = base64.encodestring("%s%s" % TOKEN_UID_PREFIX, user.id)
+        uid_part = base64.encodestring("%s%s" % (TOKEN_UID_PREFIX, user.id))
 
         return "%s-%s%s%s" % (ts_b36, uid_part, TOKEN_UID_POSTFIX, hash)
 

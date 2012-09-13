@@ -33,17 +33,21 @@ TODO
 * Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 * Commenti nelle viste
 
-* solo owner e moderatori (che insieme compongono i -- referrers --) possono scrivere blogpost per una action--> nel modello Action (-- moderator_set --). In seguito implementare il controllo nelle assert nel modello User.
-* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione
-* controllare campi da nascondere nelle form
+* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione. v
+* nel modello Action aggiungere campo -- moderator_set -- v
+* solo owner e moderatori (che insieme compongono i -- referrers --) possono scrivere blogpost per una action. Implementare il controllo nelle assert nel modello User. v
 * tutti i referrers possono settare lo stato victory che però dovà essere verificato ed eventualmente accettato dallo staff:
-    fare un modello "ActionRequest" con campi:
+    fare un modello "ActionRequest" con campi: v
         * Action, 
         * il tipo di richiesta, 
         * le note,
         * 'requested_at' datetime,
         * un campo 'is_processed' per considerare la richiesta processata e non visualizzarla piu nell'admin
+* controllare campi da nascondere nelle form v
 * [non prioritario] modifica dei tag di una azione
+
+* NOTA: quali operazioni è possibile eseguire sulla Action se questa è in stato "canceled" ??
+* TESTARE l'aggiunta del voto tramite token, ora non funziona per via delle modifiche
 
 NOTE
 ^^^^
