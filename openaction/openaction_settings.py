@@ -55,6 +55,7 @@ INSTALLED_APPS.append('askbot_extensions')
 INSTALLED_APPS.append('action')
 INSTALLED_APPS.append('social_auth')
 INSTALLED_APPS.append('oa_social_auth')
+INSTALLED_APPS.append('external_resource')
 
 
 PROJECT_NAME = "openaction"
