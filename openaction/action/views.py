@@ -15,6 +15,7 @@ import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as action_const
 from action import forms
+from askbot_extensions import utils as askbot_extensions_utils
 import exceptions
 
 from lib import views_support
@@ -25,7 +26,7 @@ log = logging.getLogger(settings.PROJECT_NAME)
 
 
 class ActionDetailView(DetailView):
-    """ List the fields of an Action """
+    """ List the details of an Action """
 
     model = Action
     context_object_name="action" 
@@ -57,6 +58,7 @@ class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
         """Get referral token from url and return referral User"""
 
         token = self.request.REQUEST.get('ref_token')
+        #print "\nToken_arrived_from_req: %s\n" % token
         if token:
             referral = action.get_user_from_token(token)
         else:
@@ -89,16 +91,16 @@ class ActionVoteView(VoteView):
 class CommentVoteView(VoteView):
     """Add a vote to an Action comment.
 
-    A Comment can be voted only from an authenticated User, and only
-    if the Action the Comment is child of is in a valid state. The valid states 
-    are:
+    A comment (a Post of type 'comment') can be voted only from an authenticated 
+    User, and only if the Action the comment is child of is in a valid state. 
+    The valid states are:
         * ready
         * active
         * closed
         * victory
 
-    If the condition above are satisfied, the Comment score will be incremented 
-    by 1 and a new vote will be added to the Comment post votes
+    If the condition above are satisfied, the comment score will be incremented 
+    by 1 and a new vote will be added to the comment post votes
 
     This view accepts only POST requests.
     """
@@ -109,7 +111,7 @@ class CommentVoteView(VoteView):
         comment = self.get_object()
         request.user.assert_can_vote_comment(comment)
         referral = self.get_referral(comment.thread.action)
-        askbot_extensions.utils.vote_add(comment, request.user, referral)
+        askbot_extensions_utils.vote_add(comment, request.user, referral)
         return views_support.response_success(request) 
 
 #---------------------------------------------------------------------------------
@@ -118,7 +120,20 @@ class CommentView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ Add a comment to a post"""
     
 class ActionCommentView(CommentView):
-    """ Add a comment to an Action"""
+    """ Add a comment to an Action
+
+    An Action can be commented only from an authenticated User, and only
+    if the Action is in a valid state. The valid states are:
+        * ready
+        * active
+        * closed
+        * victory
+
+    NOTE: the check above is performed in the Post pre_save()
+
+    If the condition above are satisfied a new comment (a new Post object 
+    of type 'comment') will be added to Action Thread
+    """
 
     #to get the object
     model = Action
@@ -128,10 +143,21 @@ class ActionCommentView(CommentView):
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         action = self.get_object()
-        return action.comment_add(form.cleaned_data['text'], self.request.user)
+        #WAS: return action.comment_add(form.cleaned_data['text'], self.request.user)
+        action.comment_add(form.cleaned_data['text'], self.request.user)
+        return views_support.response_success(self.request)
 
 class BlogpostCommentView(CommentView):
-    """ Add a comment to an action blogpost"""
+    """ Add a comment to an action blog post
+
+    A blog post (a Post object of type 'answer') can be commented only if the
+    Action related to the Thread that is parent of the blog post is in a valid 
+    state. The valid states are:
+        * ready
+        * active
+        * closed
+        * victory
+    """
 
     #to get the object
     model = Post
@@ -155,6 +181,11 @@ class BlogpostView(FormView, SingleObjectMixin, views_support.LoginRequiredView)
     pass
 
 class ActionBlogpostView(BlogpostView):
+    """Add an article to the Action blog
+
+    An article can be added only from Users who are Action referrers, and only
+    if the Action is in a valid status. The valid status are:
+    """
 
     model = Action
     form_class = forms.ActionBlogpostForm
@@ -163,6 +194,7 @@ class ActionBlogpostView(BlogpostView):
     def form_valid(self, form):
 
         action = self.get_object()
+        self.request.user.assert_can_create_blog_post(action)
         action.blog_post_add(form.cleaned_data['text'], self.request.user)
         return views_support.response_success(self.request)
 
@@ -244,6 +276,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('openid')
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
+        form.hide_field('wiki')
+        form.hide_field('ask_anonymously')
         return form
 
 class ActionCreateView(ActionView):
@@ -280,8 +314,6 @@ class ActionCreateView(ActionView):
             'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
-            for o in m2m_value:
-                print "m2m_added %s" % o.id
             if len(m2m_value) != 0:
                 getattr(action, m2m_attr).add(*m2m_value)
 
