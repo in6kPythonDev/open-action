@@ -133,6 +133,8 @@ class UserExtension(ModelExtender):
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
         """Check permission. If invalid --> raise exception"""
+        # CHECK THIS Matteo: shouldn't I be able to vote a comment
+        # even if the Action cannot be voted ??
         try:
             self.assert_can_vote_action(comment.thread.action)
         except exceptions.PermissionDenied as e:
@@ -154,6 +156,8 @@ class UserExtension(ModelExtender):
                 action_const.ACTION_STATUS_DRAFT, 
             ):
                 raise exceptions.EditActionInvalidStatusException(action.status)
+            # CHECK THIS Matteo: can the moderators edit an Action ??
+            # (and, in the case, which parts of it?) 
             elif action.question.author != self:
                 #only action author can update it
                 raise exceptions.UserIsNotActionOwnerException(self, action)
@@ -177,6 +181,19 @@ class UserExtension(ModelExtender):
             do_default_edit_action_check()
 
         return True
+
+    def _askbot_ext_assert_can_create_blog_post(self, action):
+        """Check permission. If invalid --> raise exception.
+        
+        Check if the user has the permission to add a new article to 
+        the Action blog
+        """
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+        ):
+            raise exceptions.BlogpostActionInvalidStatusException(action.status)
+        if self not in action.referrers.all():
+            raise exceptions.UserIsNotActionReferralException(self, action)
 
     def _askbot_ext_assert_can_follow_action(self, action):
         """Check permission. If invalid --> raise exception"""
