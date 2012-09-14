@@ -3,8 +3,6 @@ import simplejson, urllib2
 
 class ExternalResourceInfo(object):
 
-    RESOURCE_TYPE_METHOD_MAP = None #To be defined in subclass
-
     def __init__(self, resource):
         self.resource = resource
         super(ExternalResourceInfo, self).__init__()

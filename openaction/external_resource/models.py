@@ -8,7 +8,7 @@ from askbot_extensions.models import User
 
 from lib import load_symbol
 
-import datetime
+import datetime, pickle
 
 class ExternalResource(models.Model, Resource):
     """Registry of external resources."""
