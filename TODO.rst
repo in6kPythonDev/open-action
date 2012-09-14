@@ -44,10 +44,15 @@ TODO
         * 'requested_at' datetime,
         * un campo 'is_processed' per considerare la richiesta processata e non visualizzarla piu nell'admin
 * controllare campi da nascondere nelle form v
-* [non prioritario] modifica dei tag di una azione
+* TESTARE l'aggiunta del voto tramite token v
+* inserire un controllo che logghi il caso in cui un utente voti con se stesso come referente v
+* inserire campo 'is_deleted' nel modello ActionCategory v
+* nessuna operazione è eseguibile sulla Action se questa è in stato 'canceled' --> implementare controlli nelle estensioni di askbot (asserts e pre_save) v
 
-* NOTA: quali operazioni è possibile eseguire sulla Action se questa è in stato "canceled" ??
-* TESTARE l'aggiunta del voto tramite token, ora non funziona per via delle modifiche
+* creare una vista, relativa al modello NoticeSetting, che aggiunga nuovi tipi di notifiche relative ad un particolare utente e collegate ad uno o piu backends
+* [non prioritario] modifica dei tag di una azione: i referrers (e di conseguenza i moderatori) possono modificare i tag di una Action.
+* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). 
+
 
 NOTE
 ^^^^
