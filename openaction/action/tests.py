@@ -893,4 +893,94 @@ class ActionViewTest(OpenActionViewTestCase):
 #                kwargs
 #            )
 #        return response
-#
+
+from notification.models import *
+
+class NotificationTest(OpenActionViewTestCase):
+
+    def setUp(self):
+        
+        types = ["1","2","3","4","6"]
+        
+        for _type in types:
+            self._create_notice_type(_type)
+        
+        # Create test user
+        username = 'user1'
+        self._author = self.create_user(username=username)
+
+        self._c = Client()
+
+    def _create_notice_type(self, _type):
+        
+        label = "Notifica tipo %s" % _type 
+        display = "display tipo %s" % _type
+        description = "description tipo %s" % _type
+        default = 2
+
+        noticetype, created = NoticeType.objects.get_or_create(label=label, 
+            display=display,
+            description=description,
+            default=default
+        )
+
+        try:
+            print "%s NoticeType object with pk %s" % (["Not created","Created"][created], noticetype.pk)
+        except Exception as e:
+            pass
+ 
+    def _post(self, url, is_ajax, **kwargs):
+        
+        if is_ajax:
+            response = self._c.post(url,
+                kwargs,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        else:
+            response = self._c.post(url,
+                kwargs
+            )
+        return response
+    
+    def _get(self, url, is_ajax, **kwargs):
+        
+        if is_ajax:
+            response = self._c.get(url,
+                kwargs,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        else:
+            response = self._c.get(url,
+                kwargs
+            )
+        return response
+
+    def _do_post_notice_settings(self, ajax=False):
+
+        response = self._post(
+            reverse('notification_notice_settings', args=()),
+            ajax
+        )
+        return response
+
+    def _do_get_notice_settings(self, ajax=False):
+
+        response = self._get(
+            reverse('notification_notice_settings', args=()),
+            ajax
+        )
+        return response
+
+    def test_notice_settings(self):
+
+        self._login()
+
+        response = self._do_post_notice_settings(ajax=True)
+
+        print "POST response status code %s" % response.status_code
+        print "POST response content %s" % response.content
+
+        response = self._do_get_notice_settings(ajax=True)
+
+        print "GET response status code %s" % response.status_code
+        print "GET response content %s" % response.content

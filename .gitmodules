@@ -1,6 +1,6 @@
 [submodule "submodules/askbot-devel"]
 	path = submodules/askbot-devel
-	url = git@github.com:feroda/askbot-devel.git
+	url = git://github.com/feroda/askbot-devel.git
 [submodule "submodules/django-notification-brosner"]
 	path = submodules/django-notification-brosner
 	url = git://github.com/brosner/django-notification.git
