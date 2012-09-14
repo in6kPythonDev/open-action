@@ -38,6 +38,8 @@ class ActionRequest(models.Model, Resource):
 
     is_processed = models.BooleanField(default=False)
 
+#--------------------------------------------------------------------------------
+
 class Action(models.Model, Resource):
 
     # Extending Askbot model!
@@ -409,6 +411,7 @@ class ActionCategory(models.Model, Resource):
     name = models.CharField(max_length=128, unique=True, blank=False,verbose_name=_('name'))
     description = models.TextField(blank=True,verbose_name=_('description'))
     #image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         verbose_name=_('Product category')
