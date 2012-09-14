@@ -85,9 +85,18 @@ class ActionVoteView(VoteView):
     def post(self, request, *args, **kwargs):
         action = self.get_object()
         request.user.assert_can_vote_action(action)
+
         referral = self.get_referral(action)
-        log.debug("PIPPPOOOOOO")
+        # Check referral
+        if referral:
+            if referral == request.user:
+                # QUESTION TO ASK: what if a user design itself as a referral
+                # for its vote? Should the vote be valid or not? Or, should
+                # be the user (and the Action referrers) be notified of this?
+                log.debug("User %s has itself as the referral for its vote \
+                     on the action %s" % (request.user, action))
         action.vote_add(request.user, referral=referral)
+        
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
@@ -287,8 +296,20 @@ class ActionView(FormView, views_support.LoginRequiredView):
         return form
 
 class ActionCreateView(ActionView):
-    """Create a new action
+    """Create a new Action.
 
+    Firstly, a new askbot question (and thus a new Thread) is created.
+    This cause a new Action to be automatically created, with the Thread 
+    as a o2o field.
+
+    Secondly, the Action relations with
+        * geonames, 
+        * categories,
+        * politicians,
+        * medias
+    are set basing on the set of values reveived with the form.
+    The same holds for the tags defined by the User who submitted the
+    form.
     """
 
     template_name = "action/create.html"
@@ -329,6 +350,17 @@ class ActionCreateView(ActionView):
 class ActionUpdateView(ActionView, SingleObjectMixin):
     """Update an action
 
+    Firstly, the question of the Thread related to the Action to update is
+    edited with the data got from the validated form.
+ 
+    Then, the Action relations with
+        * geonames, 
+        * categories,
+        * politicians,
+        * medias
+    are updated basing on the set of values reveived with the form.
+    The Action question tags are updated with the ones defined by the User 
+    who submitted the form.
     """
     model = Action
     template_name = "action/update.html"
@@ -347,6 +379,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         question = action.question 
 
         title = form.cleaned_data['title']
+        #theese tags will be replaced to the old ones
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
 
@@ -354,8 +387,8 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             question = question,
             title = title,
             body_text = text,
-        revision_comment = None,
-        tags = tagnames,
+            revision_comment = None,
+            tags = tagnames,
             wiki = False, 
             edit_anonymously = False,
         )   
@@ -379,43 +412,44 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 #for o in m2m_values_new:
                 #    print "m2m_n %s" % o.id
 
-                to_add = []
-                to_remove = []
-                #WAS: to_keep = []
-                count = 0
-                values_new_length = len(m2m_values_new)
-
-                for obj_new in m2m_values_new:
-                    to_add.append(obj_new)
-
-                for obj_old in m2m_values_old:
-                    #print "old %s" % obj_old.id
-                    for obj_new in m2m_values_new:
-                        #print "new %s" % obj_new.id
-                        if obj_old.id == obj_new.id:
-                            #already present, does not need 
-                            #to be added
-                            to_add.remove(obj_new)
-                            break
-                        else:
-                            count = count + 1
-
-                    if values_new_length == count:
-                        #the old value is not present in the new set
-                        #of selected values
-                        to_remove.append(obj_old)
-                    #WAS: else:
-                    #WAS:     #the old value is present in the new set
-                    #WAS:     #of selected values
-                    #WAS:     to_keep.append(obj_old)
-                    count = 0
-
-                #for o in to_add:
-                #    print "-----------TO_ADD------------%s" % o.id
-                #for o in to_remove:
-                #    print "-----------TO_REMOVE------------%s" % o.id
-                #for o in to_keep:
-                #    print "-----------TO_KEEP------------%s" % o.id
+#                to_add = []
+#                to_remove = []
+#                #WAS: to_keep = []
+#                count = 0
+#                values_new_length = len(m2m_values_new)
+#
+#                for obj_new in m2m_values_new:
+#                    to_add.append(obj_new)
+#
+#                for obj_old in m2m_values_old:
+#                    #print "old %s" % obj_old.id
+#                    for obj_new in m2m_values_new:
+#                        #print "new %s" % obj_new.id
+#                        if obj_old.id == obj_new.id:
+#                            #already present, does not need 
+#                            #to be added
+#                            to_add.remove(obj_new)
+#                            break
+#                        else:
+#                            count = count + 1
+#
+#                    if values_new_length == count:
+#                        #the old value is not present in the new set
+#                        #of selected values
+#                        to_remove.append(obj_old)
+#                    #WAS: else:
+#                    #WAS:     #the old value is present in the new set
+#                    #WAS:     #of selected values
+#                    #WAS:     to_keep.append(obj_old)
+#                    count = 0
+#
+#                #for o in to_add:
+#                #    print "-----------TO_ADD------------%s" % o.id
+#                #for o in to_remove:
+#                #    print "-----------TO_REMOVE------------%s" % o.id
+#                #for o in to_keep:
+#                #    print "-----------TO_KEEP------------%s" % o.id
+                to_add, to_remove = update_values(m2m_values_old, m2m_values_new)
 
                 getattr(action, m2m_attr).add(*to_add)
                 getattr(action, m2m_attr).remove(*to_remove)
@@ -423,8 +457,69 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
+    def update_values(self, old_values, new_values):
+        """ Get two sets of values as input and return two sets of values as output.
+
+        This can be used when receiving a set of objects of the same tipe from a form 
+        to determine, knowing the old set of values, which objects have to be
+        removed, which ones have to be added and which ones have to be kept.
+        
+        The outputted set contain respectively the objects to add and the objects
+        to remove.
+        """
+
+        to_add = []
+        to_remove = []
+        count = 0
+        values_new_length = len(new_values)
+
+        for obj_new in new_values:
+            to_add.append(obj_new)
+
+        for obj_old in old_values:
+            #print "old %s" % obj_old.id
+            for obj_new in new_values:
+                #print "new %s" % obj_new.id
+                if obj_old.id == obj_new.id:
+                    #already present, does not need 
+                    #to be added
+                    to_add.remove(obj_new)
+                    break
+                else:
+                    count = count + 1
+
+            if values_new_length == count:
+                #the old value is not present in the new set
+                #of selected values
+                to_remove.append(obj_old)
+
+            count = 0
+
+        #for o in to_add:
+        #    print "-----------TO_ADD------------%s" % o.id
+        #for o in to_remove:
+        #    print "-----------TO_REMOVE------------%s" % o.id
+        #for o in to_keep:
+        #    print "-----------TO_KEEP------------%s" % o.id
+        
+        return to_add, to_remove
+
+
 class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
+    """ Allow to an User to follow an Action
+
+    A follower of an Action can receive notifications of the Action updates, 
+    with respect to the Action itself and all the objects linked to it.
+
+    A User can follow an action only if it is in a valid states. Valid states
+    are:
+        * ready
+        * active
+        * closed
+        * victory
     
+    This view accepts only POST requests.
+    """
     model = Action
    
     def post(self, request, *args, **kwargs):
@@ -438,14 +533,21 @@ class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
         return views_support.response_success(request)
 
 class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
-    
-    model = Action
+    """ Allow to an User to unfollow an Action
+
+    By unfollowing an Action a User stops to receive notifications of the 
+    Action updates, with respect to the Action itself and all the objects 
+    linked to it.
    
+    This view accepts only POST requests.
+    """
+
+    model = Action
+
     def post(self, request, *args, **kwargs):
 
         action = self.get_object()
         user = request.user
-
         user.assert_can_unfollow_action(action)
         user.unfollow_action(action)
         
