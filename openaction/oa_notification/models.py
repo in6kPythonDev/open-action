@@ -1,8 +1,23 @@
 from django.db import models
+from django.contrib.auth.models import User
+
 from notification import models as notification
 
+class UserNotice(models.Model):
 
-#------------------------------------------------------------------------------
+    user = models.ForeignKey(User)
+    text = models.TextField()
+    is_read = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return u"Notice %s received from user %s [%s]" % (
+            self.notice,
+            self.user,
+            [["","ARCHIVED"][self.is_archived], "READ"][self.is_read]
+        )
+
+#--------------------------------------------------------------------------------
 
 def create_notice_types(app, created_models, verbosity, **kwargs):
     """Define notice types and default 'spam_sensitivity'.
