@@ -25,13 +25,6 @@ TODO
 * NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica                       | OK testato
 * nelle view e nei test: solo l'owner della Action la puo modificare (text)                                     | OK testato
 
-* [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?:
-    viste:
-        * ActionModeratorsAdd, 
-        * ActionModeratorsManage
-
-* Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
-* Commenti nelle viste
 
 * nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione. v
 * nel modello Action aggiungere campo -- moderator_set -- v
@@ -48,13 +41,29 @@ TODO
 * inserire un controllo che logghi il caso in cui un utente voti con se stesso come referente v
 * inserire campo 'is_deleted' nel modello ActionCategory v
 * nessuna operazione è eseguibile sulla Action se questa è in stato 'canceled' --> implementare controlli nelle estensioni di askbot (asserts e pre_save) v
+* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). 
 
 * creare una vista, relativa al modello NoticeSetting, che aggiunga nuovi tipi di notifiche relative ad un particolare utente e collegate ad uno o piu backends
 * [non prioritario] modifica dei tag di una azione: i referrers (e di conseguenza i moderatori) possono modificare i tag di una Action.
-* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). 
-* Creare una nuova a applicazione (connections) con tre modelli ( vedere documento di analisi)
-* Implementare un backand e testarlo 
+* Creare una nuova a applicazione (organization) con tre modelli ( vedere documento di analisi) v
 
+* rinominare l'applicazione 'connection' in 'organization'
+* spostare UserNotice in oa_notification/models.py
+* implementare una gestione di segnale che alla creazione di un post nel blog nella post_save del modello Post (controllando che l'istanza sia di tipo answer) setta i referrers ed i followers della action --> in oa_notification/handlers.py 
+* nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True
+* TODO : controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 
+* Implementare il backand di openaction --> eredita da noticication.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) 
+
+
+
+
+* [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?:
+    viste:
+        * ActionModeratorsAdd, 
+        * ActionModeratorsManage
+
+* Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
+* Commenti nelle viste
 
 NOTE
 ^^^^
