@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from askbot.models import User
 
 from notification import models as notification
 
@@ -12,7 +12,7 @@ class UserNotice(models.Model):
 
     def __unicode__(self):
         return u"Notice %s received from user %s [%s]" % (
-            self.notice,
+            self.text,
             self.user,
             [["","ARCHIVED"][self.is_archived], "READ"][self.is_read]
         )
