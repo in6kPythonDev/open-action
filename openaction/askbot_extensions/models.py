@@ -8,7 +8,8 @@ from django.dispatch import receiver
 
 from askbot.models import Thread, Vote, User, Post
 from action import exceptions 
-from action import const as action_const
+from action import const as action_cons
+from notification import models as notification
 
 from lib.djangolib import ModelExtender
 
@@ -112,6 +113,18 @@ def vote_check_before_save(sender, **kwargs):
             # TODO Matteo: define specific exception
             #WAS: raise PermissionDenied("Cannot be referred by yourself")
             raise exceptions.InvalidReferralError()
+
+@receiver(pre_save, sender=User)
+def user_set_notice_settings(sender, **kwargs):
+ 
+    user = kwargs['instance']
+
+    #default is openaction backend
+    if user.is_active:
+        notification.get_notification_setting(user=user,
+            notice_type=,
+            medium="default"
+        )
 
 #---------------------------------------------------------------------------------
 
@@ -227,7 +240,8 @@ class UserExtension(ModelExtender):
         self.followed_threads.remove(action.thread)
 
     def _askbot_ext_is_following_action(self, action=None):
-        return action.thread.followed_by.filter(id=self.id).exists()
+        #WAS: return action.thread.followed_by.filter(id=self.id).exists() 
+        return action.thread.is_followed_by(self)
 
 User.add_to_class('ext_noattr', UserExtension())
 

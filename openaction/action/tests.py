@@ -17,6 +17,8 @@ from django.core.exceptions import PermissionDenied
 from askbot.models import Post, User
 from askbot.models.repute import Vote
 
+from oa_notification.models import UserNotice 
+
 from action.models import Action, Geoname
 from action import const, exceptions
 
@@ -480,6 +482,30 @@ class ActionViewTest(OpenActionViewTestCase):
                 blogpost_obj = False
 
             self.assertTrue(blogpost_obj)
+
+            #check that all action referrers and followers has been notified
+            #NOTE: a test for Action referrers has still to be done
+            user2 = self.create_user(username='user2')
+            self.test_follow_action(user2)
+
+            try:
+                user_followed_action = user2.followed_threads.get(
+                    pk=self._action.thread.pk
+                )
+            except Post.DoesNotExist as e:
+                user_follow_action = False
+
+            self.assertTrue(user_follow_action)
+
+            try:
+                notice = UserNotice.objects.get(
+                    user=user2
+                )
+            except Post.DoesNotExist as e:
+                notice = False
+
+            self.assertTrue(notice)
+            
         else:
             # Unauthenticated user cannot post
             self._check_for_redirect_response(response)
