@@ -3,12 +3,13 @@
 """
 
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
 
 from askbot.models import Thread, Vote, User, Post
 from action import exceptions 
 from action import const as action_const
+from notification import models as notification
 
 from lib.djangolib import ModelExtender
 
@@ -63,13 +64,15 @@ def comment_check_before_save(sender, **kwargs):
 
     if post.is_comment():
         if post.thread.action.status in (
-            action_const.ACTION_STATUS_DRAFT
+            action_const.ACTION_STATUS_DRAFT,
+            action_const.ACTION_STATUS.deleted,
         ):
             raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     elif post.is_answer():
         if post.thread.action.status in (
-            action_const.ACTION_STATUS_DRAFT
+            action_const.ACTION_STATUS_DRAFT,
+            action_const.ACTION_STATUS.deleted,
         ):
             raise BlogpostActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
         
@@ -133,6 +136,8 @@ class UserExtension(ModelExtender):
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
         """Check permission. If invalid --> raise exception"""
+        # CHECK THIS Matteo: shouldn't I be able to vote a comment
+        # even if the Action cannot be voted ??
         try:
             self.assert_can_vote_action(comment.thread.action)
         except exceptions.PermissionDenied as e:
@@ -154,6 +159,8 @@ class UserExtension(ModelExtender):
                 action_const.ACTION_STATUS_DRAFT, 
             ):
                 raise exceptions.EditActionInvalidStatusException(action.status)
+            # CHECK THIS Matteo: can the moderators edit an Action ??
+            # (and, in the case, which parts of it?) 
             elif action.question.author != self:
                 #only action author can update it
                 raise exceptions.UserIsNotActionOwnerException(self, action)
@@ -178,10 +185,25 @@ class UserExtension(ModelExtender):
 
         return True
 
+    def _askbot_ext_assert_can_create_blog_post(self, action):
+        """Check permission. If invalid --> raise exception.
+        
+        Check if the user has the permission to add a new article to 
+        the Action blog
+        """
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+            action_const.ACTION_STATUS.deleted,
+        ):
+            raise exceptions.BlogpostActionInvalidStatusException(action.status)
+        if self not in action.referrers.all():
+            raise exceptions.UserIsNotActionReferralException(self, action)
+
     def _askbot_ext_assert_can_follow_action(self, action):
         """Check permission. If invalid --> raise exception"""
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
+            action_const.ACTION_STATUS.deleted,
         ):
             raise exceptions.FollowActionInvalidStatusException(action.status)
 
@@ -191,7 +213,10 @@ class UserExtension(ModelExtender):
         """Check permission. If invalid --> raise exception"""
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
+            action_const.ACTION_STATUS.deleted,
         ):
+            raise exceptions.ParanoidException()
+        elif not self.is_following(action):
             raise exceptions.ParanoidException()
 
         return True
@@ -203,7 +228,8 @@ class UserExtension(ModelExtender):
         self.followed_threads.remove(action.thread)
 
     def _askbot_ext_is_following_action(self, action=None):
-        return action.thread.followed_by.filter(id=self.id).exists()
+        #WAS: return action.thread.followed_by.filter(id=self.id).exists() 
+        return action.thread.is_followed_by(self)
 
 User.add_to_class('ext_noattr', UserExtension())
 

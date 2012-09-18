@@ -15,6 +15,7 @@ import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as action_const
 from action import forms
+from askbot_extensions import utils as askbot_extensions_utils
 import exceptions
 
 from lib import views_support
@@ -25,6 +26,7 @@ log = logging.getLogger(settings.PROJECT_NAME)
 
 
 class ActionDetailView(DetailView):
+    """ List the details of an Action """
 
     model = Action
     context_object_name="action" 
@@ -46,14 +48,7 @@ class ActionDetailView(DetailView):
 class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
     """Add a vote to a post  
       
-    This means that the Action score will be incremented by 1
-    and that a new vote will be added to the Action question votes
-    * accessibile solo tramite POST
-    * recupera la action in "def get_object(self)" v
-    * aggiungere un voto ad una action v
-    * aggiungere un voto solo se in uno stato ammissibile v
-    * l'utente sia autenticato v
-   
+    **TODO**
     SUCCESSIVAMENTE (ma non lo fare)
     * prenderemo via url HTTP il parametro "token" per capire
       da chi e' stato inviato il link
@@ -63,26 +58,63 @@ class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
         """Get referral token from url and return referral User"""
 
         token = self.request.REQUEST.get('ref_token')
+        print "\nToken_arrived_from_req: %s\n" % token
         if token:
             referral = action.get_user_from_token(token)
         else:
             referral = None
+        log.debug("FOUND REFERRAL %s" % referral)
         return referral
 
 class ActionVoteView(VoteView):
-    """Add a vote to an Action."""
+    """Add a vote to an Action.
+
+    An Action can be voted only from an authenticated User, and only
+    if the Action is in a valid state. The valid states are:
+        * ready
+        * active
+
+    If the condition above are satisfied, the Action score will be incremented 
+    by 1 and a new vote will be added to the Action question votes
+
+    This view accepts only POST requests.
+    """
 
     model = Action
 
     def post(self, request, *args, **kwargs):
         action = self.get_object()
         request.user.assert_can_vote_action(action)
+
         referral = self.get_referral(action)
-        action.vote_add(request.user)
+        # Check referral
+        if referral:
+            if referral == request.user:
+                # QUESTION TO ASK: what if a user design itself as a referral
+                # for its vote? Should the vote be valid or not? Or, should
+                # be the user (and the Action referrers) be notified of this?
+                log.debug("User %s has itself as the referral for its vote \
+                     on the action %s" % (request.user, action))
+        action.vote_add(request.user, referral=referral)
+        
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
-    """Add a vote to an Action comment."""
+    """Add a vote to an Action comment.
+
+    A comment (a Post of type 'comment') can be voted only from an authenticated 
+    User, and only if the Action the comment is child of is in a valid state. 
+    The valid states are:
+        * ready
+        * active
+        * closed
+        * victory
+
+    If the condition above are satisfied, the comment score will be incremented 
+    by 1 and a new vote will be added to the comment post votes
+
+    This view accepts only POST requests.
+    """
     
     model = Post
 
@@ -90,7 +122,7 @@ class CommentVoteView(VoteView):
         comment = self.get_object()
         request.user.assert_can_vote_comment(comment)
         referral = self.get_referral(comment.thread.action)
-        askbot_extensions.utils.vote_add(comment, request.user, referral)
+        askbot_extensions_utils.vote_add(comment, request.user, referral)
         return views_support.response_success(request) 
 
 #---------------------------------------------------------------------------------
@@ -99,7 +131,20 @@ class CommentView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ Add a comment to a post"""
     
 class ActionCommentView(CommentView):
-    """ Add a comment to an action"""
+    """ Add a comment to an Action
+
+    An Action can be commented only from an authenticated User, and only
+    if the Action is in a valid state. The valid states are:
+        * ready
+        * active
+        * closed
+        * victory
+
+    NOTE: the check above is performed in the Post pre_save()
+
+    If the condition above are satisfied a new comment (a new Post object 
+    of type 'comment') will be added to Action Thread
+    """
 
     #to get the object
     model = Action
@@ -109,10 +154,21 @@ class ActionCommentView(CommentView):
     def form_valid(self, form):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         action = self.get_object()
-        return action.comment_add(form.cleaned_data['text'], self.request.user)
+        #WAS: return action.comment_add(form.cleaned_data['text'], self.request.user)
+        action.comment_add(form.cleaned_data['text'], self.request.user)
+        return views_support.response_success(self.request)
 
 class BlogpostCommentView(CommentView):
-    """ Add a comment to an action blogpost"""
+    """ Add a comment to an action blog post
+
+    A blog post (a Post object of type 'answer') can be commented only if the
+    Action related to the Thread that is parent of the blog post is in a valid 
+    state. The valid states are:
+        * ready
+        * active
+        * closed
+        * victory
+    """
 
     #to get the object
     model = Post
@@ -136,6 +192,15 @@ class BlogpostView(FormView, SingleObjectMixin, views_support.LoginRequiredView)
     pass
 
 class ActionBlogpostView(BlogpostView):
+    """Add an article to the Action blog
+
+    An article can be added only from Users who are Action referrers, and only
+    if the Action is in a valid status. The valid status are:
+        * ready
+        * active
+        * closed
+        * victory
+    """
 
     model = Action
     form_class = forms.ActionBlogpostForm
@@ -144,6 +209,7 @@ class ActionBlogpostView(BlogpostView):
     def form_valid(self, form):
 
         action = self.get_object()
+        self.request.user.assert_can_create_blog_post(action)
         action.blog_post_add(form.cleaned_data['text'], self.request.user)
         return views_support.response_success(self.request)
 
@@ -225,11 +291,25 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('openid')
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
+        form.hide_field('wiki')
+        form.hide_field('ask_anonymously')
         return form
 
 class ActionCreateView(ActionView):
-    """Create a new action
+    """Create a new Action.
 
+    Firstly, a new askbot question (and thus a new Thread) is created.
+    This cause a new Action to be automatically created, with the Thread 
+    as a o2o field.
+
+    Secondly, the Action relations with
+        * geonames, 
+        * categories,
+        * politicians,
+        * medias
+    are set basing on the set of values reveived with the form.
+    The same holds for the tags defined by the User who submitted the
+    form.
     """
 
     template_name = "action/create.html"
@@ -261,8 +341,6 @@ class ActionCreateView(ActionView):
             'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
-            for o in m2m_value:
-                print "m2m_added %s" % o.id
             if len(m2m_value) != 0:
                 getattr(action, m2m_attr).add(*m2m_value)
 
@@ -272,6 +350,17 @@ class ActionCreateView(ActionView):
 class ActionUpdateView(ActionView, SingleObjectMixin):
     """Update an action
 
+    Firstly, the question of the Thread related to the Action to update is
+    edited with the data got from the validated form.
+ 
+    Then, the Action relations with
+        * geonames, 
+        * categories,
+        * politicians,
+        * medias
+    are updated basing on the set of values reveived with the form.
+    The Action question tags are updated with the ones defined by the User 
+    who submitted the form.
     """
     model = Action
     template_name = "action/update.html"
@@ -290,6 +379,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         question = action.question 
 
         title = form.cleaned_data['title']
+        #theese tags will be replaced to the old ones
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
 
@@ -297,8 +387,8 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             question = question,
             title = title,
             body_text = text,
-        revision_comment = None,
-        tags = tagnames,
+            revision_comment = None,
+            tags = tagnames,
             wiki = False, 
             edit_anonymously = False,
         )   
@@ -311,54 +401,55 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
 
-            #if m2m_value is not None:
+            #WAS: if m2m_value is not None:
             if len(m2m_value) != 0:
-                #TODO Matteo: retest. 
+                #DONE Matteo: retest. 
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
-                for o in m2m_values_old:
-                    print "m2m_o %s" % o.id
+                #for o in m2m_values_old:
+                #    print "m2m_o %s" % o.id
                 m2m_values_new = m2m_value
-                for o in m2m_values_new:
-                    print "m2m_n %s" % o.id
+                #for o in m2m_values_new:
+                #    print "m2m_n %s" % o.id
 
-                to_add = []
-                to_remove = []
-                to_keep = []
-                count = 0
-                values_new_length = len(m2m_values_new)
-
-                for obj_new in m2m_values_new:
-                    to_add.append(obj_new)
-
-                for obj_old in m2m_values_old:
-                    print "old %s" % obj_old.id
-                    for obj_new in m2m_values_new:
-                        print "new %s" % obj_new.id
-                        if obj_old.id == obj_new.id:
-                            #already present, does not need 
-                            #to be added
-                            to_add.remove(obj_new)
-                            break
-                        else:
-                            count = count + 1
-
-                    if values_new_length == count:
-                        #the old value is not present in the new set
-                        #of selected values
-                        to_remove.append(obj_old)
-                    else:
-                        #the old value is present in the new set
-                        #of selected values
-                        to_keep.append(obj_old)
-                    count = 0
-
-                for o in to_add:
-                    print "-----------TO_ADD------------%s" % o.id
-                for o in to_remove:
-                    print "-----------TO_REMOVE------------%s" % o.id
-                for o in to_keep:
-                    print "-----------TO_KEEP------------%s" % o.id
+#                to_add = []
+#                to_remove = []
+#                #WAS: to_keep = []
+#                count = 0
+#                values_new_length = len(m2m_values_new)
+#
+#                for obj_new in m2m_values_new:
+#                    to_add.append(obj_new)
+#
+#                for obj_old in m2m_values_old:
+#                    #print "old %s" % obj_old.id
+#                    for obj_new in m2m_values_new:
+#                        #print "new %s" % obj_new.id
+#                        if obj_old.id == obj_new.id:
+#                            #already present, does not need 
+#                            #to be added
+#                            to_add.remove(obj_new)
+#                            break
+#                        else:
+#                            count = count + 1
+#
+#                    if values_new_length == count:
+#                        #the old value is not present in the new set
+#                        #of selected values
+#                        to_remove.append(obj_old)
+#                    #WAS: else:
+#                    #WAS:     #the old value is present in the new set
+#                    #WAS:     #of selected values
+#                    #WAS:     to_keep.append(obj_old)
+#                    count = 0
+#
+#                #for o in to_add:
+#                #    print "-----------TO_ADD------------%s" % o.id
+#                #for o in to_remove:
+#                #    print "-----------TO_REMOVE------------%s" % o.id
+#                #for o in to_keep:
+#                #    print "-----------TO_KEEP------------%s" % o.id
+                to_add, to_remove = update_values(m2m_values_old, m2m_values_new)
 
                 getattr(action, m2m_attr).add(*to_add)
                 getattr(action, m2m_attr).remove(*to_remove)
@@ -366,8 +457,69 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
+    def update_values(self, old_values, new_values):
+        """ Get two sets of values as input and return two sets of values as output.
+
+        This can be used when receiving a set of objects of the same tipe from a form 
+        to determine, knowing the old set of values, which objects have to be
+        removed, which ones have to be added and which ones have to be kept.
+        
+        The outputted set contain respectively the objects to add and the objects
+        to remove.
+        """
+
+        to_add = []
+        to_remove = []
+        count = 0
+        values_new_length = len(new_values)
+
+        for obj_new in new_values:
+            to_add.append(obj_new)
+
+        for obj_old in old_values:
+            #print "old %s" % obj_old.id
+            for obj_new in new_values:
+                #print "new %s" % obj_new.id
+                if obj_old.id == obj_new.id:
+                    #already present, does not need 
+                    #to be added
+                    to_add.remove(obj_new)
+                    break
+                else:
+                    count = count + 1
+
+            if values_new_length == count:
+                #the old value is not present in the new set
+                #of selected values
+                to_remove.append(obj_old)
+
+            count = 0
+
+        #for o in to_add:
+        #    print "-----------TO_ADD------------%s" % o.id
+        #for o in to_remove:
+        #    print "-----------TO_REMOVE------------%s" % o.id
+        #for o in to_keep:
+        #    print "-----------TO_KEEP------------%s" % o.id
+        
+        return to_add, to_remove
+
+
 class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
+    """ Allow to an User to follow an Action
+
+    A follower of an Action can receive notifications of the Action updates, 
+    with respect to the Action itself and all the objects linked to it.
+
+    A User can follow an action only if it is in a valid states. Valid states
+    are:
+        * ready
+        * active
+        * closed
+        * victory
     
+    This view accepts only POST requests.
+    """
     model = Action
    
     def post(self, request, *args, **kwargs):
@@ -381,14 +533,21 @@ class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
         return views_support.response_success(request)
 
 class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
-    
-    model = Action
+    """ Allow to an User to unfollow an Action
+
+    By unfollowing an Action a User stops to receive notifications of the 
+    Action updates, with respect to the Action itself and all the objects 
+    linked to it.
    
+    This view accepts only POST requests.
+    """
+
+    model = Action
+
     def post(self, request, *args, **kwargs):
 
         action = self.get_object()
         user = request.user
-
         user.assert_can_unfollow_action(action)
         user.unfollow_action(action)
         

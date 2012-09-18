@@ -3,10 +3,11 @@
 
 from django.db import models
 
-from base import Resource
+from base.models import Resource
 from askbot_extensions.models import User
 
 from lib import load_symbol
+from lib.djangolib import ModelExtender
 
 import datetime, pickle
 
@@ -33,7 +34,7 @@ class ExternalResource(models.Model, Resource):
     _data = models.TextField()
 
     @property
-    def external_info(self)
+    def external_info(self):
         # TODO: NoSQL cache
         #key = self.__class__.cache_key(self.id)
         #data = pstore.getalldata(key, 'external_info')
@@ -94,7 +95,7 @@ class ExternalResource(models.Model, Resource):
 
 class UserExternalResourceExtension(ModelExtender):
 
-    def _askbot_ext_get_external_info(self, social_auth_backend_name, attrs=[])
+    def _askbot_ext_get_external_info(self, social_auth_backend_name, attrs=[]):
         """Retrieve external info from external resource"""
 
         from external_resource.models import ExternalResource

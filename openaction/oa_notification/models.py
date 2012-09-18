@@ -1,8 +1,27 @@
 from django.db import models
+from askbot.models import User
+
+from django.db.models.signals import pre_save
+from django.contrib.auth.models import User
+from django.dispatch import receiver 
+
 from notification import models as notification
 
+class UserNotice(models.Model):
 
-#------------------------------------------------------------------------------
+    user = models.ForeignKey(User)
+    text = models.TextField()
+    is_read = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return u"Notice %s received from user %s [%s]" % (
+            self.text,
+            self.user,
+            [["","ARCHIVED"][self.is_archived], "READ"][self.is_read]
+        )
+
+#--------------------------------------------------------------------------------
 
 def create_notice_types(app, created_models, verbosity, **kwargs):
     """Define notice types and default 'spam_sensitivity'.
@@ -108,3 +127,30 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
         "association_public_something", _("Publication Created"),
         _("an association you're following published something"), default=2
     )
+
+#--------------------------------------------------------------------------------
+
+@receiver(pre_save, sender=User)
+def user_set_default_notice_settings(sender, **kwargs):
+    """ Create a NoticeSetting instance for the User, using default (openaction) 
+    backend
+    """
+
+    user = kwargs['instance']
+
+    try:
+        old_user = User.objects.get(pk=user.pk)
+    except User.DoesNotExist as e:
+        created=True
+    else:
+        created = False
+
+    # Add openaction backend for sending notices to the user.
+    # when a User is activated
+    if user.is_active and (created or not old_user.is_active):
+        for notice_type in notification.NoticeType.objects.all():
+            notification.get_notification_setting(user=user,
+                notice_type=notice_type,
+                medium="default"
+            )
+

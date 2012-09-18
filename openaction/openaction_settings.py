@@ -55,6 +55,7 @@ INSTALLED_APPS.append('askbot_extensions')
 INSTALLED_APPS.append('action')
 INSTALLED_APPS.append('social_auth')
 INSTALLED_APPS.append('oa_social_auth')
+INSTALLED_APPS.append('external_resource')
 
 
 PROJECT_NAME = "openaction"
@@ -130,6 +131,7 @@ DEFAULT_FROM_EMAIL = "openaction@localhost.befair.it"
 NOTIFICATION_BACKENDS = (
     ("email", "notification.backends.email.EmailBackend"),
     ("facebook_inbox", "oa_notification.backends.facebook.FBInboxBackend"),
+    ("default", "oa_notification.backends.openaction.OpenActionDefaultBackend"),
     #("twitter_message", "oa_notification.backends.twitter.TWMessageBackend"),
 )
 

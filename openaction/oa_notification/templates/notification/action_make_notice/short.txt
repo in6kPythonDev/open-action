@@ -1,1 +1,1 @@
-Notizia dalla action
+Notizia dalla action {{ action }}
