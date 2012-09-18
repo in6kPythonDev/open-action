@@ -20,40 +20,17 @@ log = logging.getLogger(settings.PROJECT_NAME)
 
 #--------------------------------------------------------------------------------
 
-class ActionRequest(models.Model, Resource):
-    """ A request,from moderators to the staff,to make operations on an Action
-    
-    An ActionRequest is raised from an Action moderator whether he wants 
-    to make some operation on it, only if the operation requires the staff 
-    permissions 
-    """
-    
-    action = models.ForeignKey('Action')
-
-    request_type = models.CharField(max_length=256, null=True, blank=True)
-
-    notes = models.TextField(max_length=1024, null=True, blank=True)
-
-    requested_at = models.DateTimeField(default=datetime.datetime.now())
-
-    is_processed = models.BooleanField(default=False)
-
-#--------------------------------------------------------------------------------
-
 class Action(models.Model, Resource):
 
     # Extending Askbot model!
     thread = models.OneToOneField(Thread)
 
     victory = models.BooleanField(default=False)
-
     _threshold = models.PositiveIntegerField(blank=True, null=True)
 
-    #TODO: fill this when the action is created
-    created_by = models.ForeignKey(User, null=True, related_name="created_action")
+    created_by = models.ForeignKey(User, related_name="created_action_set")
 
-    moderator_set = models.ManyToManyField(User, null=True, blank=True,related_name="moderators")
-
+    moderator_set = models.ManyToManyField(User, null=True, blank=True, related_name="moderated_action_set")
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
@@ -94,6 +71,7 @@ class Action(models.Model, Resource):
     def update_status(self, value):
         """ Update status and save it """
 
+        #TODO: upgrade ACTION_STATUS[key] -> ACTION_STATUS_key
         if value == const.ACTION_STATUS['victory']:
             self.victory = True
             self.save()
@@ -136,17 +114,17 @@ class Action(models.Model, Resource):
     def referrers(self):
         """ The owner of the Action togheter with the Action moderators """
 
-        owner = User.objects.filter(pk=self.owner.pk)
+        owners = User.objects.filter(pk=self.owner.pk)
         moderators = self.moderator_set.all()
 
-        return owner | moderators
+        return owners | moderators
 
     @property
     def pingbacks(self):
         pass
 
     @property
-    def create_datetime(self):
+    def created_on(self):
         return self.question.added_at
     
     @property
@@ -282,11 +260,11 @@ class Action(models.Model, Resource):
         Token is generated on couple (action, user)
         """
         
-        #return self.token_generator.make_token((self, user)) 
-        return self.token_generator._make_token_with_timestamp(
-            (self, user), 
-            int(datetime.datetime.now().strftime("%s"))
-        ) 
+        return self.token_generator.make_token((self, user)) 
+        #KO: return self.token_generator._make_token_with_timestamp(
+        #KO:     (self, user), 
+        #KO:     int(datetime.datetime.now().strftime("%s"))
+        #KO: ) 
 
     def get_user_from_token(self, token):
         """Return User instance corresponding to token.
@@ -437,31 +415,51 @@ class Media(models.Model):
     pass
     
 #--------------------------------------------------------------------------------
+
+class ActionRequest(models.Model, Resource):
+    """ A request,from moderators to the staff,to make operations on an Action
+    
+    An ActionRequest is raised from an Action moderator whether he wants 
+    to make some operation on it, only if the operation requires the staff 
+    permissions 
+    """
+    
+    action = models.ForeignKey(Action)
+    request_type = models.CharField(max_length=256)
+    request_notes = models.TextField(blank=True, default="")
+    answer_notes = models.TextField(blank=True, default="")
+    is_processed = models.BooleanField(default=False)
+
+    created_on = models.DateTimeField(auto_now_add=True)
+    last_update_on = models.DateTimeField(auto_now=True)
+
+#--------------------------------------------------------------------------------
 # Askbot signal handling
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-@receiver(post_save, sender=Thread)
-def create_action(sender, **kwargs):
-    if kwargs['created']:
-        thread = kwargs['instance']
-        try:
-            assert(thread.action)
-        except Action.DoesNotExist as e:
-            action = Action(thread=kwargs['instance'])
-            action.save()
+#WAS: @receiver(post_save, sender=Thread)
+#WAS: def create_action(sender, **kwargs):
+#WAS:     if kwargs['created']:
+#WAS:         thread = kwargs['instance']
+#WAS:         try:
+#WAS:             assert(thread.action)
+#WAS:         except Action.DoesNotExist as e:
+#WAS:             action = Action(
+#WAS:                 thread = thread,
+#WAS:                 created_by = thread.question.author
+#WAS:             )
+#WAS:             action.save()
 
 @receiver(post_save, sender=Post)
-def set_action_author(sender, **kwargs):
+def create_action(sender, **kwargs):
     if kwargs['created']:
         post = kwargs['instance']
         if post.is_question():
-            try:
-                assert(post.thread.action)
-                action = post.thread.action
-                action.created_by = post.author
-                action.save()
-            except Action.DoesNotExist as e:
-                pass
+            action = Action(
+                thread = post.thread,
+                created_by = post.author
+            )
+            action.save()
             
