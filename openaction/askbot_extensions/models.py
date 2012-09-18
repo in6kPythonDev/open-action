@@ -8,7 +8,7 @@ from django.dispatch import receiver
 
 from askbot.models import Thread, Vote, User, Post
 from action import exceptions 
-from action import const as action_cons
+from action import const as action_const
 from notification import models as notification
 
 from lib.djangolib import ModelExtender
@@ -113,21 +113,6 @@ def vote_check_before_save(sender, **kwargs):
             # TODO Matteo: define specific exception
             #WAS: raise PermissionDenied("Cannot be referred by yourself")
             raise exceptions.InvalidReferralError()
-
-@receiver(post_save, sender=User)
-def user_set_notice_settings(sender, **kwargs):
-    """ Create a NoticeSetting instance for the User, using default (openaction) 
-    backend
-    """
-
-    user = kwargs['instance']
-
-    #default is openaction backend
-    if user.is_active:
-        notification.get_notification_setting(user=user,
-            notice_type=,
-            medium="default"
-        )
 
 #---------------------------------------------------------------------------------
 

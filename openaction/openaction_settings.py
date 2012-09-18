@@ -131,7 +131,7 @@ DEFAULT_FROM_EMAIL = "openaction@localhost.befair.it"
 NOTIFICATION_BACKENDS = (
     ("email", "notification.backends.email.EmailBackend"),
     ("facebook_inbox", "oa_notification.backends.facebook.FBInboxBackend"),
-    ("default", "oa_notification.backends.openaction.DefaultBackend"),
+    ("default", "oa_notification.backends.openaction.OpenActionDefaultBackend"),
     #("twitter_message", "oa_notification.backends.twitter.TWMessageBackend"),
 )
 

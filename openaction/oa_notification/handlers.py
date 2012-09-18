@@ -1,10 +1,10 @@
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver 
 
 from askbot.models import Post
-from notification.models import send
+from notification import models as notification
 
-@receiver(pre_save, sender=Post)
+@receiver(post_save, sender=Post)
 def notify_add_blog_post(sender, **kwargs):
     """ Notify to Action referrers and followers that a new post 
     has been added to the Action blog
@@ -22,23 +22,28 @@ def notify_add_blog_post(sender, **kwargs):
 
     QUESTION: should we pass the referrer who created the blog post as the 
     sender of the notice (in sender=)?
+    ANSWER: no, the sender is always "the system"
     """
 
-    post = kwargs['instance']
+    if kwargs['created']:
+        post = kwargs['instance']
 
-    if post.is_answer():
-        action = post.thread.action
+        # This is a generic Post post_save handler, 
+        # so we have to check if it is an answer
+        if post.is_answer():
 
-        referrers = action.referrers
-        followers = action.thread.followed_by.objects.all()
-        # recipients
-        users = referrers.extend(followers)
-        
-        send(users=users, 
-            label="action_make_notice", 
-            extra_context=None, 
-            on_site=True, 
-            sender=None, 
-            now=True
-        )
+            action = post.thread.action
+
+            referrers = action.referrers
+            followers = action.thread.followed_by.all()
+            # recipients
+            users = referrers | followers
+            
+            notification.send(users=users, 
+                label="action_make_notice", 
+                extra_context=None, 
+                on_site=True, 
+                sender=None, 
+                now=True
+            )
  
