@@ -3,7 +3,7 @@
 """
 
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
 
 from askbot.models import Thread, Vote, User, Post
@@ -114,9 +114,12 @@ def vote_check_before_save(sender, **kwargs):
             #WAS: raise PermissionDenied("Cannot be referred by yourself")
             raise exceptions.InvalidReferralError()
 
-@receiver(pre_save, sender=User)
+@receiver(post_save, sender=User)
 def user_set_notice_settings(sender, **kwargs):
- 
+    """ Create a NoticeSetting instance for the User, using default (openaction) 
+    backend
+    """
+
     user = kwargs['instance']
 
     #default is openaction backend
