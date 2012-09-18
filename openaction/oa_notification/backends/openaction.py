@@ -1,6 +1,9 @@
-from notification.backends.base import BaseBackend
+from django.template.loader import render_to_string
+from django.template import Context
 
 from oa_notification.models import UserNotice
+
+from notification.backends.base import BaseBackend
 
 class OpenActionDefaultBackend(BaseBackend):
 
@@ -14,10 +17,30 @@ class OpenActionDefaultBackend(BaseBackend):
 
         # Inspired from django-notification-brosner.backends.EmailBackend
         # 1. Get formatted messages
+        context = Context({
+            "recipient": recipient,
+            "sender": sender,
+            "notice": ugettext(notice_type.display),
+        })
+        context.update(extra_context)
+
+        messages = self.get_formatted_messages((
+            "short.txt",
+            "full.txt"
+        ), notice_type.label, context)
+
         # TODO: Matteo
         # 2. Render them with on-site site-wide notification templates
+        subject = render_to_string("notification/on_site_notice_subject.txt", {
+            "message": messages["short.txt"],
+        }, context))
+        
+        text = render_to_string("notification/on_site_notice_text.txt", {
+            "message": messages["full.txt"],
+        }, context)
+
+        notice_text = u"%s%s" % (subject, text)
         # TODO: Matteo
         # 3. Deliver notice = save new notice for User 'recipient'
-
         UserNotice.objects.create(user=recipient, text=notice_text)
         
