@@ -41,21 +41,22 @@ TODO
 * inserire un controllo che logghi il caso in cui un utente voti con se stesso come referente v
 * inserire campo 'is_deleted' nel modello ActionCategory v
 * nessuna operazione è eseguibile sulla Action se questa è in stato 'canceled' --> implementare controlli nelle estensioni di askbot (asserts e pre_save) v
-* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). 
+* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). v 
 
+* Creare una nuova a applicazione (organization) con tre modelli ( vedere documento di analisi) v
 * creare una vista, relativa al modello NoticeSetting, che aggiunga nuovi tipi di notifiche relative ad un particolare utente e collegate ad uno o piu backends
 * [non prioritario] modifica dei tag di una azione: i referrers (e di conseguenza i moderatori) possono modificare i tag di una Action.
-* Creare una nuova a applicazione (organization) con tre modelli ( vedere documento di analisi) v
 
-* rinominare l'applicazione 'connection' in 'organization'
-* spostare UserNotice in oa_notification/models.py
-* implementare una gestione di segnale che alla creazione di un post nel blog nella post_save del modello Post (controllando che l'istanza sia di tipo answer) setta i referrers ed i followers della action --> in oa_notification/handlers.py 
-* nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True
+* rinominare l'applicazione 'connection' in 'organization' v
+* spostare UserNotice in oa_notification/models.py v
+* implementare una gestione di segnale che alla creazione di un post nel blog nella post_save del modello Post (controllando che l'istanza sia di tipo answer) prenda i referrers ed i followers della action e invii loro una notifica --> in oa_notification/handlers.py v
+* nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True v
+* Implementare il backend di openaction --> eredita da notification.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) v
+
+
 * TODO : controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 
-* Implementare il backand di openaction --> eredita da noticication.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) 
-
-
-
+* [non prioritario] implementare generiche viste per il modello UserNotice (List/Add/Edit/Delete)
+* [non prioritario] testare l'aggiunta dei tags in fase di creazione del blogpost
 
 * [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?:
     viste:
