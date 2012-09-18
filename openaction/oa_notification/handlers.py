@@ -51,4 +51,26 @@ def notify_add_blog_post(sender, **kwargs):
                 sender=None, 
                 now=True
             )
- 
+
+@receiver(post_save, sender=Vote)
+def notify_user_join_same_action(sender, **kwargs):
+
+    vote = kwargs['instance']
+
+    if vote.voted_post.is_question():
+
+        action = vote.voted_post
+        user_voter = vote.user
+
+        extra_content = ({
+            "action" : action,
+            "voter" : user_voter
+        })
+        
+        notification.send(users=action.voters, 
+            label="user_join_same_action", 
+            extra_context=extra_context, 
+            on_site=True, 
+            sender=None, 
+            now=True
+        )
