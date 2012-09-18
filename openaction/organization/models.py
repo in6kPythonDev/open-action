@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from askbot.models import User
 
 from external_resource.models import ExternalResource
 
