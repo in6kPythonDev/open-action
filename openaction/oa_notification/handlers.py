@@ -38,10 +38,15 @@ def notify_add_blog_post(sender, **kwargs):
             followers = action.thread.followed_by.all()
             # recipients
             users = referrers | followers
-            
+
+            extra_context = ({
+                "blog_post" : post,
+                "action" : action
+            })
+
             notification.send(users=users, 
                 label="action_make_notice", 
-                extra_context=None, 
+                extra_context=extra_context, 
                 on_site=True, 
                 sender=None, 
                 now=True
