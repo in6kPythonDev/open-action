@@ -35,7 +35,7 @@ def notify_add_blog_post(sender, **kwargs):
         users = referrers.extend(followers)
         
         send(users=users, 
-            label="referrer_comment_same_blog_post", 
+            label="action_make_notice", 
             extra_context=None, 
             on_site=True, 
             sender=None, 
