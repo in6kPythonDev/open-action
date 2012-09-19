@@ -54,23 +54,53 @@ def notify_add_blog_post(sender, **kwargs):
 
 @receiver(post_save, sender=Vote)
 def notify_user_join_same_action(sender, **kwargs):
+    """ Notify to the users who woted an Action that 
+    another User has voted it. """
 
-    vote = kwargs['instance']
+    if kwargs['created']:
+        vote = kwargs['instance']
+        post = vote.voted_post
 
-    if vote.voted_post.is_question():
+        if post.is_question():
+            voter = vote.user
 
-        action = vote.voted_post
-        user_voter = vote.user
+            extra_content = ({
+                "user" : voter
+                "action" : action,
+            })
+            #recipients
+            users = action.voters
+            
+            notification.send(users=users, 
+                label="user_join_same_action", 
+                extra_context=extra_context, 
+                on_site=True, 
+                sender=None, 
+                now=True
+            )
 
-        extra_content = ({
-            "action" : action,
-            "voter" : user_voter
-        })
-        
-        notification.send(users=action.voters, 
-            label="user_join_same_action", 
-            extra_context=extra_context, 
-            on_site=True, 
-            sender=None, 
-            now=True
-        )
+@receiver(post_save, sender=Post)
+def notify_user_comment_your_action(sender, **kwargs):
+    """ Notify that a user commented an Action to its owners """
+
+    if kwargs['created']:
+        post = kwargs['instance']
+
+        if post.is_comment_to_action():
+            commenter = post.author
+            action = post.thread.action
+
+            extra_content = ({
+                "user" : commenter
+                "action" : action
+            }) 
+            #recipients
+            users = post.thread.action.referrers
+
+            notification.send(users=users,
+                label="user_comment_your_action",
+                extra_context=extra_context,
+                on_site=True, 
+                sender=None, 
+                now=True
+            )
