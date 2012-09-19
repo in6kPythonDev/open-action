@@ -33,7 +33,6 @@ class PostExtension(ModelExtender):
  
     ext_prefix = '_askbot_ext_'
 
-    @property
     def _askbot_ext_is_comment_to_action(self):
         """ Check if the Post is a comment of a question.
         

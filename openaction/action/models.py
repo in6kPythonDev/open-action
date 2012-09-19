@@ -9,7 +9,7 @@ from base.models import Resource
 from base.utils import get_resource_icon_path
 
 from action import const, exceptions, tokens
-from action.signals import action_get_level_step
+from action.signals import post_action_status_update
 
 import askbot_extensions.utils
 import logging, datetime

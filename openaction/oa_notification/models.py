@@ -1,5 +1,7 @@
 from django.db import models
 from askbot.models import User
+#Matteo
+from django.utils.translation import ugettext as _
 
 from django.db.models.signals import pre_save
 from django.contrib.auth.models import User

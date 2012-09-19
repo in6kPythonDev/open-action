@@ -5,7 +5,7 @@ from askbot.models import Post
 from askbot.models.repute import Vote
 from notification import models as notification
 from action.models import Action
-from action.signals import action_get_level_step
+from action.signals import post_action_status_update
 
 @receiver(post_save, sender=Post)
 def notify_add_blog_post(sender, **kwargs):
@@ -63,13 +63,14 @@ def notify_user_join_same_action(sender, **kwargs):
     if kwargs['created']:
         vote = kwargs['instance']
         post = vote.voted_post
+        action = post.thread.action
 
         if post.is_question():
             voter = vote.user
 
-            extra_content = ({
-                "user" : voter
-                "action" : action,
+            extra_context = ({
+                "user" : voter,
+                "action" : action 
             })
             #recipients
             users = action.voters
@@ -94,7 +95,7 @@ def notify_user_comment_your_action(sender, **kwargs):
             action = post.thread.action
 
             extra_content = ({
-                "user" : commenter
+                "user" : commenter,
                 "action" : action
             }) 
             #recipients
@@ -109,7 +110,7 @@ def notify_user_comment_your_action(sender, **kwargs):
             )
 
 #@receiver(action_get_level_step, sender=Action)
-@receiver(action_get_level_step)
+@receiver(post_action_status_update, sender=Action)
 def notify_action_get_level_step(sender, **kwargs):
     """ Notify two events:
 
@@ -123,16 +124,17 @@ def notify_action_get_level_step(sender, **kwargs):
  
     #1 joined action reached a level step
     action = sender
-    status = kwargs['status']
+    status = kwargs['old_status']
 
     print "\n\n------action:%s status:%s\n\n" % (action,status) 
 
-    extra_content = ({
+    extra_context = ({
         "action" : action,
         "status" : status
     }) 
     #recipients
     users = action.voters
+    print "\n\nRecipients: %s" % users
 
     notification.send(users=users,
         label="joined_action_get_level_step",

@@ -11,8 +11,11 @@ from askbot.models import Post, User
 from askbot.models.repute import Vote
 
 from action import const, exceptions
-from oa_notification.models import UserNotice
-from action.tests import OpenActionViewTestCase, ActionViewTest
+from oa_notification.models import *
+from action.tests import ActionViewTest
+#signals handling
+from action.signals import post_action_status_update
+from oa_notification.handlers import notify_action_get_level_step
 
 from lib import views_support
 
@@ -110,6 +113,13 @@ import os, urllib2
 #---------------------------------------------------------------------------------
 
 class OaNotificationTest(ActionViewTest):
+
+    def setUp(self):
+        super(ActionViewTest, self).setUp()
+        #manually connect signal to handler 
+        post_action_status_update.connect(notify_action_get_level_step)
+        #manually create notice types
+        create_notice_types("","","")
 
 #-----------------TESTS----------------------------------------------------------
 
