@@ -9,6 +9,7 @@ from base.models import Resource
 from base.utils import get_resource_icon_path
 
 from action import const, exceptions, tokens
+from action.signals import action_get_level_step
 
 import askbot_extensions.utils
 import logging, datetime
@@ -71,6 +72,7 @@ class Action(models.Model, Resource):
     def update_status(self, value):
         """ Update status and save it """
 
+        old_status = self.status
         #TODO: upgrade ACTION_STATUS[key] -> ACTION_STATUS_key
         if value == const.ACTION_STATUS['victory']:
             self.victory = True
@@ -91,6 +93,10 @@ class Action(models.Model, Resource):
             self.question.save()
         else:
             raise ValueError("Invalid status %s for action %s" % (value, self))
+
+        post_action_status_update.send(sender=self,
+            old_status=old_status
+        )
 
     @property
     def question(self):

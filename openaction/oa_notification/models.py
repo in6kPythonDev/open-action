@@ -77,7 +77,7 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
         _("an user sent you a message about your action"), default=2
     )
 
-    # Mail notification: category B
+    # notification: category B
     notification.create_notice_type(
         "user_join_same_action", _("Action Joined"),
         _("a user joined the same action you also have joined"), default=2
@@ -94,8 +94,8 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
     )
 
     notification.create_notice_type(
-        "local_politician_answer", _("Politician Answered"),
-        _("a local politician answered about an action"), default=2
+        "politician_answer", _("Politician Answered"),
+        _("a politician expressed an opinion about an action"), default=2
     )
 
     notification.create_notice_type(
@@ -109,8 +109,8 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
     )
 
     notification.create_notice_type(
-        "local_action_get_level_step", _("Level Step Reached"),
-        _("a local action reached a level step"), default=2,
+        "joined_action_get_level_step", _("Level Step Reached"),
+        _("a joined action reached a level step"), default=2,
     )
 
     notification.create_notice_type(
@@ -124,7 +124,7 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
     )
 
     notification.create_notice_type(
-        "association_public_something", _("Publication Created"),
+        "association_publish_something", _("Publication Created"),
         _("an association you're following published something"), default=2
     )
 

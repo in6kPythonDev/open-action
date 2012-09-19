@@ -2,7 +2,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver 
 
 from askbot.models import Post
+from askbot.models.repute import Vote
 from notification import models as notification
+from action.models import Action
+from action.signals import action_get_level_step
 
 @receiver(post_save, sender=Post)
 def notify_add_blog_post(sender, **kwargs):
@@ -104,3 +107,39 @@ def notify_user_comment_your_action(sender, **kwargs):
                 sender=None, 
                 now=True
             )
+
+#@receiver(action_get_level_step, sender=Action)
+@receiver(action_get_level_step)
+def notify_action_get_level_step(sender, **kwargs):
+    """ Notify two events:
+
+    * a joined action reached a level step: this is notified 
+    to the voters of the Action;
+    * a favourite topic action reached a level step: this is
+    notified to the user who are not voters of the Action,
+    but are voters of an Action who shares a category with
+    the former
+    """
+ 
+    #1 joined action reached a level step
+    action = sender
+    status = kwargs['status']
+
+    print "\n\n------action:%s status:%s\n\n" % (action,status) 
+
+    extra_content = ({
+        "action" : action,
+        "status" : status
+    }) 
+    #recipients
+    users = action.voters
+
+    notification.send(users=users,
+        label="joined_action_get_level_step",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
+
+    #2 favourite topic action reached a level step

@@ -30,7 +30,25 @@ Thread.add_to_class('ext_noattr', ThreadExtension())
 #--------------------------------------------------------------------------------
 
 class PostExtension(ModelExtender):
-    pass
+ 
+    ext_prefix = '_askbot_ext_'
+
+    @property
+    def _askbot_ext_is_comment_to_action(self):
+        """ Check if the Post is a comment of a question.
+        
+        If the post is a question, self.get_parent_post()
+        returns None anf an AttributeError has to be catched
+        (the method will then return False)
+        """
+        try:
+            rv = self.is_comment() and self.get_parent_post().is_question()
+        except Post.AttributeError as e:
+            rv = False
+        
+        return rv 
+
+Post.add_to_class('ext_noattr', PostExtension())
 
     
 #TODO TOTHINK if we could enlarge even the summary field...
