@@ -1,6 +1,7 @@
 from django.db import models
-from askbot.models import User
+from django.core.urlresolvers import reverse
 
+from askbot.models import User
 from external_resource.models import ExternalResource
 
 class Organization(models.Model):
@@ -16,11 +17,18 @@ class Organization(models.Model):
     def representatives(self):
       return self.user_set.filter(is_representative=True) 
 
+    @property
+    def followers(self):
+      return self.user_set.filter(is_follower=True)
+
+    def get_absolute_url(self):
+        return reverse("org-detail", args=(self.pk,))
+
 #--------------------------------------------------------------------------------
 
 class UserOrgMap(models.Model):
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name="organization_set")
     org = models.ForeignKey(Organization, related_name="user_set")
     grant_privacy_access = models.BooleanField(default=False)
     is_representative = models.BooleanField(default=False)
