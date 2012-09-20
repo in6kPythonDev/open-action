@@ -1,7 +1,6 @@
-from django.views.generic.detail import DetailView,SingleObjectMixin
-from django.views.generic.edit import FormView, CreateView, UpdateView
+from django.views.generic.detail import DetailView, SingleObjectMixin
+from django.views.generic.edit import FormView, UpdateView
 from django.views.generic import View
-from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.db import transaction
