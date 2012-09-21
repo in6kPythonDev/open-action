@@ -11,6 +11,7 @@ from base.utils import get_resource_icon_path
 
 from action import const, exceptions, tokens
 from action.signals import post_action_status_update
+from organization.models import Organization
 
 import askbot_extensions.utils
 import logging, datetime, os
@@ -37,6 +38,9 @@ class Action(models.Model, Resource):
     _threshold = models.PositiveIntegerField(blank=True, null=True)
 
     created_by = models.ForeignKey(User, related_name="created_action_set")
+    in_nomine_org = models.ForeignKey(Organization, null=True, blank=True,
+        help_text="azione aperta per conto dell'associazione..."
+    )
 
     moderator_set = models.ManyToManyField(User, null=True, blank=True, related_name="moderated_action_set")
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
