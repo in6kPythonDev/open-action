@@ -187,17 +187,18 @@ class Action(models.Model, Resource):
         self.thread.title = value
         self.thread.save()
     
-    @property
-    def description(self):
-        """Description is a quite short summary of the action"""
-
-        # TODO TOTHINK 
-        # Askbot summary is 300 chars long, we should enlarge it...
-        return self.question.summary
-
-    def update_description(self, value):
-        self.question.summary = value
-        self.question.save()
+    # AGREED: no need for description in this version of OpenAction
+#    @property
+#    def description(self):
+#        """Description is a quite short summary of the action"""
+#
+#        # TODO TOTHINK 
+#        # Askbot summary is 300 chars long, we should enlarge it...
+#        return self.question.summary
+#
+#    def update_description(self, value):
+#        self.question.summary = value
+#        self.question.save()
     
     @property
     def score(self):
