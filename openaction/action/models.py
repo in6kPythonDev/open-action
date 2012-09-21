@@ -1,6 +1,7 @@
 from django.db import models, transaction
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
+from django.template.defaultfilters import slugify
 
 from askbot.models import Thread, User
 from askbot.models.post import Post
@@ -12,7 +13,7 @@ from action import const, exceptions, tokens
 from action.signals import post_action_status_update
 
 import askbot_extensions.utils
-import logging, datetime
+import logging, datetime, os
 
 from django.conf import settings
 
@@ -20,6 +21,12 @@ log = logging.getLogger(settings.PROJECT_NAME)
 
 
 #--------------------------------------------------------------------------------
+
+def get_action_image_path(instance, filename):
+
+    ext = filename.split('.')[-1]
+    base_path = "action_images"
+    return os.path.join(base_path, str(instance.pk), slugify(instance.bare_title), ext)
 
 class Action(models.Model, Resource):
 
@@ -36,6 +43,8 @@ class Action(models.Model, Resource):
     category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
     media_set = models.ManyToManyField('Media', null=True, blank=True)
+
+    image = models.ImageField(null=True, blank=True, upload_to=get_action_image_path)
 
     class Meta:
         get_latest_by = "thread"
