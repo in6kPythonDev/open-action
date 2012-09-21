@@ -1,10 +1,9 @@
 from django.template.loader import render_to_string
 from django.template import Context
 
-#Import in backend.deliver() to avoid circular import from notification
-#KO: from oa_notification.models import UserNotice
-
 from notification.backends.base import BaseBackend
+#TODO: Matteo backend makes use of notification.Notice instead of UserNotice
+from notification.models import Notice
 
 class OpenActionDefaultBackend(BaseBackend):
 

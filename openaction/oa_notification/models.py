@@ -11,6 +11,7 @@ from oa_notification import consts
 
 
 class UserNotice(models.Model):
+    """TODO: Matteo - remove"""
 
     user = models.ForeignKey(User)
     text = models.TextField()
