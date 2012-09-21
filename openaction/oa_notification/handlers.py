@@ -1,11 +1,11 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver 
 
-from askbot.models import Post
+from askbot.models import Post, User
 from askbot.models.repute import Vote
 from notification import models as notification
 from action.models import Action
-from action.signals import post_action_status_update
+from action.signals import post_action_status_update 
 
 @receiver(post_save, sender=Post)
 def notify_add_blog_post(sender, **kwargs):
@@ -59,6 +59,7 @@ def notify_add_blog_post(sender, **kwargs):
 def notify_user_join_same_action(sender, **kwargs):
     """ Notify to the users who woted an Action that 
     another User has voted it. """
+    print "notify_user_join_same_action %s %s" % (sender, kwargs)
 
     if kwargs['created']:
         vote = kwargs['instance']
@@ -73,11 +74,16 @@ def notify_user_join_same_action(sender, **kwargs):
                 "action" : action 
             })
             #recipients
-            users = action.voters
-            
+            #for user in action.voters:
+            #    print "user: %s" % User.objects.get(username=user.get('user__username'))
+            users = []
+            for user in action.voters:
+                users.append(User.objects.get(username=user.get('user__username')))
+        
+            print "\nnotification.send users %s\n" % users
             notification.send(users=users, 
-                label="user_join_same_action", 
-                extra_context=extra_context, 
+                label="user_join_same_action",
+                extra_context=extra_context,
                 on_site=True, 
                 sender=None, 
                 now=True
@@ -145,3 +151,24 @@ def notify_action_get_level_step(sender, **kwargs):
     )
 
     #2 favourite topic action reached a level step
+
+@receiver(post_save, sender=User)
+def notify_user_comment_your_action(sender, **kwargs):
+    """ Indicates for the User whether to send notifications
+    of a given type to the openaction default medium. """
+
+    if kwargs['created']:
+        user = kwargs['instance']
+
+        if user.is_active:
+
+            for notice_type in notification.NoticeType.objects.all():
+                obj, created = notification.NoticeSetting.objects.get_or_create(
+                    user=user, 
+                    notice_type=notice_type, 
+                    medium="openaction", 
+                    send=True
+                )
+                print "Adding NoticeSetting of type %s to user %s " % (notice_type, 
+                    user
+                ) 
