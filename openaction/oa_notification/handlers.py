@@ -7,6 +7,8 @@ from notification import models as notification
 from action.models import Action
 from action.signals import post_action_status_update 
 
+from oa_notification import consts
+
 @receiver(post_save, sender=Post)
 def notify_add_blog_post(sender, **kwargs):
     """ Notify to Action referrers and followers that a new post 
@@ -48,15 +50,16 @@ def notify_add_blog_post(sender, **kwargs):
             })
 
             notification.send(users=users, 
-                label="action_make_notice", 
+                label=consts.ACTION_MAKE_BLOGPOST, 
                 extra_context=extra_context, 
                 on_site=True, 
                 sender=None, 
                 now=True
             )
 
+#TODO: Matteo dedicated signal: post_declared_vote_add
 @receiver(post_save, sender=Vote)
-def notify_user_join_same_action(sender, **kwargs):
+def notify_user_join_same_action(sender, **kwargs): #TODO Matteo your action
     """ Notify to the users who woted an Action that 
     another User has voted it. """
     print "notify_user_join_same_action %s %s" % (sender, kwargs)
@@ -98,7 +101,7 @@ def notify_user_comment_your_action(sender, **kwargs):
 
         if post.is_comment_to_action():
             commenter = post.author
-            action = post.thread.action
+            action = post.thread.action #TODO Matteo: post.action
 
             extra_content = ({
                 "user" : commenter,
@@ -117,6 +120,7 @@ def notify_user_comment_your_action(sender, **kwargs):
 
 #@receiver(action_get_level_step, sender=Action)
 @receiver(post_action_status_update, sender=Action)
+#TODO Matteo: rename post_status_update
 def notify_action_get_level_step(sender, **kwargs):
     """ Notify two events:
 
@@ -134,9 +138,11 @@ def notify_action_get_level_step(sender, **kwargs):
 
     print "\n\n------action:%s status:%s\n\n" % (action,status) 
 
+    #TODO: Matteo switch status values (if READY --> ... else: TODO placeholder)
+
     extra_context = ({
         "action" : action,
-        "status" : status
+        "old_status" : status
     }) 
     #recipients
     users = action.voters

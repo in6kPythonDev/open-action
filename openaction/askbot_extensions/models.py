@@ -45,11 +45,11 @@ class PostExtension(AskbotModelExtender):
         returns None anf an AttributeError has to be catched
         (the method will then return False)
         """
-        try:
-            rv = self.is_comment() and self.get_parent_post().is_question()
-        except Post.AttributeError as e:
-            rv = False
-        
+        rv = False
+        # Use parent.is_question is OK because we are sure that parent is not None
+        # (parent would be None if self.is_question())
+        if self.is_comment() and self.parent.is_question():
+            rv = True
         return rv 
 
     @property

@@ -1,6 +1,5 @@
 from django.db import models
 from askbot.models import User
-#Matteo
 from django.utils.translation import ugettext as _
 
 from django.db.models.signals import pre_save
@@ -8,6 +7,8 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver 
 
 from notification import models as notification
+from oa_notification import consts
+
 
 class UserNotice(models.Model):
 
@@ -40,8 +41,8 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
 
     # Mail notifications: category A
     notification.create_notice_type(
-        "action_make_notice", _("Notice Created"),
-        _("an action produced a notice"), default=2
+        consts.ACTION_MAKE_BLOGPOST, "Creata una nuova notizia",
+        "una azione ha prodotto una nuova notizia", default=2
     )
 
     notification.create_notice_type(
