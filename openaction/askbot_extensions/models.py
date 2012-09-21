@@ -82,16 +82,16 @@ def comment_check_before_save(sender, **kwargs):
     if post.is_comment():
         if post.thread.action.status in (
             action_const.ACTION_STATUS_DRAFT,
-            action_const.ACTION_STATUS.deleted,
+            action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     elif post.is_answer():
         if post.thread.action.status in (
             action_const.ACTION_STATUS_DRAFT,
-            action_const.ACTION_STATUS.deleted,
+            action_const.ACTION_STATUS_DELETED,
         ):
-            raise BlogpostActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+            raise exceptions.BlogpostActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
         
 
 @receiver(pre_save, sender=Vote)
@@ -210,7 +210,7 @@ class UserExtension(ModelExtender):
         """
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
-            action_const.ACTION_STATUS.deleted,
+            action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.BlogpostActionInvalidStatusException(action.status)
         if self not in action.referrers.all():
@@ -220,7 +220,7 @@ class UserExtension(ModelExtender):
         """Check permission. If invalid --> raise exception"""
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
-            action_const.ACTION_STATUS.deleted,
+            action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.FollowActionInvalidStatusException(action.status)
 
@@ -230,7 +230,7 @@ class UserExtension(ModelExtender):
         """Check permission. If invalid --> raise exception"""
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
-            action_const.ACTION_STATUS.deleted,
+            action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.ParanoidException()
         elif not self.is_following(action):

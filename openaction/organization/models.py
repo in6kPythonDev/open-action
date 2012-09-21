@@ -7,7 +7,7 @@ from external_resource.models import ExternalResource
 class Organization(models.Model):
 
     name = models.CharField(max_length=256)
-    external_resource = models.ForeignKey(ExternalResource)
+    external_resource = models.ForeignKey(ExternalResource, null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __unicode__(self):
