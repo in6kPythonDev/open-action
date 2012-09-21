@@ -13,6 +13,8 @@ from notification import models as notification
 
 from lib.djangolib import ModelExtender
 
+from askbot_extensions import managers
+
 
 #--------------------------------------------------------------------------------
 
@@ -77,6 +79,13 @@ Vote.add_to_class('ext_noattr', VoteExtension())
 Vote.add_to_class('referral', 
     models.ForeignKey(User, null=True, blank=True, help_text="voto suggerito da?")
 )
+Vote.add_to_class('is_anonymous', 
+    models.BooleanField(default=False, help_text="visibile pubblicamente o no?")
+)
+Vote.add_to_class('text', 
+    models.TextField(help_text="perché ho votato?")
+)
+Vote.add_to_class('objects', managers.VoteManager())
 
 #--------------------------------------------------------------------------------
 # Askbot signal handling
