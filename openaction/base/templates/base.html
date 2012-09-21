@@ -92,7 +92,6 @@
     <!-- /AREA-TITLE -->
 
     <!-- MAIN-NAVBAR -->
-    {% comment %}
     <div class="navbar">
       <div class="navbar-inner">
         <nav class="container-fluid" style="padding:0;">
@@ -119,7 +118,6 @@
         </nav>
       </div>
     </div>
-    {% endcomment %}
     <!-- /MAIN-NAVBAR -->
 
     {% block sub_nav %}{% endblock %}
@@ -133,7 +131,6 @@
   <!-- /MAIN-SECTION -->
 
   <!-- FOOTER-NAV -->
-  {% comment %}
   <footer class="navbar navbar-fixed-bottom">
     <div class="navbar-inner">
       <nav class="container-fluid" style="padding:0;">
@@ -152,17 +149,20 @@
           </li>
           <!-- TODO <li><a href="#">Società partecipate</a></li> -->
         </ul>
+        {%  comment %}
+        <form class="navbar-search pull-right" action="{{ haystack_search }}">
+          <input type="text" class="search-query" name="q" placeholder="Cerca nel sito">
+        </form>
+        {%  endcomment %}
       </nav>
     </div>
   </footer>
-  {% endcomment %}
   <!-- /FOOTER-NAV -->
 
 </div><!-- #wrapper -->
 
 {% block footer_js_includes %}{% endblock %}
 
-{% comment %}
 <script type="text/javascript">
 
     var _gaq = _gaq || [];
@@ -177,6 +177,5 @@
     })();
 
 </script>
-{% endcomment %}
 </body>
 </html>

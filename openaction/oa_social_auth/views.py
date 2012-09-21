@@ -42,19 +42,35 @@ def logout(request):
     return HttpResponseRedirect('/')
 
 
-def form(request):
-    if request.method == 'POST' and request.POST.get('username'):
-        name = setting('SOCIAL_AUTH_PARTIAL_PIPELINE_KEY', 'partial_pipeline')
-        request.session['saved_username'] = request.POST['username']
-        backend = request.session[name]['backend']
-        return redirect('socialauth_complete', backend=backend)
-    return render_to_response('form.html', {}, RequestContext(request))
+# Taken from OpenMunicipio social_auth integration code (om_auth application)
+from users.forms import UserSocialRegistrationForm, ProfileSocialRegistrationForm
+
+def login_form(request):
+    """
+    When a user registers through a social network we need some
+    additional information.
+    """
+    error = None
+    if request.method == 'POST':
+        profile_form = ProfileSocialRegistrationForm(request.POST)
+        user_form = UserSocialRegistrationForm(request.POST)
+        if user_form.is_valid() and profile_form.is_valid():
+            session_variable = setting('SOCIAL_AUTH_PARTIAL_PIPELINE_KEY', 'partial_pipeline')
+            request.session['saved_username'] = user_form.cleaned_data['username']
+            #LF: request.session['saved_privacy_level'] = profile_form.cleaned_data['privacy_level']
+            #LF: request.session['saved_wants_newsletter'] = profile_form.cleaned_data['wants_newsletter']
+            request.session['saved_city'] = profile_form.cleaned_data['city']
+            backend = request.session[session_variable]['backend']
+            return redirect('socialauth_complete', backend=backend)
+        else:
+            error = _('Form is invalid')
+
+    user_form = UserSocialRegistrationForm()
+    profile_form = ProfileSocialRegistrationForm()
+    return render_to_response('login_form.html', {
+            'error': error,
+            'user_form': user_form,
+            'profile_form': profile_form,
+            }, RequestContext(request))
 
 
-def form2(request):
-    if request.method == 'POST' and request.POST.get('first_name'):
-        request.session['saved_first_name'] = request.POST['first_name']
-        name = setting('SOCIAL_AUTH_PARTIAL_PIPELINE_KEY', 'partial_pipeline')
-        backend = request.session[name]['backend']
-        return redirect('socialauth_complete', backend=backend)
-    return render_to_response('form2.html', {}, RequestContext(request))

@@ -1,0 +1,223 @@
+[
+    {
+        "pk": 1, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "admin", 
+            "first_name": "", 
+            "last_name": "", 
+            "is_active": true, 
+            "is_superuser": true, 
+            "is_staff": true, 
+            "last_login": "2012-05-11 00:08:36", 
+            "groups": [], 
+            "user_permissions": [], 
+            "password": "sha1$3710f$11f93491df60c5efdc4d23b36253ad5bb21926c3", 
+            "email": "admin@openpolis.it", 
+            "date_joined": "2012-03-20 17:32:01"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "mrossi",
+            "first_name": "Mario",
+            "last_name": "Rossi",
+            "is_active": true, 
+            "is_superuser": false, 
+            "is_staff": false, 
+            "last_login": "2012-03-20 17:37:42", 
+            "groups": [], 
+            "user_permissions": [], 
+            "password": "sha1$19aee$2505c68c5b3604cd20cb8a286961ef0578f07c13", 
+            "email": "flavia@openpolis.it",
+            "date_joined": "2012-03-20 17:37:29"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "editor", 
+            "first_name": "Editor", 
+            "last_name": "Editor", 
+            "is_active": true, 
+            "is_superuser": false, 
+            "is_staff": true, 
+            "last_login": "2012-05-10 23:49:12", 
+            "groups": [
+                1
+            ], 
+            "user_permissions": [], 
+            "password": "sha1$a0843$8a08c950b91d4edbf7fe1575acb6e985c8f3ec69", 
+            "email": "editor@openpolis.it", 
+            "date_joined": "2012-03-20 17:39:05"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "auth.user", 
+        "fields": {
+            "username": "udine", 
+            "first_name": "Comune", 
+            "last_name": "Udine", 
+            "is_active": true, 
+            "is_superuser": false, 
+            "is_staff": true, 
+            "last_login": "2012-05-11 00:13:03", 
+            "groups": [
+                3
+            ], 
+            "user_permissions": [], 
+            "password": "sha1$65c6c$255b7a6de04b86819fff6ae4915c95983074ce9e", 
+            "email": "", 
+            "date_joined": "2012-05-10 23:59:49"
+        }
+    },
+    {
+        "pk": 8,
+        "model": "auth.user",
+        "fields": {
+            "username": "gverdi",
+            "first_name": "Giuseppe",
+            "last_name": "Verdi",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": false,
+            "last_login": "2012-04-20 17:37:42",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$19aee$2505c68c5b3604cd20cb8a286961ef0578f07c13",
+            "email": "guglielmo@openpolis.it",
+            "date_joined": "2012-04-20 17:37:29"
+        }
+    },
+    {
+        "pk": 9,
+        "model": "auth.user",
+        "fields": {
+            "username": "gbianchi",
+            "first_name": "Giuseppe",
+            "last_name": "Bianchi",
+            "is_active": true,
+            "is_superuser": false,
+            "is_staff": false,
+            "last_login": "2012-05-10 17:37:42",
+            "groups": [],
+            "user_permissions": [],
+            "password": "sha1$19aee$2505c68c5b3604cd20cb8a286961ef0578f07c13",
+            "email": "flavia@openpolis.it",
+            "date_joined": "2012-05-10 17:37:29"
+        }
+    },
+
+    {
+        "pk": 1, 
+        "model": "users.userprofile", 
+        "fields": {
+            "city": "Circoscrizione 1",
+            "says_is_politician": false, 
+            "wants_newsletter": false, 
+            "privacy_level": 3, 
+            "person": null, 
+            "user": 3, 
+            "uses_nickname": true
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "users.userprofile", 
+        "fields": {
+            "city": "Circoscrizione 5",
+            "says_is_politician": true, 
+            "wants_newsletter": false, 
+            "privacy_level": 3, 
+            "person": null,
+            "user": 4,
+            "uses_nickname": false
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "users.userprofile", 
+        "fields": {
+            "city": "Circoscrizione 3",
+            "says_is_politician": true, 
+            "wants_newsletter": false, 
+            "privacy_level": 3, 
+            "person": null,
+            "user": 7,
+            "uses_nickname": false
+        }
+    },
+    {
+        "pk": 5,
+        "model": "users.userprofile",
+        "fields": {
+            "city": "Circoscrizione 4",
+            "says_is_politician": true,
+            "wants_newsletter": false,
+            "privacy_level": 3,
+            "person": null,
+            "user": 8,
+            "uses_nickname": false
+        }
+    },
+    {
+        "pk": 6,
+        "model": "users.userprofile",
+        "fields": {
+            "city": "Circoscrizione 5",
+            "says_is_politician": true,
+            "wants_newsletter": false,
+            "privacy_level": 3,
+            "person": null,
+            "user": 9,
+            "uses_nickname": true
+        }
+    },
+
+    {
+        "pk": 1, 
+        "model": "registration.registrationprofile", 
+        "fields": {
+            "activation_key": "ALREADY_ACTIVATED", 
+            "user": 3
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "registration.registrationprofile", 
+        "fields": {
+            "activation_key": "ALREADY_ACTIVATED", 
+            "user": 4
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "registration.registrationprofile", 
+        "fields": {
+            "activation_key": "ALREADY_ACTIVATED", 
+            "user": 7
+        }
+    },
+    {
+        "pk": 4,
+        "model": "registration.registrationprofile",
+        "fields": {
+            "activation_key": "ALREADY_ACTIVATED",
+            "user": 8
+        }
+    },
+    {
+        "pk": 5,
+        "model": "registration.registrationprofile",
+        "fields": {
+            "activation_key": "ALREADY_ACTIVATED",
+            "user": 9
+        }
+    }
+
+
+]

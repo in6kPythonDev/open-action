@@ -5,6 +5,31 @@ import settings
 #--------------------------------------------------------------------------------
 # Social auth authentication
 
+# Taken from open_municipio social-auth integration
+
+FACEBOOK_EXTENDED_PERMISSIONS = ['email'] # if this is missing, only username is retrieved
+SOCIAL_AUTH_COMPLETE_URL_NAME  = 'socialauth_complete'
+SOCIAL_AUTH_ASSOCIATE_URL_NAME = 'socialauth_associate_complete'
+SOCIAL_AUTH_RAISE_EXCEPTIONS = DEBUG
+SOCIAL_AUTH_PIPELINE = (
+    'social_auth.backends.pipeline.social.social_auth_user',
+    'social_auth.backends.pipeline.associate.associate_by_email',
+    'social_auth.backends.pipeline.misc.save_status_to_session',
+    'om_auth.pipeline.redirect_to_form',
+    'om_auth.pipeline.extra_data',
+    'social_auth.backends.pipeline.user.create_user',
+    'om_auth.pipeline.create_profile',
+    'social_auth.backends.pipeline.social.associate_user',
+    'social_auth.backends.pipeline.social.load_extra_data',
+    'social_auth.backends.pipeline.user.update_user_details',
+)
+
+AUTH_PROFILE_MODULE = 'users.UserProfile'
+
+
+# End "taken from"
+
+
 AUTHENTICATION_BACKENDS = (
     'social_auth.backends.twitter.TwitterBackend',
     'social_auth.backends.facebook.FacebookBackend',

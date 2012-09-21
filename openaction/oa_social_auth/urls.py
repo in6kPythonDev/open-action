@@ -3,7 +3,11 @@
 from django.conf.urls.defaults import patterns, url, include
 from django.contrib import admin
 
-from oa_social_auth.views import home, done, logout, error, form, form2
+# Example Django social-auth views
+from oa_social_auth.views import home, done, logout, error
+
+# New Django social-auth login forms
+from oa_social_auth.views import login_form
 from oa_social_auth.facebook import facebook_view
 #from app.vkontakte import vkontakte_view
 #from app.odnoklassniki import ok_app, ok_app_info
@@ -13,10 +17,9 @@ admin.autodiscover()
 urlpatterns = patterns('',
     url(r'^$', home, name='home'),
     url(r'^done/$', done, name='done'),
-    url(r'^error/$', error, name='error'),
+    url(r'^login-error/$', error, name='error'),
     url(r'^logout/$', logout, name='logout'),
-    url(r'^form/$', form, name='form'),
-    url(r'^form2/$', form2, name='form2'),
+    url(r'^login-form/$', login_form, name='login-form'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^fb/', facebook_view, name='fb_app'),
 #    url(r'^vk/', vkontakte_view, name='vk_app'),

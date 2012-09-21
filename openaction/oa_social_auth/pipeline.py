@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 def redirect_to_form(*args, **kwargs):
     if not kwargs['request'].session.get('saved_username') and \
        kwargs.get('user') is None:
-        return HttpResponseRedirect(reverse('form'))
+        return HttpResponseRedirect(reverse('login-form'))
 
 
 def username(request, *args, **kwargs):
