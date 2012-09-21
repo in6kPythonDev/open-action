@@ -204,8 +204,9 @@ class Action(models.Model, Resource):
 
     @property
     def voters(self):
-        """Return User queryset who votes this action."""
-        users_pk = self.votes.values_list('user__pk', flat=True).order_by('-voted_at') 
+        """Return User queryset containing users who declared their votes for this action."""
+        declared_votes = self.votes.declareds()
+        users_pk = declared_votes.values_list('user__pk', flat=True).order_by('-voted_at') 
         return User.objects.filter(pk__in=users_pk)
 
     @property
