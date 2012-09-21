@@ -39,3 +39,5 @@ class UserOrgMap(models.Model):
     self.org)
 
     
+    class Meta:
+        unique_together = (('user', 'org'),)
