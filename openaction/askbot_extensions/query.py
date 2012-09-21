@@ -23,3 +23,7 @@ class VoteQuerySet(QuerySet):
             kw.update({ 'action' : action })
 
         return self.filter(**kw)
+
+    def referred_by(self, referral):
+        """Get votes referred by the referral user"""
+        return self.filter(referral=referral)

@@ -359,6 +359,12 @@ class Action(models.Model, Resource):
             user, self
         ))
     
+    def users_impact_factor(self):
+        """Return a User queryset with annotation of action impact factor"""
+        # TODO: TOCACHE
+        return action.voters.annotate(local_impact_factor=models.Count('votes'))
+
+
 #WAS: This method is confusing: you do not need to know Action to comment a blog post.
 #WAS: Pretending to know action AND blog post could lead to incoherent situation.
 #WAS: If there is no needing to know a detail to do something, don't ask for the detail.

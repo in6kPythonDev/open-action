@@ -13,3 +13,7 @@ class VoteManager(repute.VoteManager):
     def declareds(self, user=None, action=None):
         """Declared is the opposite of anonymous"""
         return self.get_query_set().declareds(user=user, action=action)
+
+    def referred_by(self, referral):
+        """Get votes referred by the referral user"""
+        return self.get_query_set().referred_by(referral=referral)

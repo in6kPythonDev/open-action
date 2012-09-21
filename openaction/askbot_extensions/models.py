@@ -171,6 +171,19 @@ class UserExtension(AskbotModelExtender):
         """Unique resource name"""
         return '%s/%s' % (self.resource_type, self.pk)
 
+    def action_impact_factor(self, action):
+        """Return impact factor for a specific action."""
+        # TODO: TOCACHE
+        return action.votes.referred_by(referral=self).count()
+
+    def global_impact_factor(self):
+        """Return global impact factor of this user.
+
+        How many votes have been done thanks to this user?
+        """
+        # TODO: TOCACHE
+        return Vote.objects.referred_by(referral=self).count()
+
     def _askbot_ext_assert_can_vote_action(self, action):
         """Check permission. If invalid --> raise exception"""
         # QUESTION: should an action which reached 'victory' status
