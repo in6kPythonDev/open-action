@@ -30,10 +30,9 @@ Thread.add_to_class('ext_noattr', ThreadExtension())
 #--------------------------------------------------------------------------------
 
 class PostExtension(ModelExtender):
+    # AGREED: no need for summary/description field for an action. 
+    # So no need to update Post model
     pass
-
-    
-#TODO TOTHINK if we could enlarge even the summary field...
 
 #--------------------------------------------------------------------------------
 

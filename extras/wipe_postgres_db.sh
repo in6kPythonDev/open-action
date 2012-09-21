@@ -21,16 +21,16 @@ function settings_var {
   (cd $DJANGOPROJ_HOME; (echo "from settings import *"; echo "print $name" ) |python )
 }
 
-db_name="$(settings_var 'DATABASES["default"]["NAME"]')"
-db_user="$(settings_var 'DATABASES["default"]["USER"]')"
-db_pass="$(settings_var 'DATABASES["default"]["PASSWORD"]')"
+db_name="$(settings_var 'DATABASE_NAME')"
+db_user="$(settings_var 'DATABASE_USER')"
+db_pass="$(settings_var 'DATABASE_PASSWORD')"
 db_pass="${db_pass:-''}"
 
 read -p "I am going to WIPE DB=$db_name. Are you sure? [y/N]" choice 
 
 if [ "x$choice" == "xy" ]; then
 
-    cat << EOF | python $DJANGOPROJ_HOME/manage.py dbshell --database=super --settings=$DJANGO_SETTINGS_MODULE
+    cat << EOF | python $DJANGOPROJ_HOME/manage.py dbshell --settings=$DJANGO_SETTINGS_MODULE
 \\c postgres
 DROP DATABASE $db_name;
 create role $db_user  login password $db_pass;
