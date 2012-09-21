@@ -53,6 +53,8 @@ TODO
 * nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True v
 * Implementare il backend di openaction --> eredita da notification.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) v
 
+* Creare una view in organization per implementare la follow --> creazione del mapping di tipo follow tra utente e associazione 
+* Creare una property in organization che ritorni il QS degli utenti che seguono l'associazione
 
 * TODO : controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 
 * [non prioritario] implementare generiche viste per il modello UserNotice (List/Add/Edit/Delete)

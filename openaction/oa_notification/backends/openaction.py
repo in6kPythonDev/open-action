@@ -1,11 +1,13 @@
 from django.template.loader import render_to_string
 from django.template import Context
 
-from oa_notification.models import UserNotice
+#from oa_notification.models import UserNotice
 
 from notification.backends.base import BaseBackend
 
 class OpenActionDefaultBackend(BaseBackend):
+
+    spam_sensitivity = 2
 
     def deliver(self, recipient, sender, notice_type, extra_content):
         """ Deliver a notice to a User 
@@ -33,7 +35,7 @@ class OpenActionDefaultBackend(BaseBackend):
         # 2. Render them with on-site site-wide notification templates
         subject = render_to_string("notification/on_site_notice_subject.txt", {
             "message": messages["short.txt"],
-        }, context))
+        }, context)
         
         text = render_to_string("notification/on_site_notice_text.txt", {
             "message": messages["full.txt"],
@@ -42,5 +44,6 @@ class OpenActionDefaultBackend(BaseBackend):
         notice_text = u"%s%s" % (subject, text)
         # TODO: Matteo
         # 3. Deliver notice = save new notice for User 'recipient'
+        from oa_notification.models import UserNotice
         UserNotice.objects.create(user=recipient, text=notice_text)
         
