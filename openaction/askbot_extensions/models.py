@@ -77,13 +77,13 @@ class VoteExtension(AskbotModelExtender):
 Vote.add_to_class('ext_noattr', VoteExtension())
 
 Vote.add_to_class('referral', 
-    models.ForeignKey(User, null=True, blank=True, help_text="voto suggerito da?")
+    models.ForeignKey(User, null=True, blank=True, help_text="voto suggerito da...")
 )
 Vote.add_to_class('is_anonymous', 
-    models.BooleanField(default=False, help_text="visibile pubblicamente o no?")
+    models.BooleanField(default=False, help_text="visibile pubblicamente o no")
 )
 Vote.add_to_class('text', 
-    models.TextField(help_text="perché ho votato?")
+    models.TextField(help_text="motivazione del voto")
 )
 Vote.add_to_class('objects', managers.VoteManager())
 
@@ -159,6 +159,18 @@ def vote_check_before_save(sender, **kwargs):
 
 
 class UserExtension(AskbotModelExtender):
+
+    @ClassProperty
+    @classmethod
+    def _askbot_ext_resource_type(cls):
+        """String representation of resource type"""
+        
+        return cls.__name__.lower()
+
+    @property
+    def _askbot_ext_urn(self):
+        """Unique resource name"""
+        return '%s/%s' % (self.resource_type, self.pk)
 
     def _askbot_ext_assert_can_vote_action(self, action):
         """Check permission. If invalid --> raise exception"""
