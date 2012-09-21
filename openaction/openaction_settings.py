@@ -56,6 +56,7 @@ INSTALLED_APPS.append('action')
 INSTALLED_APPS.append('social_auth')
 INSTALLED_APPS.append('oa_social_auth')
 INSTALLED_APPS.append('external_resource')
+INSTALLED_APPS.append('friendship')
 
 
 PROJECT_NAME = "openaction"

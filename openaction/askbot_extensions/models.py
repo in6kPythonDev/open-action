@@ -10,6 +10,7 @@ from askbot.models import Thread, Vote, User, Post
 from action import exceptions 
 from action import const as action_const
 from notification import models as notification
+from friendship import models as friendship
 
 from lib.djangolib import ModelExtender
 
@@ -279,6 +280,16 @@ class UserExtension(AskbotModelExtender):
     def _askbot_ext_is_following_action(self, action=None):
         #WAS: return action.thread.followed_by.filter(id=self.id).exists() 
         return action.thread.is_followed_by(self)
+
+    def _askbot_ext_friends(self):
+        """Return User list of friendship friends (symmetric).
+
+        TODO: return followers (asymmetric)"""
+
+        symmetric_friends = friendship.Friend.objects.friends(user=self)
+        # TODO: asymmetric_friends = friendship.Follow.objects.followers(user=self)
+        return symmetric_friends
+
 
 User.add_to_class('ext_noattr', UserExtension())
 
