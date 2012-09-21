@@ -16,9 +16,13 @@ from lib.djangolib import ModelExtender
 
 #--------------------------------------------------------------------------------
 
-class ThreadExtension(ModelExtender):
+class AskbotModelExtender(ModelExtender):
 
     ext_prefix = '_askbot_ext_'
+
+#--------------------------------------------------------------------------------
+
+class ThreadExtension(AskbotModelExtender):
 
     @property
     def _askbot_ext_question(self):
@@ -29,7 +33,7 @@ Thread.add_to_class('ext_noattr', ThreadExtension())
 
 #--------------------------------------------------------------------------------
 
-class PostExtension(ModelExtender):
+class PostExtension(AskbotModelExtender):
  
     ext_prefix = '_askbot_ext_'
 
@@ -47,6 +51,11 @@ class PostExtension(ModelExtender):
         
         return rv 
 
+    @property
+    def _askbot_ext_action(self):
+        """Encapsulation of action reference"""
+        return self.thread.action
+
 Post.add_to_class('ext_noattr', PostExtension())
 
 #--------------------------------------------------------------------------------
@@ -56,8 +65,17 @@ Post.add_to_class('ext_noattr', PostExtension())
 
 #--------------------------------------------------------------------------------
 
+class VoteExtension(AskbotModelExtender):
+
+    @property
+    def _askbot_ext_action(self):
+        """Encapsulation of action reference"""
+        return self.voted_post.action
+
+Vote.add_to_class('ext_noattr', VoteExtension())
+
 Vote.add_to_class('referral', 
-    models.ForeignKey(User, null=True, blank=True)
+    models.ForeignKey(User, null=True, blank=True, help_text="voto suggerito da?")
 )
 
 #--------------------------------------------------------------------------------
@@ -131,9 +149,7 @@ def vote_check_before_save(sender, **kwargs):
 #---------------------------------------------------------------------------------
 
 
-class UserExtension(ModelExtender):
-
-    ext_prefix = '_askbot_ext_'
+class UserExtension(AskbotModelExtender):
 
     def _askbot_ext_assert_can_vote_action(self, action):
         """Check permission. If invalid --> raise exception"""
