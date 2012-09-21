@@ -14,14 +14,17 @@ Action statuses
 ACTION_STATUS_DRAFT = 'DRAFT'
 ACTION_STATUS_READY = 'READY'
 ACTION_STATUS_ACTIVE = 'ACTIVE'
+ACTION_STATUS_DELETED = 'CANCELED DRAFT'
+ACTION_STATUS_CLOSED = 'CLOSED'
+ACTION_STATUS_VICTORY = 'VICTORY'
 
-# TODO TOCOMPLETE Antonio with documentation
+# TODO TOCOMPLETE Antonio documentation
 
 ACTION_STATUS = {
     'draft' : ACTION_STATUS_DRAFT,
     'ready'   : ACTION_STATUS_READY,
-    'deleted' : 'CANCELED DRAFT',
+    'deleted' : ACTION_STATUS_DELETED,
     'active' : ACTION_STATUS_ACTIVE,
-    'closed' : 'CLOSED',
-    'victory' : 'VICTORY',
+    'closed' : ACTION_STATUS_CLOSED,
+    'victory' : ACTION_STATUS_VICTORY,
 }

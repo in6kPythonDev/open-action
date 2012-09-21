@@ -204,7 +204,9 @@ class Action(models.Model, Resource):
 
     @property
     def voters(self):
-        return self.votes.values('user__username').order_by('-voted_at') 
+        """Return User queryset who votes this action."""
+        users_pk = self.votes.values_list('user__pk', flat=True).order_by('-voted_at') 
+        return User.objects.filter(pk__in=users_pk)
 
     @property
     def comments(self):
