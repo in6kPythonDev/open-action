@@ -28,10 +28,10 @@ def html_action_item(action):
     <div class="action-categories">%(categories)s</div>
 </li>
 """ % {
-        'author' : html_render_resource(action.author),
-        'action' : html_render_resource(action),
-        'geonames' : [html_render_resource(geoname) for geoname in action.geonames],
-        'categories' :  [html_render_resource(category) for category in action.categories],
+        "author" : html_render_resource(action.author),
+        "action" : html_render_resource(action),
+        "geonames" : [html_render_resource(geoname) for geoname in action.geonames],
+        "categories" :  [html_render_resource(category) for category in action.categories],
     }
     return html
 
@@ -47,12 +47,12 @@ def html_blogpost_item(blogpost):
     <div class="blogpost-excerpt">%(blogpost_excerpt)s</div>
 </li>
 """ % {
-        'action_title' : blogpost.action,
-        'blogpost_title' : blogpost.title,
-        'blogpost_date' : blogpost.added_at,
-        'blogpost_author' : blogpost.author,
-        'ncomments' : blogpost.comments.count(),
-        'blogpost_excerpt': filters.truncatewords(blogpost.html(), 300),
+        "action_title" : blogpost.action,
+        "blogpost_title" : blogpost.title,
+        "blogpost_date" : blogpost.added_at,
+        "blogpost_author" : blogpost.author,
+        "ncomments" : blogpost.comments.count(),
+        "blogpost_excerpt": filters.truncatewords(blogpost.html(), 300),
     }
     return html
 
@@ -72,11 +72,11 @@ def html_activity_item(activity):
     <div class="activity-extra">%(extra_content)s</div>
 </div>
 """ % {
-        'activity_user' : activity.user,
-        'activity_date' : activity.active_at,
-        'activity_type' : askbot_extensions_consts.ACTIVITY_TYPE_DISPLAY_D[activity.activity_type],
-        'action' : activity.content_object.action,
-        'extra_content' : extra_content,
+        "activity_user" : activity.user,
+        "activity_date" : activity.active_at,
+        "activity_type" : askbot_extensions_consts.ACTIVITY_TYPE_DISPLAY_D[activity.activity_type],
+        "action" : activity.content_object.action,
+        "extra_content" : extra_content,
     }
     return html
 

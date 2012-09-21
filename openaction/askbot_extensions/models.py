@@ -37,8 +37,6 @@ Thread.add_to_class('ext_noattr', ThreadExtension())
 
 class PostExtension(AskbotModelExtender):
  
-    ext_prefix = '_askbot_ext_'
-
     def _askbot_ext_is_comment_to_action(self):
         """ Check if the Post is a comment of a question.
         
