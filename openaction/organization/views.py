@@ -3,7 +3,7 @@ from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.utils.decorators import method_decorator
 
 import askbot.utils.decorators as askbot_decorators
-from organization.models import UserOrgMap
+from organization.models import UserOrgMap, Organization
 
 from lib import views_support
 
@@ -76,7 +76,7 @@ class UserFollowOrgView(UserOrgMapView):
         # here? 
 
         mapping, created = UserOrgMap.objects.get_or_create(user=user,
-            org=organization,
+            org=org,
             is_follower=True
         )
 
