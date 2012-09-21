@@ -345,6 +345,9 @@ class ActionViewTest(OpenActionViewTestCase):
         self._check_for_success_response(response)
         action_voted = Action.objects.get(pk=self._action.pk)
         self.assertEqual(action_voted.score, self._action.score+1)
+        voters = action_voted.voters
+        print "\n\nVOTERSs: %s" % voters
+        self.assertTrue([self._author, user][user] in voters)
         
     def test_add_vote_with_token(self):
         """Add a vote referenced by a user."""

@@ -2,6 +2,8 @@
 # License: AGPLv3
 
 from django.db import models
+#MATTEO
+from django.conf import settings
 
 from base.models import Resource
 from askbot_extensions.models import User
@@ -95,6 +97,9 @@ class ExternalResource(models.Model, Resource):
 
 class UserExternalResourceExtension(ModelExtender):
 
+    #MATTEO
+    ext_prefix = '_askbot_ext_'
+
     def _askbot_ext_get_external_info(self, social_auth_backend_name, attrs=[]):
         """Retrieve external info from external resource"""
 
@@ -102,7 +107,8 @@ class UserExternalResourceExtension(ModelExtender):
 
         # Use "social_auth" to get the bound external_id for the specific backend
         external_id = 1 #TODO: Social auth user association for specific backend
-        backend_name=settings.SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP[backend_name] 
+        #WAS: backend_name=settings.SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP[backend_name]
+        backend_name=settings.SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP[social_auth_backend_name] 
         external_resource = ExternalResource.objects.get(
             backend_name=backend_name, resource_id=external_id
         )
