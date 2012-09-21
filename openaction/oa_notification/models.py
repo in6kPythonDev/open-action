@@ -10,21 +10,6 @@ from notification import models as notification
 from oa_notification import consts
 
 
-class UserNotice(models.Model):
-    """TODO: Matteo - remove"""
-
-    user = models.ForeignKey(User)
-    text = models.TextField()
-    is_read = models.BooleanField(default=False)
-    is_archived = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return u"Notice %s received from user %s [%s]" % (
-            self.text,
-            self.user,
-            [["","ARCHIVED"][self.is_archived], "READ"][self.is_read]
-        )
-
 #--------------------------------------------------------------------------------
 
 def create_notice_types(app, created_models, verbosity, **kwargs):
@@ -83,8 +68,8 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
 
     # notification: category B
     notification.create_notice_type(
-        "user_join_same_action", _("Action Joined"),
-        _("a user joined the same action you also have joined"), default=2
+        "user_join_your_action", _("Action Joined"),
+        _("a user joined your action"), default=2
     )
 
     notification.create_notice_type(

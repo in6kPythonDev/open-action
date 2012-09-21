@@ -13,6 +13,7 @@ from notification import models as notification
 from friendship import models as friendship
 
 from lib.djangolib import ModelExtender
+from lib import ClassProperty
 
 from askbot_extensions import managers
 
@@ -103,14 +104,14 @@ def comment_check_before_save(sender, **kwargs):
     #WAS:         raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     if post.is_comment():
-        if post.thread.action.status in (
+        if post.action.status in (
             action_const.ACTION_STATUS_DRAFT,
             action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     elif post.is_answer():
-        if post.thread.action.status in (
+        if post.action.status in (
             action_const.ACTION_STATUS_DRAFT,
             action_const.ACTION_STATUS_DELETED,
         ):
@@ -189,7 +190,7 @@ class UserExtension(AskbotModelExtender):
         # CHECK THIS Matteo: shouldn't I be able to vote a comment
         # even if the Action cannot be voted ??
         try:
-            self.assert_can_vote_action(comment.thread.action)
+            self.assert_can_vote_action(comment.action)
         except exceptions.PermissionDenied as e:
             raise exceptions.VoteOnUnauthorizedCommentException()
             

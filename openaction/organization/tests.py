@@ -31,7 +31,6 @@ class UserOrgMapTest(OpenActionViewTestCase):
 
     def _create_organization(self, name, external_resource=None):
         org, created = Organization.objects.get_or_create(name=name)
-        print "\n\n%s\n\n" % created
         return org
 
     def _post(self, url, is_ajax, **kwargs):
@@ -83,4 +82,4 @@ class UserOrgMapTest(OpenActionViewTestCase):
 
             self.assertTrue(usrorgmap_obj)
 
-            self.assertTrue(usrorgmap_obj in self._org.followers)
+            self.assertTrue(_user in self._org.followers)

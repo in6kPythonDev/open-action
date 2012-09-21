@@ -120,7 +120,7 @@ class CommentVoteView(VoteView):
     def post(self, request, *args, **kwargs):
         comment = self.get_object()
         request.user.assert_can_vote_comment(comment)
-        referral = self.get_referral(comment.thread.action)
+        referral = self.get_referral(comment.action)
         askbot_extensions_utils.vote_add(comment, request.user, referral)
         return views_support.response_success(request) 
 
@@ -240,7 +240,7 @@ class EditableParameterView(UpdateView):
 #    def get_object(self,queryset=None):
 #        """ Return the Action related to the post object """
 #        self.post = super(VoteView, self).get_object(queryset)
-#        action = self.post.thread.action
+#        action = self.post.action
 #
 #        return action
 #
@@ -331,7 +331,7 @@ class ActionCreateView(ActionView):
             timestamp = timestamp
         )
 
-        action = question.thread.action 
+        action = question.action 
 
         for m2m_attr in (
             'geoname_set', 

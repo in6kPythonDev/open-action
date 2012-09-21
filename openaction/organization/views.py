@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 
 import askbot.utils.decorators as askbot_decorators
 from organization.models import UserOrgMap, Organization
+from organization import exceptions as exceptions
 
 from lib import views_support
 
@@ -30,7 +31,8 @@ class UserFollowOrgView(UserOrgMapView):
             org=org,
         )
         if mapping.is_follower:
-            raise Exception #TODO: Matteo raise appropriate exception
+            #DONE: Matteo raise appropriate exception
+            raise exceptions.UserCannotFollowOrgTwice(user, org) 
         else:
             mapping.is_follower=True
             mapping.save()

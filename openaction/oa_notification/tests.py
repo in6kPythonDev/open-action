@@ -15,7 +15,7 @@ from oa_notification import models as oa_notification
 from action.tests import ActionViewTest
 #signals handling
 from action.signals import post_action_status_update
-from oa_notification.handlers import notify_action_get_level_step
+from oa_notification.handlers import notify_post_status_update
 
 from lib import views_support
 
@@ -28,7 +28,7 @@ class OaNotificationTest(ActionViewTest):
     def setUp(self):
         super(ActionViewTest, self).setUp()
         #manually connect signal to handler 
-        post_action_status_update.connect(notify_action_get_level_step)
+        post_action_status_update.connect(notify_post_status_update)
         #manually create notice types
         oa_notification.create_notice_types("","","")
 

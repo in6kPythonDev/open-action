@@ -17,7 +17,7 @@ from django.core.exceptions import PermissionDenied
 from askbot.models import Post, User
 from askbot.models.repute import Vote
 
-from oa_notification.models import UserNotice 
+from notification.models import Notice 
 
 from action.models import Action, Geoname
 from action import const, exceptions
@@ -70,7 +70,7 @@ class OpenActionViewTestCase(AskbotTestCase):
             user=self._author,
             title=title
         )
-        return question.thread.action 
+        return question.action 
 
     def _logout(self):
         self._c.logout()
@@ -500,14 +500,14 @@ class ActionViewTest(OpenActionViewTestCase):
 
             self.assertTrue(user_follow_action)
 
-            try:
-                notice = UserNotice.objects.get(
-                    user=user2
-                )
-            except Post.DoesNotExist as e:
-                notice = False
+            #try:
+            #    notice = Notice.objects.get(
+            #        recipient=user2
+            #    )
+            #except Notice.DoesNotExist as e:
+            #    notice = False
 
-            self.assertTrue(notice)
+            #self.assertTrue(notice)
             
         else:
             # Unauthenticated user cannot post

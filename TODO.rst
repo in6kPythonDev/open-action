@@ -45,28 +45,35 @@ TODO
 
 * Creare una nuova a applicazione (organization) con tre modelli ( vedere documento di analisi) v
 * creare una vista, relativa al modello NoticeSetting, che aggiunga nuovi tipi di notifiche relative ad un particolare utente e collegate ad uno o piu backends
-* [non prioritario] modifica dei tag di una azione: i referrers (e di conseguenza i moderatori) possono modificare i tag di una Action.
 
 * rinominare l'applicazione 'connection' in 'organization' v
 * spostare UserNotice in oa_notification/models.py v
 * implementare una gestione di segnale che alla creazione di un post nel blog nella post_save del modello Post (controllando che l'istanza sia di tipo answer) prenda i referrers ed i followers della action e invii loro una notifica --> in oa_notification/handlers.py v
 * nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True v
 * Implementare il backend di openaction --> eredita da notification.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) v
+* Creare una property in organization che ritorni il QS degli utenti che seguono l'associazione v
 
-* Creare una view in organization per implementare la follow --> creazione del mapping di tipo follow tra utente e associazione 
-* Creare una property in organization che ritorni il QS degli utenti che seguono l'associazione
+* sostituire UserNotice con Notice nel backend di openaction V
+* creare una view in organization per implementare la follow --> creazione del mapping di tipo follow tra utente e associazione V 
+* sostituire user_join_same_action con user_join_your_action in oa_notification/handlers
+* modificare l'handler notify_action_get_level_step in oa_notification/handlers in modo che i segnali che riceve vengano gestiti solamente se lo stato ricevuto è READY V
+* nella vista organization/UserFollowOrgView controllare se l'utente è già collegato all'associazione: in questo caso, controllare se il campo is_follower è uguale a True: se è così l'utente era già collegato all'associazione e quindi va sollevata un'eccezione V
+* sostituire user_set_default_notice_bacKend a comment_your_action in oa_notification/handlers V
+* implementare eccezioni in organization V
 
-* TODO : controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 
+* provare a escluedere i nuovi attributie che estendono Vote, lasciando solo referral --> sembrano non funzionar, non vengon oaggiunti nel db......
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+* [TODO futuro]: controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 
 * [non prioritario] implementare generiche viste per il modello UserNotice (List/Add/Edit/Delete)
-* [non prioritario] testare l'aggiunta dei tags in fase di creazione del blogpost
-
-* [in sospeso] NEW: Moderatori: leggere specifiche - a cosa servono i moderatori?:
+* [non prioritario] testare l'aggiunta dei tags in fase di creazione del blogpost V
+* [non prioritario] modifica dei tag di una azione: i referrers (e di conseguenza i moderatori) possono modificare i tag di una Action.
+* [in sospeso] Moderatori: leggere specifiche - a cosa servono i moderatori?:
     viste:
         * ActionModeratorsAdd, 
         * ActionModeratorsManage
-
-* Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
-* Commenti nelle viste
+* [non prioritario] Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 
 NOTE
 ^^^^
