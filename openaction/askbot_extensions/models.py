@@ -83,7 +83,7 @@ Vote.add_to_class('is_anonymous',
     models.BooleanField(default=False, help_text="visibile pubblicamente o no")
 )
 Vote.add_to_class('text', 
-    models.TextField(help_text="motivazione del voto")
+    models.TextField(default='',help_text="motivazione del voto")
 )
 Vote.add_to_class('objects', managers.VoteManager())
 

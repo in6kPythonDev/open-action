@@ -12,6 +12,7 @@ from askbot.models.repute import Vote
 
 from action import const, exceptions
 from oa_notification import models as oa_notification
+from notification.models import Notice, NoticeType
 from action.tests import ActionViewTest
 #signals handling
 from action.signals import post_action_status_update
@@ -32,8 +33,7 @@ class OaNotificationTest(ActionViewTest):
         #manually create notice types
         oa_notification.create_notice_types("","","")
 
-        import notification
-        for notice_type in notification.models.NoticeType.objects.all():
+        for notice_type in NoticeType.objects.all():
             print "added notice_type %s" % notice_type
 
 #-----------------TESTS----------------------------------------------------------
@@ -46,9 +46,17 @@ class OaNotificationTest(ActionViewTest):
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
+        #sending action status update signal
+        post_action_status_update.send(sender=self._action, 
+            old_status=const.ACTION_STATUS_READY
+        )
+
+        notice_type = NoticeType.objects.get(label="joined_action_get_level_step")
         try:
-            notice_obj = oa_notification.UserNotice.objects.get(user=self._author)
-        except oa_notification.UserNotice.DoesNotExist as e:
+            notice_obj = Notice.objects.get(recipient=self._author, 
+                notice_type=notice_type
+            )
+        except Notice.DoesNotExist as e:
             notice_obj = False
 
         self.assertTrue(notice_obj)

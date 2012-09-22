@@ -33,15 +33,16 @@ class OpenActionViewTestCase(AskbotTestCase):
     TEST_PASSWORD = "test"
 
     def setUp(self):
-        """Alter table with new fields..."""
-        cu = connection.cursor()
-        f = file(os.path.join(
-            settings.PROJECT_ROOT,'askbot_extensions', 'sql', 'add_vote_referral.sql'
-        ), "r")
-        sql_initial = f.read()
-        f.close()
-        cu.execute(sql_initial)
-        cu.close()
+        # Matteo: this shouldn't be necessary anymore
+        #WAS: """Alter table with new fields..."""
+        #WAS: cu = connection.cursor()
+        #WAS: f = file(os.path.join(
+        #WAS:     settings.PROJECT_ROOT,'askbot_extensions', 'sql', 'add_vote_referral.sql'
+        #WAS: ), "r")
+        #WAS: sql_initial = f.read()
+        #WAS: f.close()
+        #WAS: cu.execute(sql_initial)
+        #WAS: cu.close()
 
         # Create test user
         username = 'user1'
@@ -347,7 +348,7 @@ class ActionViewTest(OpenActionViewTestCase):
         self.assertEqual(action_voted.score, self._action.score+1)
         voters = action_voted.voters
         print "\n\nVOTERSs: %s" % voters
-        self.assertTrue([self._author, user][user] in voters)
+        self.assertTrue([self._author, user][bool(user)] in voters)
         
     def test_add_vote_with_token(self):
         """Add a vote referenced by a user."""
@@ -492,7 +493,7 @@ class ActionViewTest(OpenActionViewTestCase):
             self.test_follow_action(user2)
 
             try:
-                user_followed_action = user2.followed_threads.get(
+                user_follow_action = user2.followed_threads.get(
                     pk=self._action.thread.pk
                 )
             except Post.DoesNotExist as e:

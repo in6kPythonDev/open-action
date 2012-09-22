@@ -1,5 +1,6 @@
 from django.template.loader import render_to_string
 from django.template import Context
+from django.utils.translation import ugettext
 
 from notification.backends.base import BaseBackend
 #WAS: from notification.models import Notice
@@ -8,7 +9,7 @@ class OpenActionDefaultBackend(BaseBackend):
 
     spam_sensitivity = 2
 
-    def deliver(self, recipient, sender, notice_type, extra_content):
+    def deliver(self, recipient, sender, notice_type, extra_context):
         """ Deliver a notice to a User 
 
         DefaultBackend.deliver will send to the receiver (a User) a 
