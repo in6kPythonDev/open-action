@@ -5,6 +5,7 @@ from django.template.defaultfilters import slugify
 
 from askbot.models import Thread, User
 from askbot.models.post import Post
+from askbot.models.repute  import Vote
 
 from base.models import Resource
 from base.utils import get_resource_icon_path
@@ -214,7 +215,13 @@ class Action(models.Model, Resource):
 
     @property
     def votes(self):
-        return self.question.votes
+        #Matteo
+        # self.question.votes returns a RelatedManager on which the methods
+        # 'declareds' and 'anonymous' of VoteManager cannot be called
+        #return self.question.votes
+        return Vote.objects.all() & self.question.votes.all()
+        # A & B returns B if B is contained in A
+        # the intersection above returns directly a VoteQuerySet object
 
     @property
     def voters(self):
