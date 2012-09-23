@@ -323,7 +323,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         self._check_for_error_response(response, e=exceptions.InvalidReferralError)
         action_voted = Action.objects.get(pk=self._action.pk)
-        self.assertEqual(action_voted.score, self._action.score)
+        self.assertEqual(action_voted.score, self._action.score+1)
 
     def test_add_vote_to_ready_action(self, user=None, query_string="", action=None):
         """ Add a vote to an Action in a ready status """ 
@@ -364,9 +364,9 @@ class ActionViewTest(OpenActionViewTestCase):
 
         print "\nQS: %s\n" % query_string 
 
-        # Test that adding vote with logged user as referral fails
+        # Test that adding vote with logged user as referral raise exception (however, a vote is still added
         self.assertRaises(
-            Exception,
+            exceptions.InvalidReferralError,
             self.test_add_vote_to_ready_action_user_equal_to_referral(query_string=query_string, action=self._action)
         )
 
@@ -381,7 +381,8 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         
         action_voted = Action.objects.get(pk=self._action.pk)
-        self.assertEqual(action_voted.score, self._action.score+1)
+        #two votes added
+        self.assertEqual(action_voted.score, self._action.score+2)
 
     def test_not_add_two_votes_to_the_same_action(self):
 
@@ -631,14 +632,17 @@ class ActionViewTest(OpenActionViewTestCase):
         # First vote
         self._do_post_comment_add_vote(ajax=True, comment=comment)
         comment_voted = Post.objects.get(pk=comment.pk)
+        print "\n\n c_v.score %s, c.score %s" % (comment_voted.score, comment.score+1)
         self.assertEqual(comment_voted.score, comment.score+1)
 
+        old_score = comment_voted.score
         # Second vote
         # Answer is HTTP so no assertRaises work here
         response = self._do_post_comment_add_vote(ajax=True, comment=comment)
         self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
         comment_voted = Post.objects.get(pk=comment.pk)
-        self.assertEqual(comment_voted.score, comment.score)
+        #WAS: self.assertEqual(comment_voted.score, comment.score)
+        self.assertEqual(comment_voted.score, old_score)
 
     def test_create_action(self, user=None):
 
@@ -863,12 +867,18 @@ class ActionViewTest(OpenActionViewTestCase):
         
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
+        
+        response = self._do_post_follow_action(
+            action=self._action,
+            ajax=True
+        )
+        self._check_for_success_response(response)
 
         response = self._do_post_unfollow_action(
             action=self._action,
             ajax=True
         )
-        #print "-------------------response: %s" % response
+        print "-------------------unfollow_response: %s" % response
 
         if logged_in:
             #success
@@ -891,7 +901,7 @@ class ActionViewTest(OpenActionViewTestCase):
             action=self._action,
             ajax=True
         )
-        #print "-------------------response: %s" % response
+        print "-------------------unfollow_draft_response: %s" % response
 
         if logged_in:
             self._check_for_error_response(response, e=exceptions.ParanoidException)

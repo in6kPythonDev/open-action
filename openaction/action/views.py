@@ -448,7 +448,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 #                #    print "-----------TO_REMOVE------------%s" % o.id
 #                #for o in to_keep:
 #                #    print "-----------TO_KEEP------------%s" % o.id
-                to_add, to_remove = update_values(m2m_values_old, m2m_values_new)
+                to_add, to_remove = self.update_values(m2m_values_old, m2m_values_new)
 
                 getattr(action, m2m_attr).add(*to_add)
                 getattr(action, m2m_attr).remove(*to_remove)
