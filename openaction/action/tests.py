@@ -128,7 +128,7 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action = self._create_action()
         self.unloggable = self.create_user_unloggable("pluto")
 
-    def _post(self, url, is_ajax, **kwargs):
+    def _POST(self, url, is_ajax, **kwargs):
         
         if is_ajax:
             response = self._c.post(url,
@@ -141,36 +141,36 @@ class ActionViewTest(OpenActionViewTestCase):
             )
         return response
 
-    def _do_post_action_add_vote(self, action, query_string="", ajax=False):
+    def _do_POST_action_add_vote(self, action, query_string="", ajax=False):
 
-        response = self._post(
+        response = self._POST(
             reverse('action-vote-add', args=(action.pk,)) + \
             query_string,
             ajax
         )
         return response
 
-    def _do_post_comment_add_vote(self, comment, ajax=False, **kwargs):
+    def _do_POST_comment_add_vote(self, comment, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('comment-vote-add', args=(comment.pk,)),
             ajax,
             **kwargs
         )
         return response
  
-    def _do_post_add_comment(self, ajax=False, **kwargs):
+    def _do_POST_add_comment(self, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('action-comment-add', args=(self._action.pk,)),
             ajax,
             **kwargs
         )
         return response
     
-    def _do_post_add_blog_post(self, ajax=False, **kwargs):
+    def _do_POST_add_blog_POST(self, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('action-blogpost-add', args=(self._action.pk,)),
             ajax,
             **kwargs
@@ -178,45 +178,45 @@ class ActionViewTest(OpenActionViewTestCase):
         return response
 
     
-    def _do_post_add_comment_to_blog_post(self, blog_post, ajax=False, **kwargs):
+    def _do_POST_add_comment_to_blog_POST(self, blog_post, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('blogpost-comment-add', args=(blog_post.pk,)),
             ajax,
             **kwargs
         )
         return response
 
-    def _do_post_create_action(self, ajax=False, **kwargs):
+    def _do_POST_create_action(self, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('action-create', args=()),
             ajax,
             **kwargs
         )
         return response
 
-    def _do_post_update_action(self, action, ajax=False, **kwargs):
+    def _do_POST_update_action(self, action, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('action-update', args=(action.pk,)),
             ajax,
             **kwargs
         )
         return response
 
-    def _do_post_follow_action(self, action, ajax=False, **kwargs):
+    def _do_POST_follow_action(self, action, ajax=False, **kwargs):
         
-        response = self._post(
+        response = self._POST(
             reverse('action-follow', args=(action.pk,)),
             ajax,
             **kwargs
         )
         return response
 
-    def _do_post_unfollow_action(self, action, ajax=False, **kwargs):
+    def _do_POST_unfollow_action(self, action, ajax=False, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('action-unfollow', args=(action.pk,)),
             ajax,
             **kwargs
@@ -239,7 +239,7 @@ class ActionViewTest(OpenActionViewTestCase):
         #geoname_set = geoname_set
 
         #create action
-        r = self._do_post_create_action(
+        r = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
@@ -254,7 +254,7 @@ class ActionViewTest(OpenActionViewTestCase):
         updated_text = "Gluglugluglugluglugluglu"
         #updated_geoname_set = updated_geoname_set
 
-        response = self._do_post_update_action( 
+        response = self._do_POST_update_action( 
             action=action,
             ajax=True,
             title=title,
@@ -289,7 +289,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login(user)
         self._action.update_status(const.ACTION_STATUS_DRAFT)
-        response = self._do_post_action_add_vote(self._action, ajax=True)
+        response = self._do_POST_action_add_vote(self._action, ajax=True)
 
         # Error verified because invalid action status
         self._check_for_error_response(
@@ -314,7 +314,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login(user)
 
-        response = self._do_post_action_add_vote(self._action, 
+        response = self._do_POST_action_add_vote(self._action, 
             query_string=query_string,
             ajax=True
         )
@@ -337,7 +337,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login(user)
 
-        response = self._do_post_action_add_vote(self._action, 
+        response = self._do_POST_action_add_vote(self._action, 
             query_string=query_string,
             ajax=True
         )
@@ -394,11 +394,11 @@ class ActionViewTest(OpenActionViewTestCase):
         self._login()
 
         # First vote
-        self._do_post_action_add_vote(self._action, ajax=True)
+        self._do_POST_action_add_vote(self._action, ajax=True)
 
         # Second vote
         # Answer is HTTP so no assertRaises work here
-        response = self._do_post_action_add_vote(self._action, ajax=True)
+        response = self._do_POST_action_add_vote(self._action, ajax=True)
         print "test_not_add_two_votes_to_the_same_action: %s" % response
 
         self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
@@ -418,7 +418,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = "Ohi, che bel castello..."
     
         #Adding comment to action 
-        response = self._do_post_add_comment(ajax=True, text=comment)
+        response = self._do_POST_add_comment(ajax=True, text=comment)
         #print "\n----------------add_comm_action resp: %s\n" % response
 
         if logged_in:
@@ -447,7 +447,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment = "Ohi, che bel castello..."
     
         #Adding comment to action 
-        response = self._do_post_add_comment(ajax=True, text=comment)
+        response = self._do_POST_add_comment(ajax=True, text=comment)
         #print "\n----------------add_comm_draft_action resp: %s\n" % response
 
         if logged_in:
@@ -473,7 +473,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         #Adding blog_post to action 
         text = "Articolo di blog relativo a action %s" % self._action
-        response = self._do_post_add_blog_post(ajax=True, text=text)
+        response = self._do_POST_add_blog_POST(ajax=True, text=text)
         #print "------------- %s" % response
         
         if logged_in:
@@ -519,7 +519,7 @@ class ActionViewTest(OpenActionViewTestCase):
         #print "\n---------------unauthenticated\n"
         self.test_add_blog_post_to_action(user=self.unloggable)
 
-    def test_add_comment_to_blog_post(self, user=None):
+    def test_add_comment_to_blog_POST(self, user=None):
 
         # test for authenticated user. The user has to be authenticated
         # at this point since i need to add a post before commenting it
@@ -531,7 +531,7 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action.update_status(const.ACTION_STATUS_READY)
         #already tested, does not need asserts
         text = "Altro blog post su action %s" % self._action
-        self._do_post_add_blog_post(ajax=True, text=text)
+        self._do_POST_add_blog_POST(ajax=True, text=text)
         blog_post = self._action.blog_posts.get(
             text=text, author=self._author
         )
@@ -540,7 +540,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         comment_text = "... marcondiro ndiro ndello"
         #Adding comment to blog_post
-        response = self._do_post_add_comment_to_blog_post(
+        response = self._do_POST_add_comment_to_blog_POST(
             ajax=True,
             blog_post=blog_post,
             text=comment_text
@@ -563,9 +563,9 @@ class ActionViewTest(OpenActionViewTestCase):
             # Unauthenticated user cannot post
             self._check_for_redirect_response(response)
 
-    def test_add_unauthenticated_comment_to_blog_post(self):
+    def test_add_unauthenticated_comment_to_blog_POST(self):
         #print "\n---------------unauthenticated\n"
-        self.test_add_comment_to_blog_post(user=self.unloggable)
+        self.test_add_comment_to_blog_POST(user=self.unloggable)
 
     def test_add_vote_to_action_comment(self, user=None):
         
@@ -578,7 +578,7 @@ class ActionViewTest(OpenActionViewTestCase):
         comment_text = "Aggiungo voto dell'utente %s" % self._author
         
         #Adding comment to action
-        response = self._do_post_add_comment(ajax=True, text=comment_text)
+        response = self._do_POST_add_comment(ajax=True, text=comment_text)
         comment = self._action.comments.get(text=comment_text,
             author=self._author
         )
@@ -586,7 +586,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         logged_in = self._login(user)
 
-        response = self._do_post_comment_add_vote(ajax=True, comment=comment)
+        response = self._do_POST_comment_add_vote(ajax=True, comment=comment)
 
         if logged_in:
             #Success
@@ -623,21 +623,21 @@ class ActionViewTest(OpenActionViewTestCase):
         comment_text = "Aggiungo dell'utente %s" % self._author
         
         #Adding comment to action
-        response = self._do_post_add_comment(ajax=True, text=comment_text)
+        response = self._do_POST_add_comment(ajax=True, text=comment_text)
         comment = self._action.comments.get(text=comment_text,
             author=self._author
         )
         print "not_add_to_votes_to_same_comment: %s" % response
 
         # First vote
-        self._do_post_comment_add_vote(ajax=True, comment=comment)
+        self._do_POST_comment_add_vote(ajax=True, comment=comment)
         comment_voted = Post.objects.get(pk=comment.pk)
         print "\n\n c_v.score %s, c.score %s" % (comment_voted.score, comment.score+1)
         self.assertEqual(comment_voted.score, comment.score+1)
 
         # Second vote
         # Answer is HTTP so no assertRaises work here
-        response = self._do_post_comment_add_vote(ajax=True, comment=comment)
+        response = self._do_POST_comment_add_vote(ajax=True, comment=comment)
         self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
         comment_voted = Post.objects.get(pk=comment.pk)
         self.assertEqual(comment_voted.score, comment.score+1)
@@ -650,7 +650,7 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
 
-        response = self._do_post_create_action(
+        response = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
@@ -751,7 +751,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
 
         #create action
-        r = self._do_post_create_action(
+        r = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
@@ -765,7 +765,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         #update action
         updated_text = "Gluglugluglugluglugluglu"
-        response = self._do_post_update_action(
+        response = self._do_POST_update_action(
             action=action, 
             ajax=True,
             title=title,
@@ -788,7 +788,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
 
         #create action
-        r = self._do_post_create_action(
+        r = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
@@ -803,7 +803,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         #update action
         updated_text = "Gluglugluglugluglugluglu"
-        response = self._do_post_update_action(
+        response = self._do_POST_update_action(
             action=action, 
             ajax=True,
             title=title,
@@ -824,7 +824,7 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
-        response = self._do_post_follow_action(
+        response = self._do_POST_follow_action(
             action=self._action,
             ajax=True
         )
@@ -845,7 +845,7 @@ class ActionViewTest(OpenActionViewTestCase):
         
         self._action.update_status(const.ACTION_STATUS_DRAFT)
 
-        response = self._do_post_follow_action(
+        response = self._do_POST_follow_action(
             action=self._action,
             ajax=True
         )
@@ -866,13 +866,13 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
         
-        response = self._do_post_follow_action(
+        response = self._do_POST_follow_action(
             action=self._action,
             ajax=True
         )
         self._check_for_success_response(response)
 
-        response = self._do_post_unfollow_action(
+        response = self._do_POST_unfollow_action(
             action=self._action,
             ajax=True
         )
@@ -895,7 +895,7 @@ class ActionViewTest(OpenActionViewTestCase):
         
         self._action.update_status(const.ACTION_STATUS_DRAFT)
 
-        response = self._do_post_unfollow_action(
+        response = self._do_POST_unfollow_action(
             action=self._action,
             ajax=True
         )
@@ -919,7 +919,7 @@ class ActionViewTest(OpenActionViewTestCase):
 #        super(ActionViewTest, self).setUp()
 #        self.unloggable = self.create_user_unloggable("pluto")
 #
-#    def _post(self, url, is_ajax, **kwargs):
+#    def _POST(self, url, is_ajax, **kwargs):
 #        
 #        if is_ajax:
 #            response = self._c.post(url,
@@ -967,7 +967,7 @@ class NotificationTest(OpenActionViewTestCase):
         except Exception as e:
             pass
  
-    def _post(self, url, is_ajax, **kwargs):
+    def _POST(self, url, is_ajax, **kwargs):
         
         if is_ajax:
             response = self._c.post(url,
@@ -980,7 +980,7 @@ class NotificationTest(OpenActionViewTestCase):
             )
         return response
     
-    def _get(self, url, is_ajax, **kwargs):
+    def _GET(self, url, is_ajax, **kwargs):
         
         if is_ajax:
             response = self._c.get(url,
@@ -993,17 +993,17 @@ class NotificationTest(OpenActionViewTestCase):
             )
         return response
 
-    def _do_post_notice_settings(self, ajax=False):
+    def _do_POST_notice_settings(self, ajax=False):
 
-        response = self._post(
+        response = self._POST(
             reverse('notification_notice_settings', args=()),
             ajax
         )
         return response
 
-    def _do_get_notice_settings(self, ajax=False):
+    def _do_GET_notice_settings(self, ajax=False):
 
-        response = self._get(
+        response = self._GET(
             reverse('notification_notice_settings', args=()),
             ajax
         )
@@ -1013,12 +1013,12 @@ class NotificationTest(OpenActionViewTestCase):
 
         self._login()
 
-        response = self._do_post_notice_settings(ajax=True)
+        response = self._do_POST_notice_settings(ajax=True)
 
         print "POST response status code %s" % response.status_code
         print "POST response content %s" % response.content
 
-        response = self._do_get_notice_settings(ajax=True)
+        response = self._do_GET_notice_settings(ajax=True)
 
         print "GET response status code %s" % response.status_code
         print "GET response content %s" % response.content
