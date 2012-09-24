@@ -33,7 +33,7 @@ class UserOrgMapTest(OpenActionViewTestCase):
         org, created = Organization.objects.get_or_create(name=name)
         return org
 
-    def _post(self, url, is_ajax, **kwargs):
+    def _POST(self, url, is_ajax, **kwargs):
         
         if is_ajax:
             response = self._c.post(url,
@@ -46,9 +46,9 @@ class UserOrgMapTest(OpenActionViewTestCase):
             )
         return response
 
-    def _do_post_user_follow_org(self, org, ajax=False):#, **kwargs):
+    def _do_POST_user_follow_org(self, org, ajax=False):#, **kwargs):
 
-        response = self._post(
+        response = self._POST(
             reverse('org-user-follow', args=(org.pk,)),
             ajax#,
             #kwargs
@@ -64,7 +64,7 @@ class UserOrgMapTest(OpenActionViewTestCase):
         logged_in = self._login(user)
 
         if logged_in:
-            response = self._do_post_user_follow_org(self._org,
+            response = self._do_POST_user_follow_org(self._org,
                 ajax=True
             )
 

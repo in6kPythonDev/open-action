@@ -21,6 +21,7 @@ from notification.models import Notice
 
 from action.models import Action, Geoname
 from action import const, exceptions
+from organization.tests import _create_organization 
 
 from askbot_extensions import models
 
@@ -488,28 +489,6 @@ class ActionViewTest(OpenActionViewTestCase):
 
             self.assertTrue(blogpost_obj)
 
-            #check that all action referrers and followers has been notified
-            #NOTE: a test for Action referrers has still to be done
-            user2 = self.create_user(username='user2')
-            self.test_follow_action(user2)
-
-            try:
-                user_follow_action = user2.followed_threads.get(
-                    pk=self._action.thread.pk
-                )
-            except Post.DoesNotExist as e:
-                user_follow_action = False
-
-            self.assertTrue(user_follow_action)
-
-            #try:
-            #    notice = Notice.objects.get(
-            #        recipient=user2
-            #    )
-            #except Notice.DoesNotExist as e:
-            #    notice = False
-
-            #self.assertTrue(notice)
             
         else:
             # Unauthenticated user cannot post
@@ -675,7 +654,36 @@ class ActionViewTest(OpenActionViewTestCase):
         #print "unauthenticated"
         self.test_create_action(user=self.unloggable)
 
-    
+    def test_create_action_in_nomine_of_association(self, user=None):
+        logged_in = self._login(user)
+
+        title = "Aggiungo una nuova action in nomine di un'associazione"
+        tagnames = None
+        text = "Blablablablablablabla"
+
+        organization=
+
+        response = self._do_POST_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text
+        )
+        #print "-------------------response: %s" % response
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+
+            try:
+                #action_obj = Action.objects.get(pk=1)
+                action_obj = Action.objects.latest()
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+        else:
+            self._check_for_redirect_response(response)
+
     def create_test_geonames(self):
 
         self._login()
@@ -909,116 +917,4 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
 
-#--------------------------------------------------------------------------------
 
-#class ViewTest(OpenActionViewTestCase):
-#    """This class encapsulate tests for views."""
-#
-#    def setUp(self):
-#
-#        super(ActionViewTest, self).setUp()
-#        self.unloggable = self.create_user_unloggable("pluto")
-#
-#    def _POST(self, url, is_ajax, **kwargs):
-#        
-#        if is_ajax:
-#            response = self._c.post(url,
-#                kwargs,
-#                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-#            )
-#        else:
-#            response = self._c.post(url,
-#                kwargs
-#            )
-#        return response
-
-from notification.models import *
-
-class NotificationTest(OpenActionViewTestCase):
-
-    def setUp(self):
-        
-        types = ["1","2","3","4","6"]
-        
-        for _type in types:
-            self._create_notice_type(_type)
-        
-        # Create test user
-        username = 'user1'
-        self._author = self.create_user(username=username)
-
-        self._c = Client()
-
-    def _create_notice_type(self, _type):
-        
-        label = "Notifica tipo %s" % _type 
-        display = "display tipo %s" % _type
-        description = "description tipo %s" % _type
-        default = 2
-
-        noticetype, created = NoticeType.objects.get_or_create(label=label, 
-            display=display,
-            description=description,
-            default=default
-        )
-
-        try:
-            print "%s NoticeType object with pk %s" % (["Not created","Created"][created], noticetype.pk)
-        except Exception as e:
-            pass
- 
-    def _POST(self, url, is_ajax, **kwargs):
-        
-        if is_ajax:
-            response = self._c.post(url,
-                kwargs,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
-        else:
-            response = self._c.post(url,
-                kwargs
-            )
-        return response
-    
-    def _GET(self, url, is_ajax, **kwargs):
-        
-        if is_ajax:
-            response = self._c.get(url,
-                kwargs,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
-        else:
-            response = self._c.get(url,
-                kwargs
-            )
-        return response
-
-    def _do_POST_notice_settings(self, ajax=False):
-
-        response = self._POST(
-            reverse('notification_notice_settings', args=()),
-            ajax
-        )
-        return response
-
-    def _do_GET_notice_settings(self, ajax=False):
-
-        response = self._GET(
-            reverse('notification_notice_settings', args=()),
-            ajax
-        )
-        return response
-
-    def test_notice_settings(self):
-
-        self._login()
-
-        response = self._do_POST_notice_settings(ajax=True)
-
-        print "POST response status code %s" % response.status_code
-        print "POST response content %s" % response.content
-
-        response = self._do_GET_notice_settings(ajax=True)
-
-        print "GET response status code %s" % response.status_code
-        print "GET response content %s" % response.content

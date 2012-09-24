@@ -218,10 +218,8 @@ class Action(models.Model, Resource):
         #Matteo
         # self.question.votes returns a RelatedManager on which the methods
         # 'declareds' and 'anonymous' of VoteManager cannot be called
-        #return self.question.votes
-        return Vote.objects.all() & self.question.votes.all()
-        # A & B returns B if B is contained in A
-        # the intersection above returns directly a VoteQuerySet object
+        #WAS: return Vote.objects.all() & self.question.votes.all()
+        return Vote.objects.filter(voted_post=self.question)
 
     @property
     def voters(self):
@@ -455,8 +453,8 @@ class ActionRequest(models.Model, Resource):
     """
     
     action = models.ForeignKey(Action)
-    sender = models.ForeignKey(User, null=True, blank=True)
-    recipient = models.ForeignKey(User, null=True, blank=True)
+    sender = models.ForeignKey(User, null=True, blank=True, related_name="request_set")
+    recipient = models.ForeignKey(User, null=True, blank=True, related_name="request_receiver_set")
     request_type = models.CharField(max_length=256)
     request_notes = models.TextField(blank=True, default="")
     answer_notes = models.TextField(blank=True, default="")

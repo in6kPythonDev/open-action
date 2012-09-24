@@ -60,3 +60,121 @@ class OaNotificationTest(ActionViewTest):
             notice_obj = False
 
         self.assertTrue(notice_obj)
+
+#TODO: integrate with the tests above.
+#TODO: restructure test to prevent the action app tests to be executed here
+class NotificationTest(OpenActionViewTestCase):
+
+    def setUp(self):
+        
+        types = ["1","2","3","4","6"]
+        
+        for _type in types:
+            self._create_notice_type(_type)
+        
+        # Create test user
+        username = 'user1'
+        self._author = self.create_user(username=username)
+
+        self._c = Client()
+
+    def _create_notice_type(self, _type):
+        
+        label = "Notifica tipo %s" % _type 
+        display = "display tipo %s" % _type
+        description = "description tipo %s" % _type
+        default = 2
+
+        noticetype, created = NoticeType.objects.get_or_create(label=label, 
+            display=display,
+            description=description,
+            default=default
+        )
+
+        try:
+            print "%s NoticeType object with pk %s" % (["Not created","Created"][created], noticetype.pk)
+        except Exception as e:
+            pass
+ 
+    def _POST(self, url, is_ajax, **kwargs):
+        
+        if is_ajax:
+            response = self._c.post(url,
+                kwargs,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        else:
+            response = self._c.post(url,
+                kwargs
+            )
+        return response
+    
+    def _GET(self, url, is_ajax, **kwargs):
+        
+        if is_ajax:
+            response = self._c.get(url,
+                kwargs,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        else:
+            response = self._c.get(url,
+                kwargs
+            )
+        return response
+
+    def _do_POST_notice_settings(self, ajax=False):
+
+        response = self._POST(
+            reverse('notification_notice_settings', args=()),
+            ajax
+        )
+        return response
+
+    def _do_GET_notice_settings(self, ajax=False):
+
+        response = self._GET(
+            reverse('notification_notice_settings', args=()),
+            ajax
+        )
+        return response
+
+    def test_notice_settings(self):
+
+        self._login()
+
+        response = self._do_POST_notice_settings(ajax=True)
+
+        print "POST response status code %s" % response.status_code
+        print "POST response content %s" % response.content
+
+        response = self._do_GET_notice_settings(ajax=True)
+
+        print "GET response status code %s" % response.status_code
+        print "GET response content %s" % response.content
+
+    def test_notify_action_xxxx_to_referres__and_followers(self):
+
+        #TODO: make some action here and do something on it
+
+        #check that all action referrers and followers has been notified
+        #NOTE: a test for Action referrers has still to be done
+        user2 = self.create_user(username='user2')
+        self.test_follow_action(user2)
+
+        try:
+            user_follow_action = user2.followed_threads.get(
+                pk=self._action.thread.pk
+            )
+        except Post.DoesNotExist as e:
+            user_follow_action = False
+
+        self.assertTrue(user_follow_action)
+
+        #try:
+        #    notice = Notice.objects.get(
+        #        recipient=user2
+        #    )
+        #except Notice.DoesNotExist as e:
+        #    notice = False
+
+        #self.assertTrue(notice)

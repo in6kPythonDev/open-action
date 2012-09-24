@@ -291,6 +291,9 @@ class UserExtension(AskbotModelExtender):
         # TODO: asymmetric_friends = friendship.Follow.objects.followers(user=self)
         return symmetric_friends
 
+    def _askbot_ext_orgs_represented(self):
+        return self.orgmap_set.filter(is_representative=True)
+
 
 User.add_to_class('ext_noattr', UserExtension())
 
