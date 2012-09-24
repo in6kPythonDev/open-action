@@ -6,6 +6,9 @@ from action.models import Geoname, ActionCategory, Politician, Media
 class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
 
+    in_nomine = forms.ChoiceField(required=True #TODO: Matteo pseudo-code to complete
+    )
+
     geoname_set = forms.ModelMultipleChoiceField(
         queryset=Geoname.objects, label="Territori",
         required=False
@@ -22,6 +25,23 @@ class ActionForm(askbot_forms.AskForm):
         queryset=Media.objects, label="Media",
         required=False
     ) 
+
+    def __init__(self, request, *args, **kw):
+        # TODO FIXME WARNING Matto: consider it pseudo-code
+        user = request.user
+        choices = [("user-%s" % user.pk, user),]
+        orgs = user.orgs_represented()
+        for org in orgs:
+            choices.append(
+                ("org-%s" % org.pk, org)
+            )
+        #WAS: else:
+        #WAS:     ActionForm.in_nomine.widget = forms.HiddenInput()
+        ActionForm.in_nomine.choices = choices
+        super(ActionForm, self).__init__(*args, **kw)
+        if not orgs:
+            self.hide_field('in_nomine')
+        
 
 class EditActionForm(askbot_forms.EditQuestionForm):
     # TOASK: Ajaxification of fields autocomplete?

@@ -455,9 +455,12 @@ class ActionRequest(models.Model, Resource):
     """
     
     action = models.ForeignKey(Action)
+    sender = models.ForeignKey(User, null=True, blank=True)
+    recipient = models.ForeignKey(User, null=True, blank=True)
     request_type = models.CharField(max_length=256)
     request_notes = models.TextField(blank=True, default="")
     answer_notes = models.TextField(blank=True, default="")
+    is_accepted = models.BooleanField(default=False)
     is_processed = models.BooleanField(default=False)
 
     created_on = models.DateTimeField(auto_now_add=True)
