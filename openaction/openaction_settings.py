@@ -52,11 +52,14 @@ TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
 
 INSTALLED_APPS = list(settings.INSTALLED_APPS)
 INSTALLED_APPS.append('askbot_extensions')
+INSTALLED_APPS.append('organization')
 INSTALLED_APPS.append('action')
 INSTALLED_APPS.append('social_auth')
 INSTALLED_APPS.append('oa_social_auth')
 INSTALLED_APPS.append('external_resource')
 INSTALLED_APPS.append('friendship')
+INSTALLED_APPS.append('notification')
+INSTALLED_APPS.append('oa_notification')
 
 
 PROJECT_NAME = "openaction"

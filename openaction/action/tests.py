@@ -635,14 +635,12 @@ class ActionViewTest(OpenActionViewTestCase):
         print "\n\n c_v.score %s, c.score %s" % (comment_voted.score, comment.score+1)
         self.assertEqual(comment_voted.score, comment.score+1)
 
-        old_score = comment_voted.score
         # Second vote
         # Answer is HTTP so no assertRaises work here
         response = self._do_post_comment_add_vote(ajax=True, comment=comment)
         self._check_for_error_response(response, e=exceptions.UserCannotVoteTwice)
         comment_voted = Post.objects.get(pk=comment.pk)
-        #WAS: self.assertEqual(comment_voted.score, comment.score)
-        self.assertEqual(comment_voted.score, old_score)
+        self.assertEqual(comment_voted.score, comment.score+1)
 
     def test_create_action(self, user=None):
 

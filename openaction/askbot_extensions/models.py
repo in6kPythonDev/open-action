@@ -267,18 +267,18 @@ class UserExtension(AskbotModelExtender):
             action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.ParanoidException()
-        elif not self.is_following(action):
+        elif not self.is_following_action(action):
             raise exceptions.ParanoidException()
 
         return True
 
-    def _askbot_ext_follow_action(self, action=None):
+    def _askbot_ext_follow_action(self, action):
         self.followed_threads.add(action.thread)
 
-    def _askbot_ext_unfollow_action(self, action=None):
+    def _askbot_ext_unfollow_action(self, action):
         self.followed_threads.remove(action.thread)
 
-    def _askbot_ext_is_following_action(self, action=None):
+    def _askbot_ext_is_following_action(self, action):
         #WAS: return action.thread.followed_by.filter(id=self.id).exists() 
         return action.thread.is_followed_by(self)
 
