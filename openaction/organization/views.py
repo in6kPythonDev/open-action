@@ -42,3 +42,25 @@ class UserFollowOrgView(UserOrgMapView):
         
         return views_support.response_success(request)
  
+class UserRepresentOrgView(UserOrgMapView):
+    """ Map a User to an Organization, defining the User as a representative 
+    of the latter. """
+
+    def post(self, request, *args, **kwargs):
+        org = self.get_object()
+        user = request.user
+
+        mapping, created = UserOrgMap.objects.get_or_create(user=user,
+            org=org,
+        )
+        if mapping.is_representative:
+            #DONE: Matteo raise appropriate exception
+            raise exceptions.UserCannotRepresentOrgTwice(user, org) 
+        else:
+            mapping.is_representative=True
+            mapping.save()
+
+        # QUESTION: should we notify (here or in an UserOrgMap post_save
+        # signal) to the Organization that a new User is following them ?
+        
+        return views_support.response_success(request)

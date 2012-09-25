@@ -11,6 +11,7 @@ from action import exceptions
 from action import const as action_const
 from notification import models as notification
 from friendship import models as friendship
+from organization.models import Organization
 
 from lib.djangolib import ModelExtender
 from lib import ClassProperty
@@ -291,8 +292,18 @@ class UserExtension(AskbotModelExtender):
         # TODO: asymmetric_friends = friendship.Follow.objects.followers(user=self)
         return symmetric_friends
 
+    #######Matteo QUESTION: shouldn't theese be properties?
+
+    @property
+    def _askbot_ext_orgs_followed(self):
+        orgs_pk = self.orgmap_set.filter(is_follower=True).values_list('org__pk', flat=True)
+        return Organization.objects.filter(pk__in=orgs_pk)
+
+    @property
     def _askbot_ext_orgs_represented(self):
-        return self.orgmap_set.filter(is_representative=True)
+        orgs_pk = self.orgmap_set.filter(is_representative=True).values_list('org__pk', flat=True)
+        return Organization.objects.filter(pk__in=orgs_pk)
+    ########
 
 
 User.add_to_class('ext_noattr', UserExtension())
