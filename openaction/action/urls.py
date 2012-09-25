@@ -5,6 +5,7 @@ except ImportError as e:
     from django.conf.urls.defaults import patterns, url
 
 import action.views as action_views
+import action_request.views as action_request_views
 
 urlpatterns = patterns('',
     # Single action view
@@ -50,6 +51,10 @@ urlpatterns = patterns('',
     ),
     url(r'^(?P<pk>\d+)/unfollow/$', action_views.ActionUnfollowView.as_view(), 
         name='action-unfollow'
+    ),
+    #request to a user to moderate action
+    url(r'^(?P<pk>\d+)/moderate/$', action_request_views.ActionModerationRequestView.as_view(), 
+        name='action-moderation-request'
     ),
 )
 

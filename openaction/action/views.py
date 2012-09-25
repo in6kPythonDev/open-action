@@ -282,7 +282,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
-            'in_nomine': self.request.REQUEST.get('in_nomine', ''),
+            #'in_nomine': self.request.REQUEST.get('in_nomine', ''),
             'wiki': False,
             'is_anonymous': False,
         }

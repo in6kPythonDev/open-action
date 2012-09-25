@@ -64,12 +64,15 @@ TODO
 * Creare Azione per l'associazione: V
     * la form avrà un campo choice che conterrà l'utente e tutte le associazioni che rappresenta: nel caso l'utente non rappresenti nessuna associazione, il campo choice verrà nascosto
 
-* Nuova applicazione per: (nome= action_request)
+* Nuova applicazione per: (nome = action_request)
     ** se in futuro sarà generica, action diventerà una property e verrà aggiunto un generic_field che conterrà il riferimento al modello a cui in quel momento si desidera utilizzare
     * aggiungere un moderatore all'Azione: gestione tramite segnale inviato dalla vista e gestito da un handler apposito:
-        [vista] owner sceglie un utente a cui inviare la richiesta di moderazione --> [segnale] l'utente scelto riceve una notifica con l'url di accettazione -->  [vista] l'utente accetta o rifiuta (motivando la scelta) e la action request viene modificata di conseguenza, notificando la cosa all'owner della action
+        * [vista] owner sceglie un utente (un referral della action) a cui inviare la richiesta di moderazione
+        * [segnale] l'utente scelto riceve una notifica con l'url di accettazione 
+        * [vista] l'utente accetta o rifiuta (motivando la scelta) e la action request viene modificata di conseguenza, notificando la cosa all'owner della action
     * inviare un messaggio privato: gestione come sopra
 * controllare la possibilità di spostare la migrazione dei campi aggiunti in vote da askbot ad askbot_extensions
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 * [TODO futuro]: controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 

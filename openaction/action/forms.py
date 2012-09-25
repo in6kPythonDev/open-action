@@ -28,7 +28,6 @@ class ActionForm(askbot_forms.AskForm):
     ) 
 
     def __init__(self, *args, **kw):
-        # TODO FIXME WARNING Matteo: consider it pseudo-code
         request = kw.pop('request', None)
         user = request.user
         choices = [("user-%s" % user.pk, user),]

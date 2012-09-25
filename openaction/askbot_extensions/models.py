@@ -7,7 +7,9 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
 
 from askbot.models import Thread, Vote, User, Post
-from action import exceptions 
+from action import exceptions
+from action_request import exceptions as action_request_exceptions
+from action_request.models import ActionRequest 
 from action import const as action_const
 from notification import models as notification
 from friendship import models as friendship
@@ -270,6 +272,26 @@ class UserExtension(AskbotModelExtender):
             raise exceptions.ParanoidException()
         elif not self.is_following_action(action):
             raise exceptions.ParanoidException()
+
+        return True
+
+    def _askbot_ext_assert_can_request_moderation_for_action(self, sender, recipient, action):
+        """ Check permissions. If user is not action owner --> raise exception """
+        if user.owner != user:
+            raise action_request_exceptions.RequestActionModerationNotOwnerException(user, action)
+        elif ActionRequest.objects.filter(recipient=recipient,
+                action=action,
+                request_type='moderation'
+            ).count() > settings.MAX_MODERATION_REQUESTS:
+                raise action_request_exceptions.CannotRequestModerationToUser(sender, recipient, action)
+
+        return True
+
+    def _askbot_ext_assert_can_process_moderation_for_action(self, action):
+        """ Check permissions. If user is not following action --> raise exception """
+        followers_not_moderators = action.thread.followed_by.all().exclude(pk__in=action.moderator_set.all())
+        if self not in followers_not_moderators:
+            raise action_request_exceptions.UserCannotModerateActionException(self, action)
 
         return True
 

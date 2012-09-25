@@ -129,6 +129,8 @@ LOGGING = {
 
 REFERRAL_TOKEN_RESET_TIMEOUT_DAYS = 5
 
+MAX_MODERATION_REQUESTS = 3 
+
 #--------------------------------------------------------------------------------
 
 DEFAULT_FROM_EMAIL = "openaction@localhost.befair.it"
