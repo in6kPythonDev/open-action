@@ -18,10 +18,10 @@ from askbot.models import Post, User
 from askbot.models.repute import Vote
 
 from notification.models import Notice 
+from organization.models import Organization
 
 from action.models import Action, Geoname
 from action import const, exceptions
-from organization.tests import _create_organization 
 
 from askbot_extensions import models
 
@@ -73,6 +73,11 @@ class OpenActionViewTestCase(AskbotTestCase):
             title=title
         )
         return question.action 
+    
+    def _create_organization(self, name, external_resource=None):
+        org, created = Organization.objects.get_or_create(name=name)
+        return org
+
 
     def _logout(self):
         self._c.logout()
@@ -628,14 +633,16 @@ class ActionViewTest(OpenActionViewTestCase):
         title = "Aggiungo una nuova action"
         tagnames = None
         text = "Blablablablablablabla" 
+        in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
 
         response = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
-            text=text
+            text=text,
+            in_nomine=in_nomine
         )
-        #print "-------------------response: %s" % response
+        print "-------------------response: %s" % response
 
         if logged_in:
             self._check_for_redirect_response(response, is_ajax=True)
@@ -647,6 +654,10 @@ class ActionViewTest(OpenActionViewTestCase):
                 action_obj = False
 
             self.assertTrue(action_obj)
+
+            #checck that the action is not in nomine of any association,
+            # since the user is not representative of any ot them
+            self.assertTrue(action_obj.in_nomine_org == None)
         else:
             self._check_for_redirect_response(response)
         
@@ -656,18 +667,34 @@ class ActionViewTest(OpenActionViewTestCase):
 
     def test_create_action_in_nomine_of_association(self, user=None):
         logged_in = self._login(user)
+        organization = self._create_organization(name="org")
 
         title = "Aggiungo una nuova action in nomine di un'associazione"
         tagnames = None
         text = "Blablablablablablabla"
+        in_nomine = "%s-%s" % ("org", organization.pk)
 
-        organization=
+        # NOT DRY: This post is implemented in organization.tests.
+        # At this point, it could be better to collect all the utility
+        # functions (such as the POST and GET functions, that are 
+        # useful in more than one TestClass) togheter in class from 
+        # which all the other TestClass will inherit
+        
+        response = self._POST(
+            reverse('org-user-represent', args=(organization.pk,)),
+            True
+        )
+        if logged_in:
+            self._check_for_success_response(response)
+        else:
+            self._check_for_redirect_response(response)
 
         response = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
-            text=text
+            text=text,
+            in_nomine=in_nomine
         )
         #print "-------------------response: %s" % response
 
@@ -681,6 +708,11 @@ class ActionViewTest(OpenActionViewTestCase):
                 action_obj = False
 
             self.assertTrue(action_obj)
+
+            self.assertTrue(
+                organization in [self._author, user][bool(user)].orgs_represented
+            )
+
         else:
             self._check_for_redirect_response(response)
 

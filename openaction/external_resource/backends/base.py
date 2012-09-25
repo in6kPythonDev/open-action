@@ -5,7 +5,8 @@ class ExternalResourceInfo(object):
 
     def __init__(self, resource):
         self.resource = resource
-        super(ExternalResourceInfo, self).__init__()
+        #WAS: super(ExternalResourceInfo, self).__init__()
+        super(ExternalResourceInfo, self).__init__(resource)
 
 
     def get_external_info(self):

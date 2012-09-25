@@ -61,13 +61,13 @@ TODO
 * sostituire user_set_default_notice_bacKend a comment_your_action in oa_notification/handlers V
 * implementare eccezioni in organization V
 * provare a escluedere i nuovi attributie che estendono Vote, lasciando solo referral --> sembrano non funzionar, non vengon aggiunti nel db...... --> risolto tramite migrazione con South V
-
-* Creare Azione per l'associazione: 
+* Creare Azione per l'associazione: V
     * la form avrà un campo choice che conterrà l'utente e tutte le associazioni che rappresenta: nel caso l'utente non rappresenti nessuna associazione, il campo choice verrà nascosto
+
 * Nuova applicazione per:
     * aggiungere un moderatore all'Azione: gestione tramite segnale inviato dalla vista e gestito da un handler apposito 
     * inviare un messaggio privato: gestione come sopra
-
+* controllare la possibilità di spostare la migrazione dei campi aggiunti in vote da askbot ad askbot_extensions
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 * [TODO futuro]: controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 

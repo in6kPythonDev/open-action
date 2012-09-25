@@ -27,18 +27,17 @@ class ActionForm(askbot_forms.AskForm):
         required=False
     ) 
 
-    def __init__(self, request, *args, **kw):
+    def __init__(self, *args, **kw):
         # TODO FIXME WARNING Matteo: consider it pseudo-code
+        request = kw.pop('request', None)
         user = request.user
         choices = [("user-%s" % user.pk, user),]
-        orgs = user.orgs_represented()
+        orgs = user.orgs_represented
         for org in orgs:
             choices.append(
                 ("org-%s" % org.pk, org)
             )
-        #WAS: else:
-        #WAS:     ActionForm.in_nomine.widget = forms.HiddenInput()
-        ActionForm.in_nomine.choices = choices
+        ActionForm.base_fields['in_nomine'].choices = choices
         super(ActionForm, self).__init__(*args, **kw)
         if not orgs:
             self.hide_field('in_nomine')
