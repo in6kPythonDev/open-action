@@ -10,13 +10,15 @@ OpenAction installation guide
 
     mkvirtualenv open-action
 
-2. Install required submodules
+2. Update required submodules
 
     git submodule update --init 
 
 3. Install Askbot following the official guide http://askbot.org/doc/install.html
 
     3.1 Install askbot by the provided script
+
+        cd CLONEDIR/submodules/askbot-devel
 
         python setup.py develop
 
@@ -58,9 +60,9 @@ OpenAction installation guide
 
          python manage.py runserver (check no error)  
 
-4.  Install django-social-auth
+4.  Install requirements
 
-        pip install django-social-auth
+    pip install -r requirements.txt
 
 5.  Merge CLONEDIR/submodules/askbot-devel/urls.py.dist with WEBDIR/urls.py
 
@@ -68,21 +70,26 @@ OpenAction installation guide
 
 7. Integrate openaction project
 
-     2.1 Link (ln command) the 'action' app into the Askbot installation
-root directory
-     ln -s CLONEDIR/openaction/action/ WEBDIR/action
+     7.1 Link (ln command) the 'action' app into the 
+         Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/action/ WEBDIR/action
 
-     2.2 Link the 'base' app into the Askbot installation root directory
-     ln -s CLONEDIR/openaction/base/ WEBDIR/base
+     7.2 Link the 'base' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/base/ WEBDIR/base
 
-     2.3 Link the 'lib' app into the Askbot installation root directory
-     ln -s CLONEDIR/openaction/lib/ WEBDIR/lib
+     7.3 Link the 'lib' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/lib/ WEBDIR/lib
 
-     2.4 Link the 'askbot_extensions' app into the Askbot installation
-root directory
-     ln -s CLONEDIR/openaction/askbot_extensions/ WEBDIR/askbot_extension
+     7.4 Link the 'askbot_extensions' app into the 
+         Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/askbot_extensions/ WEBDIR/askbot_extension
 
-     2.5 Link the 'oa_social_auth' app into the Askbot installation root
-directory
-     ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth 
+     7.5 Link the 'oa_social_auth' app into the 
+         Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth 
 
