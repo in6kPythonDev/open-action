@@ -345,7 +345,6 @@ class ActionCreateView(ActionView):
             in_nomine_pk = int(in_nomine[4:])
             print "\n\nIN_NOMINE %s _PK %s\n\n" % (in_nomine[:3], in_nomine[4:])
             action.in_nomine_org = Organization.objects.get(pk=in_nomine_pk)
-            #do I need to save?
             action.save()
 
         for m2m_attr in (

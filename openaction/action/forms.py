@@ -7,7 +7,7 @@ class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
 
     in_nomine = forms.ChoiceField(required=True,
-        choices=() #TODO: Matteo pseudo-code to complete
+        choices=()
     )
 
     geoname_set = forms.ModelMultipleChoiceField(

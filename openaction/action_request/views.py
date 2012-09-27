@@ -1,16 +1,17 @@
+from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView
 from django.utils.decorators import method_decorator
 from django.db import transaction
 
 import askbot.utils.decorators as askbot_decorators
-from action_request import forms
+from action_request import forms as action_request_forms
 from action.models import Action
 from action_request.models import ActionRequest
 from action_request.signals import action_moderation_request_submitted
 
 from lib import views_support
 
-class ActionRequestView(FormView):
+class ActionRequestView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ A User submits a request of some type to anither user
     with regard to an Action"""
 
@@ -29,27 +30,26 @@ class ActionModerationRequestView(ActionRequestView):
     """ Submit a request for an Action moderation to a follower ofth Action 
     to moderate"""
 
-    form_class = forms.ModerationForm
-
-    def get_initial(self)
-        return {
-            'request_type': 'moderation',
-        }
+    form_class = action_request_forms.ModerationForm
+    template_name = 'moderation/add.html'
 
     @transaction.commit_on_success
     def form_valid(self, form):
+        print "\nform_valid\n"
 
         sender = self.request.user
         action = self.get_object()
         recipient = form.cleaned_data['follower']
         request_notes = form.cleaned_data['request_text']
+        request_type = 'moderation'
 
-        self.request.user.assert_can_request_moderation_for_action(sender, recipient, action)
+        sender.assert_can_request_moderation_for_action(sender, recipient, action)
 
         action_request = ActionRequest(action=action,
             sender=sender,
             recipient=recipient,
-            request_notes=request_notes
+            request_notes=request_notes,
+            request_type=request_type 
         )
         action_request.save()
 
@@ -58,7 +58,7 @@ class ActionModerationRequestView(ActionRequestView):
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
-class ActionRequestProcessView(FormView):
+class ActionRequestProcessView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ A User decides to accept or refuse an ActionRequest sent to him 
     by another User"""
     
@@ -77,7 +77,8 @@ class ActionRequestModerationProcessView(ActionRequestProcessView):
     """ A User decides to accept or refuse a moderation request sent to him 
     by another User"""
 
-    form_class = forms.ModerationProcessForm
+    form_class = action_request_forms.ModerationProcessForm
+    template_name = 'moderation/process.html'
 
     @transaction.commit_on_success
     def form_valid(self, form):

@@ -5,6 +5,7 @@
 from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
+from django.conf import settings
 
 from askbot.models import Thread, Vote, User, Post
 from action import exceptions
@@ -277,12 +278,12 @@ class UserExtension(AskbotModelExtender):
 
     def _askbot_ext_assert_can_request_moderation_for_action(self, sender, recipient, action):
         """ Check permissions. If user is not action owner --> raise exception """
-        if user.owner != user:
-            raise action_request_exceptions.RequestActionModerationNotOwnerException(user, action)
+        if action.owner != sender:
+            raise action_request_exceptions.RequestActionModerationNotOwnerException(sender, action)
         elif ActionRequest.objects.filter(recipient=recipient,
                 action=action,
                 request_type='moderation'
-            ).count() > settings.MAX_MODERATION_REQUESTS:
+            ).count() >= settings.MAX_MODERATION_REQUESTS:
                 raise action_request_exceptions.CannotRequestModerationToUser(sender, recipient, action)
 
         return True

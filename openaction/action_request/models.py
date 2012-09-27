@@ -1,5 +1,6 @@
 from django.db import models
 
+from base.models import Resource
 from action.models import Action
 from askbot.models.user import User
 
