@@ -15,6 +15,7 @@ from action.models import Action
 from action import const as action_const
 from action import forms
 from askbot_extensions import utils as askbot_extensions_utils
+from organization.models import Organization
 import exceptions
 
 from lib import views_support
@@ -120,7 +121,7 @@ class CommentVoteView(VoteView):
     def post(self, request, *args, **kwargs):
         comment = self.get_object()
         request.user.assert_can_vote_comment(comment)
-        referral = self.get_referral(comment.thread.action)
+        referral = self.get_referral(comment.action)
         askbot_extensions_utils.vote_add(comment, request.user, referral)
         return views_support.response_success(request) 
 
@@ -240,7 +241,7 @@ class EditableParameterView(UpdateView):
 #    def get_object(self,queryset=None):
 #        """ Return the Action related to the post object """
 #        self.post = super(VoteView, self).get_object(queryset)
-#        action = self.post.thread.action
+#        action = self.post.action
 #
 #        return action
 #
@@ -281,6 +282,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
+            #'in_nomine': self.request.REQUEST.get('in_nomine', ''),
             'wiki': False,
             'is_anonymous': False,
         }
@@ -293,6 +295,11 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('wiki')
         form.hide_field('ask_anonymously')
         return form
+
+    def get_form_kwargs(self):
+        kwargs = super(ActionView, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
 class ActionCreateView(ActionView):
     """Create a new Action.
@@ -321,6 +328,7 @@ class ActionCreateView(ActionView):
         title = form.cleaned_data['title']
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
+        in_nomine = form.cleaned_data['in_nomine']
 
         question = self.request.user.post_question(
             title = title,
@@ -331,7 +339,13 @@ class ActionCreateView(ActionView):
             timestamp = timestamp
         )
 
-        action = question.thread.action 
+        action = question.action 
+
+        if in_nomine[:3] == "org":
+            in_nomine_pk = int(in_nomine[4:])
+            print "\n\nIN_NOMINE %s _PK %s\n\n" % (in_nomine[:3], in_nomine[4:])
+            action.in_nomine_org = Organization.objects.get(pk=in_nomine_pk)
+            action.save()
 
         for m2m_attr in (
             'geoname_set', 
@@ -448,7 +462,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 #                #    print "-----------TO_REMOVE------------%s" % o.id
 #                #for o in to_keep:
 #                #    print "-----------TO_KEEP------------%s" % o.id
-                to_add, to_remove = update_values(m2m_values_old, m2m_values_new)
+                to_add, to_remove = self.update_values(m2m_values_old, m2m_values_new)
 
                 getattr(action, m2m_attr).add(*to_add)
                 getattr(action, m2m_attr).remove(*to_remove)

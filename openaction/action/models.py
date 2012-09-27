@@ -5,6 +5,7 @@ from django.template.defaultfilters import slugify
 
 from askbot.models import Thread, User
 from askbot.models.post import Post
+from askbot.models.repute  import Vote
 
 from base.models import Resource
 from base.utils import get_resource_icon_path
@@ -214,7 +215,11 @@ class Action(models.Model, Resource):
 
     @property
     def votes(self):
-        return self.question.votes
+        #Matteo
+        # self.question.votes returns a RelatedManager on which the methods
+        # 'declareds' and 'anonymous' of VoteManager cannot be called
+        #WAS: return Vote.objects.all() & self.question.votes.all()
+        return Vote.objects.filter(voted_post=self.question)
 
     @property
     def voters(self):
@@ -442,25 +447,6 @@ class Politician(models.Model):
 
 class Media(models.Model):
     pass
-    
-#--------------------------------------------------------------------------------
-
-class ActionRequest(models.Model, Resource):
-    """ A request,from moderators to the staff,to make operations on an Action
-    
-    An ActionRequest is raised from an Action moderator whether he wants 
-    to make some operation on it, only if the operation requires the staff 
-    permissions 
-    """
-    
-    action = models.ForeignKey(Action)
-    request_type = models.CharField(max_length=256)
-    request_notes = models.TextField(blank=True, default="")
-    answer_notes = models.TextField(blank=True, default="")
-    is_processed = models.BooleanField(default=False)
-
-    created_on = models.DateTimeField(auto_now_add=True)
-    last_update_on = models.DateTimeField(auto_now=True)
 
 #--------------------------------------------------------------------------------
 # Askbot signal handling

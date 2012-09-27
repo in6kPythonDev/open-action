@@ -5,14 +5,19 @@
 from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
+from django.conf import settings
 
 from askbot.models import Thread, Vote, User, Post
-from action import exceptions 
+from action import exceptions
+from action_request import exceptions as action_request_exceptions
+from action_request.models import ActionRequest 
 from action import const as action_const
 from notification import models as notification
 from friendship import models as friendship
+from organization.models import Organization
 
 from lib.djangolib import ModelExtender
+from lib import ClassProperty
 
 from askbot_extensions import managers
 
@@ -82,7 +87,7 @@ Vote.add_to_class('is_anonymous',
     models.BooleanField(default=False, help_text="visibile pubblicamente o no")
 )
 Vote.add_to_class('text', 
-    models.TextField(help_text="motivazione del voto")
+    models.TextField(default='',help_text="motivazione del voto")
 )
 Vote.add_to_class('objects', managers.VoteManager())
 
@@ -103,14 +108,14 @@ def comment_check_before_save(sender, **kwargs):
     #WAS:         raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     if post.is_comment():
-        if post.thread.action.status in (
+        if post.action.status in (
             action_const.ACTION_STATUS_DRAFT,
             action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     elif post.is_answer():
-        if post.thread.action.status in (
+        if post.action.status in (
             action_const.ACTION_STATUS_DRAFT,
             action_const.ACTION_STATUS_DELETED,
         ):
@@ -202,7 +207,7 @@ class UserExtension(AskbotModelExtender):
         # CHECK THIS Matteo: shouldn't I be able to vote a comment
         # even if the Action cannot be voted ??
         try:
-            self.assert_can_vote_action(comment.thread.action)
+            self.assert_can_vote_action(comment.action)
         except exceptions.PermissionDenied as e:
             raise exceptions.VoteOnUnauthorizedCommentException()
             
@@ -279,18 +284,38 @@ class UserExtension(AskbotModelExtender):
             action_const.ACTION_STATUS_DELETED,
         ):
             raise exceptions.ParanoidException()
-        elif not self.is_following(action):
+        elif not self.is_following_action(action):
             raise exceptions.ParanoidException()
 
         return True
 
-    def _askbot_ext_follow_action(self, action=None):
+    def _askbot_ext_assert_can_request_moderation_for_action(self, sender, recipient, action):
+        """ Check permissions. If user is not action owner --> raise exception """
+        if action.owner != sender:
+            raise action_request_exceptions.RequestActionModerationNotOwnerException(sender, action)
+        elif ActionRequest.objects.filter(recipient=recipient,
+                action=action,
+                request_type='moderation'
+            ).count() >= settings.MAX_MODERATION_REQUESTS:
+                raise action_request_exceptions.CannotRequestModerationToUser(sender, recipient, action)
+
+        return True
+
+    def _askbot_ext_assert_can_process_moderation_for_action(self, action):
+        """ Check permissions. If user is not following action --> raise exception """
+        followers_not_moderators = action.thread.followed_by.all().exclude(pk__in=action.moderator_set.all())
+        if self not in followers_not_moderators:
+            raise action_request_exceptions.UserCannotModerateActionException(self, action)
+
+        return True
+
+    def _askbot_ext_follow_action(self, action):
         self.followed_threads.add(action.thread)
 
-    def _askbot_ext_unfollow_action(self, action=None):
+    def _askbot_ext_unfollow_action(self, action):
         self.followed_threads.remove(action.thread)
 
-    def _askbot_ext_is_following_action(self, action=None):
+    def _askbot_ext_is_following_action(self, action):
         #WAS: return action.thread.followed_by.filter(id=self.id).exists() 
         return action.thread.is_followed_by(self)
 
@@ -302,6 +327,19 @@ class UserExtension(AskbotModelExtender):
         symmetric_friends = friendship.Friend.objects.friends(user=self)
         # TODO: asymmetric_friends = friendship.Follow.objects.followers(user=self)
         return symmetric_friends
+
+    #######Matteo QUESTION: shouldn't theese be properties?
+
+    @property
+    def _askbot_ext_orgs_followed(self):
+        orgs_pk = self.orgmap_set.filter(is_follower=True).values_list('org__pk', flat=True)
+        return Organization.objects.filter(pk__in=orgs_pk)
+
+    @property
+    def _askbot_ext_orgs_represented(self):
+        orgs_pk = self.orgmap_set.filter(is_representative=True).values_list('org__pk', flat=True)
+        return Organization.objects.filter(pk__in=orgs_pk)
+    ########
 
 
 User.add_to_class('ext_noattr', UserExtension())

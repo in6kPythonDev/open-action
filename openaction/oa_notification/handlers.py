@@ -1,13 +1,20 @@
 from django.db.models.signals import post_save
-from django.dispatch import receiver 
+from django.dispatch import receiver
+from django.conf import settings
 
 from askbot.models import Post, User
 from askbot.models.repute import Vote
 from notification import models as notification
 from action.models import Action
-from action.signals import post_action_status_update 
+from action.signals import post_action_status_update, post_declared_vote_add 
 
-from oa_notification import consts
+from oa_notification import consts as notification_consts
+from action import const as action_consts
+
+import logging
+
+log = logging.getLogger(settings.PROJECT_NAME)
+
 
 @receiver(post_save, sender=Post)
 def notify_add_blog_post(sender, **kwargs):
@@ -37,7 +44,7 @@ def notify_add_blog_post(sender, **kwargs):
         # so we have to check if it is an answer
         if post.is_answer():
 
-            action = post.thread.action
+            action = post.action
 
             referrers = action.referrers
             followers = action.thread.followed_by.all()
@@ -50,47 +57,44 @@ def notify_add_blog_post(sender, **kwargs):
             })
 
             notification.send(users=users, 
-                label=consts.ACTION_MAKE_BLOGPOST, 
+                label=notification_consts.ACTION_MAKE_BLOGPOST, 
                 extra_context=extra_context, 
                 on_site=True, 
                 sender=None, 
                 now=True
             )
 
-#TODO: Matteo dedicated signal: post_declared_vote_add
-@receiver(post_save, sender=Vote)
-def notify_user_join_same_action(sender, **kwargs): #TODO Matteo your action
+#DONE: Matteo dedicated signal: post_declared_vote_add
+#WAS: @receiver(post_save, sender=Vote)
+@receiver(post_declared_vote_add, sender=Vote)
+def notify_user_join_your_action(sender, **kwargs):
     """ Notify to the users who woted an Action that 
     another User has voted it. """
-    print "notify_user_join_same_action %s %s" % (sender, kwargs)
+    log.debug("notify_user_join_same_action %s %s" % (sender, kwargs))
 
-    if kwargs['created']:
-        vote = kwargs['instance']
-        post = vote.voted_post
-        action = post.thread.action
+    #WAS: if kwargs['created']:
+    vote = kwargs['vote_instance']
+    post = vote.voted_post
+    action = post.action
 
-        if post.is_question():
-            voter = vote.user
+    if post.is_question():
+        voter = vote.user
 
-            extra_context = ({
-                "user" : voter,
-                "action" : action 
-            })
-            #recipients
-            #for user in action.voters:
-            #    print "user: %s" % User.objects.get(username=user.get('user__username'))
-            users = []
-            for user in action.voters:
-                users.append(User.objects.get(username=user.get('user__username')))
-        
-            print "\nnotification.send users %s\n" % users
-            notification.send(users=users, 
-                label="user_join_same_action",
-                extra_context=extra_context,
-                on_site=True, 
-                sender=None, 
-                now=True
-            )
+        extra_context = ({
+            "user" : voter,
+            "action" : action 
+        })
+        #recipients
+        users = action.referrers
+
+        #print "\nnotification.send users %s\n" % users
+        notification.send(users=users, 
+            label="user_join_your_action",
+            extra_context=extra_context,
+            on_site=True, 
+            sender=None, 
+            now=True
+        )
 
 @receiver(post_save, sender=Post)
 def notify_user_comment_your_action(sender, **kwargs):
@@ -101,14 +105,14 @@ def notify_user_comment_your_action(sender, **kwargs):
 
         if post.is_comment_to_action():
             commenter = post.author
-            action = post.thread.action #TODO Matteo: post.action
+            action = post.action
 
             extra_content = ({
                 "user" : commenter,
                 "action" : action
             }) 
             #recipients
-            users = post.thread.action.referrers
+            users = post.action.referrers
 
             notification.send(users=users,
                 label="user_comment_your_action",
@@ -118,10 +122,10 @@ def notify_user_comment_your_action(sender, **kwargs):
                 now=True
             )
 
-#@receiver(action_get_level_step, sender=Action)
+#WAS: @receiver(action_get_level_step, sender=Action)
 @receiver(post_action_status_update, sender=Action)
-#TODO Matteo: rename post_status_update
-def notify_action_get_level_step(sender, **kwargs):
+#DONE Matteo: rename post_status_update
+def notify_post_status_update(sender, **kwargs):
     """ Notify two events:
 
     * a joined action reached a level step: this is notified 
@@ -134,32 +138,37 @@ def notify_action_get_level_step(sender, **kwargs):
  
     #1 joined action reached a level step
     action = sender
-    status = kwargs['old_status']
+    old_status = kwargs['old_status']
 
-    print "\n\n------action:%s status:%s\n\n" % (action,status) 
+    log.debug("Action:%s status:%s" % (action, old_status)) 
 
-    #TODO: Matteo switch status values (if READY --> ... else: TODO placeholder)
+    #DONE: Matteo switch status values (if READY --> ... else: TODO placeholder)
 
-    extra_context = ({
-        "action" : action,
-        "old_status" : status
-    }) 
-    #recipients
-    users = action.voters
-    print "\n\nRecipients: %s" % users
+    if old_status == action_consts.ACTION_STATUS_READY: 
 
-    notification.send(users=users,
-        label="joined_action_get_level_step",
-        extra_context=extra_context,
-        on_site=True, 
-        sender=None, 
-        now=True
-    )
+        extra_context = ({
+            "action" : action,
+            "old_status" : old_status
+        }) 
+        #recipients
+        users = action.voters
+        #print "\n\nRecipients: %s" % users
 
-    #2 favourite topic action reached a level step
+        notification.send(users=users,
+            label="joined_action_get_level_step",
+            extra_context=extra_context,
+            on_site=True, 
+            sender=None, 
+            now=True
+        )
+
+        #2 favourite topic action reached a level step
+    else:
+        #TODO placeholder
+        pass
 
 @receiver(post_save, sender=User)
-def notify_user_comment_your_action(sender, **kwargs):
+def user_set_default_notice_backend(sender, **kwargs):
     """ Indicates for the User whether to send notifications
     of a given type to the openaction default medium. """
 
@@ -175,6 +184,7 @@ def notify_user_comment_your_action(sender, **kwargs):
                     medium="openaction", 
                     send=True
                 )
-                print "Adding NoticeSetting of type %s to user %s " % (notice_type, 
+                log.debug("Adding NoticeSetting of type %s to user %s " % (
+                    notice_type, 
                     user
-                ) 
+                ))

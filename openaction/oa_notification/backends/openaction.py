@@ -1,15 +1,15 @@
 from django.template.loader import render_to_string
 from django.template import Context
+from django.utils.translation import ugettext
 
 from notification.backends.base import BaseBackend
-#TODO: Matteo backend makes use of notification.Notice instead of UserNotice
-from notification.models import Notice
+#WAS: from notification.models import Notice
 
 class OpenActionDefaultBackend(BaseBackend):
 
     spam_sensitivity = 2
 
-    def deliver(self, recipient, sender, notice_type, extra_content):
+    def deliver(self, recipient, sender, notice_type, extra_context):
         """ Deliver a notice to a User 
 
         DefaultBackend.deliver will send to the receiver (a User) a 
@@ -43,6 +43,10 @@ class OpenActionDefaultBackend(BaseBackend):
         notice_text = u"%s%s" % (subject, text)
 
         # 3. Deliver notice = save new notice for User 'recipient'
-        from oa_notification.models import UserNotice
-        UserNotice.objects.create(user=recipient, text=notice_text)
+        from notification.models import Notice
+        Notice.objects.create(recipient=recipient, 
+            message=notice_text,
+            notice_type=notice_type,
+            on_site=True
+        )
         

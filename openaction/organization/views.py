@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 
 import askbot.utils.decorators as askbot_decorators
 from organization.models import UserOrgMap, Organization
+from organization import exceptions as exceptions
 
 from lib import views_support
 
@@ -30,7 +31,8 @@ class UserFollowOrgView(UserOrgMapView):
             org=org,
         )
         if mapping.is_follower:
-            raise Exception #TODO: Matteo raise appropriate exception
+            #DONE: Matteo raise appropriate exception
+            raise exceptions.UserCannotFollowOrgTwice(user, org) 
         else:
             mapping.is_follower=True
             mapping.save()
@@ -40,3 +42,25 @@ class UserFollowOrgView(UserOrgMapView):
         
         return views_support.response_success(request)
  
+class UserRepresentOrgView(UserOrgMapView):
+    """ Map a User to an Organization, defining the User as a representative 
+    of the latter. """
+
+    def post(self, request, *args, **kwargs):
+        org = self.get_object()
+        user = request.user
+
+        mapping, created = UserOrgMap.objects.get_or_create(user=user,
+            org=org,
+        )
+        if mapping.is_representative:
+            #DONE: Matteo raise appropriate exception
+            raise exceptions.UserCannotRepresentOrgTwice(user, org) 
+        else:
+            mapping.is_representative=True
+            mapping.save()
+
+        # QUESTION: should we notify (here or in an UserOrgMap post_save
+        # signal) to the Organization that a new User is following them ?
+        
+        return views_support.response_success(request)
