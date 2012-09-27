@@ -3,7 +3,7 @@ from django.db import models
 from base.models import Resource
 from action.models import Action
 from askbot.models.user import User
-
+from action_request import const
 
 
 class ActionRequest(models.Model, Resource):
@@ -15,8 +15,8 @@ class ActionRequest(models.Model, Resource):
     """
 
     REQUEST_CHOICES = (
-        ('moderation','Moderazione'),
-        ('message','Messaggio'),
+        (const.REQUEST_TYPE['mod'],'Moderazione'),
+        (const.REQUEST_TYPE['msg'],'Messaggio'),
     ) 
     
     action = models.ForeignKey(Action)

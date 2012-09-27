@@ -7,7 +7,7 @@ except ImportError as e:
 import action_request.views as action_request_views
 
 urlpatterns = patterns('',
-    url(r'^(?P<pk>\d+)/moderate/$', action_request_views.ActionRequestModerationProcessView.as_view(),
+    url(r'^(?P<pk>\d+)/answer/$', action_request_views.ActionRequestModerationProcessView.as_view(),
         name='actionrequest-moderation-process'
     ),
 )

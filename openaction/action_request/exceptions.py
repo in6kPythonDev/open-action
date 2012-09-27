@@ -33,4 +33,4 @@ class UserCannotModerateActionException(exceptions.PermissionDenied):
         self.action = action
 
     def __unicode__(self):
-        return u"L'utente %s non puo moderare l'azione % poichè non la sta seguendo" % (self.user, self.action)
+        return u"L'utente %s non puo moderare l'azione %s poichè non la sta seguendo" % (self.user, self.action)

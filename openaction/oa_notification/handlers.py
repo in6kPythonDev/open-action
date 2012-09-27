@@ -1,13 +1,15 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from askbot.models import Post, User
 from askbot.models.repute import Vote
 from notification import models as notification
 from action.models import Action
 from action.signals import post_action_status_update, post_declared_vote_add 
-
+from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed
+from action_request.models import ActionRequest
 from oa_notification import consts as notification_consts
 from action import const as action_consts
 
@@ -64,7 +66,6 @@ def notify_add_blog_post(sender, **kwargs):
                 now=True
             )
 
-#DONE: Matteo dedicated signal: post_declared_vote_add
 #WAS: @receiver(post_save, sender=Vote)
 @receiver(post_declared_vote_add, sender=Vote)
 def notify_user_join_your_action(sender, **kwargs):
@@ -124,7 +125,6 @@ def notify_user_comment_your_action(sender, **kwargs):
 
 #WAS: @receiver(action_get_level_step, sender=Action)
 @receiver(post_action_status_update, sender=Action)
-#DONE Matteo: rename post_status_update
 def notify_post_status_update(sender, **kwargs):
     """ Notify two events:
 
@@ -142,7 +142,7 @@ def notify_post_status_update(sender, **kwargs):
 
     log.debug("Action:%s status:%s" % (action, old_status)) 
 
-    #DONE: Matteo switch status values (if READY --> ... else: TODO placeholder)
+    #Matteo switch status values (if READY --> ... else: TODO placeholder)
 
     if old_status == action_consts.ACTION_STATUS_READY: 
 
@@ -164,27 +164,77 @@ def notify_post_status_update(sender, **kwargs):
 
         #2 favourite topic action reached a level step
     else:
-        #TODO placeholder
+        #TODO placeholder old_status other than READY
         pass
 
-@receiver(post_save, sender=User)
-def user_set_default_notice_backend(sender, **kwargs):
-    """ Indicates for the User whether to send notifications
-    of a given type to the openaction default medium. """
+#NOTE: KO: the default settings should have been setted in the user pre_save
+#@receiver(post_save, sender=User)
+#def user_set_default_notice_backend(sender, **kwargs):
+#    """ Indicates for the User whether to send notifications
+#    of a given type to the openaction default medium. """
+#
+#    if kwargs['created']:
+#        user = kwargs['instance']
+#
+#        if user.is_active:
+#
+#            for notice_type in notification.NoticeType.objects.all():
+#                obj, created = notification.NoticeSetting.objects.get_or_create(
+#                    user=user, 
+#                    notice_type=notice_type, 
+#                    medium="openaction", 
+#                    send=True
+#                )
+#                log.debug("Adding NoticeSetting of type %s to user %s " % (
+#                    notice_type, 
+#                    user
+#                ))
 
-    if kwargs['created']:
-        user = kwargs['instance']
+#handle the moderation requests from the action owner
+@receiver(action_moderation_request_submitted, sender=ActionRequest)
+def notify_action_moderation_request(sender, **kwargs):
+    """ Notify to an action follower that he received a moderation
+    request from the action owner"""
 
-        if user.is_active:
+    action_request = sender
 
-            for notice_type in notification.NoticeType.objects.all():
-                obj, created = notification.NoticeSetting.objects.get_or_create(
-                    user=user, 
-                    notice_type=notice_type, 
-                    medium="openaction", 
-                    send=True
-                )
-                log.debug("Adding NoticeSetting of type %s to user %s " % (
-                    notice_type, 
-                    user
-                ))
+    #recipients
+    users = []
+    users.append(action_request.recipient)
+    #extra_context
+    extra_context = ({
+        "action_request" : action_request,
+        "process_url" : reverse("actionrequest-moderation-process", args=(action_request.pk,))
+    }) 
+
+    notification.send(users=users,
+        label="mod_proposal",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
+
+#handle the moderation processing of the questioned user
+@receiver(action_moderation_request_processed, sender=ActionRequest)
+def notify_action_moderation_processed(sender, **kwargs):
+    """ Notify to the Action owner that an Action follower sent a response
+    to an Action moderation request"""
+
+    action_request = sender
+
+    #recipients
+    users = []
+    users.append(action_request.action.owner)
+    #extra_context
+    extra_context = ({
+        "action_request" : action_request,
+    }) 
+
+    notification.send(users=users,
+        label="answer_mod_proposal",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
