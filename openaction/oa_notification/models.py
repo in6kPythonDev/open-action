@@ -1,8 +1,9 @@
 from django.db import models
 from askbot.models import User
 from django.utils.translation import ugettext as _
+from django.conf import settings
 
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.contrib.auth.models import User
 from django.dispatch import receiver 
 
@@ -119,27 +120,48 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
 
 #--------------------------------------------------------------------------------
 
-@receiver(pre_save, sender=User)
-def user_set_default_notice_settings(sender, **kwargs):
+def set_default_notice_settings(user):
+
+    # Add openaction backend for sending notices to the user.
+    # when a User is activated
+    # Note: we need to get the index of the backands list because 
+    # 'notification' needs the index, not the name
+    medium = settings.NOTIFICATION_BACKENDS.index(("openaction", "oa_notification.backends.openaction.OpenActionDefaultBackend"))
+    for notice_type in notification.NoticeType.objects.all():
+        notification.get_notification_setting(user=user,
+            notice_type=notice_type,
+            medium=medium
+        )
+
+@receiver(post_save, sender=User)
+def post_user_set_default_notice_settings(sender, **kwargs):
     """ Create a NoticeSetting instance for the User, using default (openaction) 
     backend
+    
+    Case: user is being created and user is active
+    """
+    if kwargs['created']:
+        user = kwargs['instance']
+        if user.is_active:
+            set_default_notice_settings(user)
+
+@receiver(pre_save, sender=User)
+def pre_user_set_default_notice_settings(sender, **kwargs):
+    """ Create a NoticeSetting instance for the User, using default (openaction) 
+    backend
+
+    Case: user is being modified as active and user was not active before the modification
     """
 
     user = kwargs['instance']
 
-    try:
-        old_user = User.objects.get(pk=user.pk)
-    except User.DoesNotExist as e:
-        created=True
-    else:
-        created = False
+    if user.pk and user.is_active:
 
-    # Add openaction backend for sending notices to the user.
-    # when a User is activated
-    if user.is_active and (created or not old_user.is_active):
-        for notice_type in notification.NoticeType.objects.all():
-            notification.get_notification_setting(user=user,
-                notice_type=notice_type,
-                medium="default"
-            )
+        try:
+            old_user = User.objects.get(pk=user.pk)
+        except User.DoesNotExist as e:
+            return
+
+        if not old_user.is_active:
+            set_default_notice_settings(user)
 

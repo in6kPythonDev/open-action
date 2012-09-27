@@ -10,12 +10,12 @@ from django.conf import settings
 from askbot.models import Thread, Vote, User, Post
 from action import exceptions
 from action_request import exceptions as action_request_exceptions
-from action_request.models import ActionRequest 
 from action import const as action_const
 from notification import models as notification
 from friendship import models as friendship
+from action_request.models import ActionRequest
+from action_request import const as action_request_const
 from organization.models import Organization
-
 from lib.djangolib import ModelExtender
 from lib import ClassProperty
 
@@ -104,7 +104,6 @@ def comment_check_before_save(sender, **kwargs):
     #WAS:     if post.thread.action.status in (
     #WAS:         action_const.ACTION_STATUS_DRAFT
     #WAS:     ):
-    #WAS:         #DONE Matteo: define appropriate arguments
     #WAS:         raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     if post.is_comment():
@@ -126,7 +125,7 @@ def comment_check_before_save(sender, **kwargs):
 def vote_check_before_save(sender, **kwargs):
     """Overload Askbot.repute.Vote.save
 
-    DONE Matteo: Check that a user cannot vote twice
+    Check that a user cannot vote twice
     Check that referral cannot be the user himself
     """
 
@@ -155,8 +154,6 @@ def vote_check_before_save(sender, **kwargs):
     # Check referral
     if vote.referral:
         if vote.referral == vote.user:
-            # TODO Matteo: define specific exception
-            #WAS: raise PermissionDenied("Cannot be referred by yourself")
             raise exceptions.InvalidReferralError()
 
 #---------------------------------------------------------------------------------
@@ -214,8 +211,6 @@ class UserExtension(AskbotModelExtender):
                 action_const.ACTION_STATUS_DRAFT, 
             ):
                 raise exceptions.EditActionInvalidStatusException(action.status)
-            # CHECK THIS Matteo: can the moderators edit an Action ??
-            # (and, in the case, which parts of it?) 
             elif action.question.author != self:
                 #only action author can update it
                 raise exceptions.UserIsNotActionOwnerException(self, action)
@@ -282,19 +277,37 @@ class UserExtension(AskbotModelExtender):
             raise action_request_exceptions.RequestActionModerationNotOwnerException(sender, action)
         elif ActionRequest.objects.filter(recipient=recipient,
                 action=action,
-                request_type='moderation'
+                request_type=action_request_const.REQUEST_TYPE['mod']
             ).count() >= settings.MAX_MODERATION_REQUESTS:
                 raise action_request_exceptions.CannotRequestModerationToUser(sender, recipient, action)
 
         return True
 
-    def _askbot_ext_assert_can_process_moderation_for_action(self, action):
+    def _askbot_ext_assert_can_process_moderation_for_action(self, action_request, already_accepted):
         """ Check permissions. If user is not following action --> raise exception """
-        followers_not_moderators = action.thread.followed_by.all().exclude(pk__in=action.moderator_set.all())
-        if self not in followers_not_moderators:
-            raise action_request_exceptions.UserCannotModerateActionException(self, action)
+        followers_not_moderators = action_request.action.thread.followed_by.all().exclude(pk__in=action_request.action.moderator_set.all())
+        if self not in followers_not_moderators and not already_accepted:
+            raise action_request_exceptions.UserCannotModerateActionException(self, action_request.action)
+        elif action_request.is_processed or action_request.request_type != action_request_const.REQUEST_TYPE['mod']:
+            raise exceptions.ParanoidException()
 
         return True
+
+    def _askbot_ext_check_moderation_response_already_answered(self, action_request):
+        """" """
+        
+        action_requests = ActionRequest.objects.filter(recipient=action_request.recipient,
+            action=action_request.action,
+            request_type=action_request_const.REQUEST_TYPE['mod']
+        )
+
+        for action_request in action_requests:
+            if action_request.is_accepted:
+                return True
+
+        return False
+
+#--------------------------------------------------------------------------------
 
     def _askbot_ext_follow_action(self, action):
         self.followed_threads.add(action.thread)
@@ -315,8 +328,6 @@ class UserExtension(AskbotModelExtender):
         # TODO: asymmetric_friends = friendship.Follow.objects.followers(user=self)
         return symmetric_friends
 
-    #######Matteo QUESTION: shouldn't theese be properties?
-
     @property
     def _askbot_ext_orgs_followed(self):
         orgs_pk = self.orgmap_set.filter(is_follower=True).values_list('org__pk', flat=True)
@@ -326,7 +337,6 @@ class UserExtension(AskbotModelExtender):
     def _askbot_ext_orgs_represented(self):
         orgs_pk = self.orgmap_set.filter(is_representative=True).values_list('org__pk', flat=True)
         return Organization.objects.filter(pk__in=orgs_pk)
-    ########
 
 
 User.add_to_class('ext_noattr', UserExtension())

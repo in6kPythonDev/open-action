@@ -13,7 +13,7 @@ from askbot.models.repute import Vote
 from action import const, exceptions
 from oa_notification import models as oa_notification
 from notification.models import Notice, NoticeType
-from action.tests import ActionViewTest
+from action.tests import ActionViewTest, OpenActionViewTestCase
 #signals handling
 from action.signals import post_action_status_update
 from oa_notification.handlers import notify_post_status_update
@@ -27,7 +27,7 @@ import os, urllib2
 class OaNotificationTest(ActionViewTest):
 
     def setUp(self):
-        super(ActionViewTest, self).setUp()
+        super(OaNotificationTest, self).setUp()
         #manually connect signal to handler 
         post_action_status_update.connect(notify_post_status_update)
         #manually create notice types
@@ -63,6 +63,7 @@ class OaNotificationTest(ActionViewTest):
 
 #TODO: integrate with the tests above.
 #TODO: restructure test to prevent the action app tests to be executed here
+#TODO: Test
 class NotificationTest(OpenActionViewTestCase):
 
     def setUp(self):

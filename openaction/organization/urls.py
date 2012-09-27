@@ -10,10 +10,10 @@ urlpatterns = patterns('',
     url(r'^(?P<pk>\d+)/$', organization_views.OrgView.as_view(),
         name='org-detail'
     ),
-    url(r'^(?P<pk>\d+)/follow$', organization_views.UserFollowOrgView.as_view(),
+    url(r'^(?P<pk>\d+)/follow/$', organization_views.UserFollowOrgView.as_view(),
         name='org-user-follow'
     ),
-    url(r'^(?P<pk>\d+)/represent$', organization_views.UserRepresentOrgView.as_view(),
+    url(r'^(?P<pk>\d+)/represent/$', organization_views.UserRepresentOrgView.as_view(),
         name='org-user-represent'
     ),
 )

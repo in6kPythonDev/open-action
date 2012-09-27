@@ -215,8 +215,7 @@ class Action(models.Model, Resource):
 
     @property
     def votes(self):
-        #Matteo
-        # self.question.votes returns a RelatedManager on which the methods
+        #NOTE: self.question.votes returns a RelatedManager on which the methods
         # 'declareds' and 'anonymous' of VoteManager cannot be called
         #WAS: return Vote.objects.all() & self.question.votes.all()
         return Vote.objects.filter(voted_post=self.question)
@@ -301,11 +300,9 @@ class Action(models.Model, Resource):
         """
         try:
             # get the User instance
-            print "\nToken: !%s!\n" % token
             user_pk = self.token_generator.get_user_pk_from_token(token)
             user_calling_for_action = User.objects.get(pk=user_pk)
         except Exception as e:
-            print "\nexception raised: %s\n" % e
             raise exceptions.InvalidReferralTokenException()
 
         checked = self.token_generator.check_token((self, user_calling_for_action), token)
@@ -403,7 +400,6 @@ class Geoname(models.Model):
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
 
-    #added by Matteo
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.kind)
 
