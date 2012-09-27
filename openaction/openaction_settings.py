@@ -176,9 +176,26 @@ NOTIFICATION_BACKENDS = (
 #--------------------------------------------------------------------------------
 
 EXTERNAL_API_BACKENDS_D = {
-    "facebook" : "external_resource.backends.FBExternalResourceInfo",
-    #"twitter" : "external_resource.backends.TwitterExternalResourceInfo",
-    "openpolis" : "external_resource.backends.OpenPolisExternalResourceInfo",
+    "facebook" : "external_resource.backends.FBResourceBackend",
+    #"twitter" : "external_resource.backends.TwitterResourceBackend",
+    "politicians" : {
+        'ENGINE' : "external_resource.backends.OpenPolisPoliticiansBackend",
+        'HOST' : 'api.openpolis.it',
+        'PORT' : 80,
+        'PROTOCOL': 'http',
+        'BASE_PATH' : '/op/1.0/',
+        'USER' : 'your_user_here',
+        'PASSWORD' : 'your_password_here',
+    },
+    "locations" : {
+        'ENGINE' : "external_resource.backends.OpenPolisLocationsBackend",
+        'HOST' : 'api.openpolis.it',
+        'PORT' : 80,
+        'PROTOCOL': 'http',
+        'BASE_PATH' : '/op/1.0/',
+        'USER' : 'your_user_here',
+        'PASSWORD' : 'your_password_here',
+    }
 }
 
 # Map correspondance of backend names from social_auth to external_resource
@@ -186,3 +203,12 @@ SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP = {
     "facebook" : "facebook",
 }
 
+#---------------------------------------------------------------------------------
+# Redis cache server
+
+# IP:PORT address. None will use default values
+REDIS_SERVER_ADDR = None
+REDIS_SERVER_PORT = None
+
+# Redis Database identifier. None will use default values
+REDIS_DATABASE    = None

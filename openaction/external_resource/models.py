@@ -2,7 +2,6 @@
 # License: AGPLv3
 
 from django.db import models
-#MATTEO
 from django.conf import settings
 
 from base.models import Resource
@@ -10,6 +9,8 @@ from askbot_extensions.models import User
 
 from lib import load_symbol
 from lib.djangolib import ModelExtender
+
+from external_resource import utils
 
 import datetime, pickle
 
@@ -20,8 +21,8 @@ class ExternalResource(models.Model, Resource):
         help_text=u"nome convenzionale che comprende l'api del backend da chiamare"
     )
 
-    resource_id = models.CharField(max_length=1024, verbose_name="id della risorsa nel backend")
-    resource_type = models.CharField(max_length=128, verbose_name="tipo della risorsa nel backend")
+    ext_res_id = models.CharField(max_length=1024, verbose_name="id della risorsa nel backend")
+    ext_res_type = models.CharField(max_length=128, verbose_name="tipo della risorsa nel backend")
     first_get_on = models.DateTimeField()
     last_get_on = models.DateTimeField()
 
@@ -34,6 +35,9 @@ class ExternalResource(models.Model, Resource):
     # It is a pickled dictionary. It has key 'external_info'
     # TODO: NoSQL cache
     _data = models.TextField()
+
+    def __unicode__(self):
+        return u"%s - %s" % (self.backend_name, self.ext_res_id)
 
     @property
     def external_info(self):
@@ -48,9 +52,8 @@ class ExternalResource(models.Model, Resource):
 
         if not rv:
             # Retrieve external_info from backend
-            backend_class = self.get_backend_class()
-            backend = backend_class(self)
-            rv = backend.get_external_info()
+            backend = self.get_backend()
+            rv = backend.get_external_info(self)
 
             # TODO: Check results!
             # case 1: got results
@@ -84,13 +87,17 @@ class ExternalResource(models.Model, Resource):
         data.update(new_data)
         self._data = pickle.dumps(data)
     
-    def get_backend_class(self):
-        backend_class_path = settings.EXTERNAL_API_BACKENDS_D[self.backend_name]
-        backend_class = load_symbol(backend_class_path)
-        return backend_class
+    def get_backend(self):
+        return utils.load_backend(self.backend_name)
 
-    def __unicode__(self):
-        return u"%s - %s %s" % (self.backend, self.resource_type, self.resource_id)
+    @property
+    def backend(self):
+        try:
+            assert self.__backend
+        except AttributeError as e:
+            self.__backend = self.get_backend()
+        
+        return self.__backend
 
 
 #-------------------------------------------------------------------------------------
@@ -110,7 +117,7 @@ class UserExternalResourceExtension(ModelExtender):
         #WAS: backend_name=settings.SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP[backend_name]
         backend_name=settings.SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP[social_auth_backend_name] 
         external_resource = ExternalResource.objects.get(
-            backend_name=backend_name, resource_id=external_id
+            backend_name=backend_name, ext_res_id=external_id
         )
 
         return external_resource.external_info

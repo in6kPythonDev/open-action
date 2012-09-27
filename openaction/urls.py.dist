@@ -6,3 +6,4 @@
     #(r'^%saction/' % settings.ASKBOT_URL, include('action.urls')),
     #(r'^%saction_request/' % settings.ASKBOT_URL, include('action_request.urls')),
     #(r'^%snotification/' % settings.ASKBOT_URL, include('notification.urls')),
+    #(r'^%sexternal/' % settings.ASKBOT_URL, include('external_resource.urls')),
