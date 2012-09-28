@@ -411,20 +411,25 @@ class Action(models.Model, Resource):
 
 class Geoname(models.Model):
 
-    GEO_CHOICES = (
-        ('state', 'Stato'),
-        ('province', 'Provincia'),
-        ('municipality', 'Comune'),
-    )
+    #COMMENT LF: we do not restrict CharField choices
+    # in order to support versatile API
+    # GEO_CHOICES = (
+    #     ('state', 'Stato'),
+    #     ('province', 'Provincia'),
+    #     ('municipality', 'Comune'),
+    # )
 
-    name = models.CharField(max_length=1024)
-    kind = models.CharField(max_length=32, choices=GEO_CHOICES)
+    name = models.CharField(max_length=512)
+    kind = models.CharField(max_length=64) #, choices=GEO_CHOICES)
 
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
 
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.kind)
+
+    class Meta:
+        unique_together = (('name','kind'),)
 
 #--------------------------------------------------------------------------------
 
