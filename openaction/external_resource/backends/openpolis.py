@@ -9,13 +9,6 @@ import json, urllib2, base64, urlparse
 
 class OpenPolisResourceBackend(base.CachedResourceBackend):
 
-    def get_url(self, url):
-        """Retrieve an url, return http response"""
-
-        full_url = self.base_url + url
-        data = self.get_data(full_url, as_string=True)
-        return HttpResponse(data, mimetype="application/json")
-
     def get_data(self, full_url, as_string=False):
         """Retrieve data from cache or from url, cache result, return data
 
@@ -42,9 +35,9 @@ class OpenPolisResourceBackend(base.CachedResourceBackend):
 
 class OpenPolisLocationsBackend(OpenPolisResourceBackend):
 
-    def get_url(self, url):
+    def get_url(self, url, request):
         url = 'locations/' + url
-        return super(OpenPolisLocationsBackend, self).get_url(url)
+        return super(OpenPolisLocationsBackend, self).get_url(url, request)
 
     def get_info(self, resource):
         """Call OpenPolis API and return normalized data."""

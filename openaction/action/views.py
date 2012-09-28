@@ -338,8 +338,10 @@ class ActionCreateView(ActionView):
 
         action = question.action 
 
+        # check if this action is created by an organization
         if in_nomine[:3] == "org":
             in_nomine_pk = int(in_nomine[4:])
+            log.debug("IN_NOMINE %s _PK %s" % (in_nomine[:3], in_nomine[4:]))
             action.in_nomine_org = Organization.objects.get(pk=in_nomine_pk)
             action.save()
 

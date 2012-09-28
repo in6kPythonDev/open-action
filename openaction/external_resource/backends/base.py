@@ -19,6 +19,22 @@ class ExternalResourceBackend(object):
         self.username = self.settings_dict['USER']
         self.password = self.settings_dict['PASSWORD']
 
+    def get_url(self, url, request):
+        """Retrieve an url, return http response.
+
+        Take as input the original request as the backend
+        should pass also GET or POST parameters and
+        could do some considerations basing on other settings
+        of the request itself.
+        """
+
+        full_url = self.base_url + url
+        qs = request.META['QUERY_STRING']
+        if qs:
+            full_url += "?" + qs
+        data = self.get_data(full_url, as_string=True)
+        return HttpResponse(data, mimetype="application/json")
+
     def get_external_info(self, resource):
         """Dispatcher to real getter method for specific resource type.
 
