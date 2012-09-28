@@ -85,6 +85,9 @@ class CachedResourceBackend(ExternalResourceBackend):
         timestamp = cached_entry['timestamp']
         return int(time.time()) - timestamp < self.CACHE_REFRESH_INTERVAL
 
+    def clean_cache(self):
+        oa_cache.clean()
+
 #--------------------------------------------------------------------------------
 
 class FBResourceBackend(ExternalResourceBackend):
