@@ -97,10 +97,10 @@ class ExternalResource(models.Model, Resource):
 
 class UserExternalResourceExtension(ModelExtender):
 
-    #MATTEO
     ext_prefix = '_askbot_ext_'
 
     def _askbot_ext_get_external_info(self, social_auth_backend_name, attrs=[]):
+        return {} #TODO fero TOSEE
         """Retrieve external info from external resource"""
 
         from external_resource.models import ExternalResource

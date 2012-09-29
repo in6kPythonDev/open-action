@@ -5,8 +5,9 @@ class ExternalResourceInfo(object):
 
     def __init__(self, resource):
         self.resource = resource
-        #WAS: super(ExternalResourceInfo, self).__init__()
-        super(ExternalResourceInfo, self).__init__(resource)
+        super(ExternalResourceInfo, self).__init__()
+        #KO LESSON CRITICAL!!!: why you do this? object class does not take any argument.
+        #KO: super(ExternalResourceInfo, self).__init__(resource)
 
 
     def get_external_info(self):
