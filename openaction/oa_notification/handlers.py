@@ -199,8 +199,13 @@ def notify_action_moderation_request(sender, **kwargs):
     action_request = sender
 
     #recipients
-    users = []
-    users.append(action_request.recipient)
+    if action_request.recipient:
+        users = [action_request.recipient]
+    else:
+        # Send notification to staff users
+        # OpenPolis/ActionAID people who manage the software
+        users = User.objects.filter(is_staff=True)
+
     #extra_context
     extra_context = ({
         "action_request" : action_request,

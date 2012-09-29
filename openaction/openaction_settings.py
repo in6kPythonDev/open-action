@@ -137,8 +137,9 @@ MAX_MODERATION_REQUESTS = 3
 DEFAULT_FROM_EMAIL = "openaction@localhost.befair.it"
 NOTIFICATION_BACKENDS = (
     ("email", "notification.backends.email.EmailBackend"),
-    ("facebook_inbox", "oa_notification.backends.facebook.FBInboxBackend"),
-    ("default", "oa_notification.backends.openaction.OpenActionDefaultBackend"),
+    #("facebook_inbox", "oa_notification.backends.facebook.FBInboxBackend"),
+    
+    ("openaction", "oa_notification.backends.openaction.OpenActionDefaultBackend"), #IMPORTANT: The openaction backend is REQUIRED!
     #("twitter_message", "oa_notification.backends.twitter.TWMessageBackend"),
 )
 

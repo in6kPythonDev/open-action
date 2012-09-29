@@ -4,3 +4,5 @@
 #aggiungi in testa nei pattern
     #url(r'^%ssocial_auth/' % settings.ASKBOT_URL, include('oa_social_auth.urls')),
     #(r'^%saction/' % settings.ASKBOT_URL, include('action.urls')),
+    #(r'^%saction_request/' % settings.ASKBOT_URL, include('action_request.urls')),
+    #(r'^%snotification/' % settings.ASKBOT_URL, include('notification.urls')),
