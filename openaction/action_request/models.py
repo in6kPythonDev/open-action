@@ -47,3 +47,16 @@ class ActionRequest(models.Model, Resource):
     created_on = models.DateTimeField(auto_now_add=True)
     last_update_on = models.DateTimeField(auto_now=True)
         
+    def check_same_type_already_accepted(self):
+        return ActionRequest.objects.filter(
+            recipient=self.recipient, action=self.action,
+            request_type=self.request_type, is_accepted=True
+        ).exist()
+
+    def check_same_type_already_processed(self):
+        return ActionRequest.objects.filter(
+            recipient=self.recipient, action=self.action,
+            request_type=self.request_type, is_processed=True
+        ).exist()
+
+
