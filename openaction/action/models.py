@@ -45,7 +45,10 @@ class Action(models.Model, Resource):
 
     moderator_set = models.ManyToManyField(User, null=True, blank=True, related_name="moderated_action_set")
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
-    category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
+    category_set = models.ManyToManyField('ActionCategory', 
+        null=True, blank=True,
+        help_text=u"La scelta degli argomenti può aiutarti a definire meglio i prossimi passi"
+    )
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
     media_set = models.ManyToManyField('Media', null=True, blank=True)
 

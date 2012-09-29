@@ -282,24 +282,22 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
-            #'in_nomine': self.request.REQUEST.get('in_nomine', ''),
+            'in_nomine': self.request.REQUEST.get('in_nomine', ''),
             'wiki': False,
             'is_anonymous': False,
         }
     
     def get_form(self, form_class):
-        form = super(ActionView, self).get_form(form_class)
+
+        #KO: form = super(ActionView, self).get_form(form_class)
+        # Override default get_form() in order to pass "request" correctly
+        form = form_class(self.request, **self.get_form_kwargs())
         form.hide_field('openid')
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
         form.hide_field('wiki')
         form.hide_field('ask_anonymously')
         return form
-
-    def get_form_kwargs(self):
-        kwargs = super(ActionView, self).get_form_kwargs()
-        kwargs['request'] = self.request
-        return kwargs
 
 class ActionCreateView(ActionView):
     """Create a new Action.
