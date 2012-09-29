@@ -1,0 +1,51 @@
+#
+# Django Deploy script to use with modwsgi and virtualenvs
+
+# Specify the following parameters:
+# NO FINAL SLASH
+
+# path to the folder where you cloned openaction
+# (something like /usr/local/openaction-dev )
+
+CLONEDIR = '' 
+
+# path to the dir where you want to deploy openaction
+# (often something like /var/www/openaction )
+
+WEBDIR   = ''  
+
+# path to your virtualenv directory 
+# (something like /var/lib/virtualenvs/openaction )
+
+VIRTUALENVDIR = ''
+
+######## STOP EDITING HERE ########
+
+ALLDIRS = [VIRTUALENVDIR+'/lib/python2.6/site-packages/']
+
+import sys 
+import site 
+
+import os, sys
+sys.path.append(WEBDIR)
+sys.path.append(CLONEDIR)
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+
+# Remember original sys.path.
+prev_sys_path = list(sys.path) 
+
+# Add each new site-packages directory.
+for directory in ALLDIRS:
+  site.addsitedir(directory)
+
+# Reorder sys.path so new directories at the front.
+new_sys_path = [] 
+for item in list(sys.path): 
+    if item not in prev_sys_path: 
+        new_sys_path.append(item) 
+        sys.path.remove(item) 
+sys.path[:0] = new_sys_path 
+
+import django.core.handlers.wsgi
+application = django.core.handlers.wsgi.WSGIHandler()
