@@ -58,7 +58,7 @@ class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
         """Get referral token from url and return referral User"""
 
         token = self.request.REQUEST.get('ref_token')
-        print "\nToken_arrived_from_req: %s\n" % token
+        log.debug("Token_arrived_from_req: %s" % token)
         if token:
             referral = action.get_user_from_token(token)
         else:
@@ -282,24 +282,22 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
-            #'in_nomine': self.request.REQUEST.get('in_nomine', ''),
+            'in_nomine': self.request.REQUEST.get('in_nomine', ''),
             'wiki': False,
             'is_anonymous': False,
         }
     
     def get_form(self, form_class):
-        form = super(ActionView, self).get_form(form_class)
+
+        #KO: form = super(ActionView, self).get_form(form_class)
+        # Override default get_form() in order to pass "request" correctly
+        form = form_class(self.request, **self.get_form_kwargs())
         form.hide_field('openid')
         form.hide_field('post_author_email')
         form.hide_field('post_author_username')
         form.hide_field('wiki')
         form.hide_field('ask_anonymously')
         return form
-
-    def get_form_kwargs(self):
-        kwargs = super(ActionView, self).get_form_kwargs()
-        kwargs['request'] = self.request
-        return kwargs
 
 class ActionCreateView(ActionView):
     """Create a new Action.
@@ -343,7 +341,6 @@ class ActionCreateView(ActionView):
 
         if in_nomine[:3] == "org":
             in_nomine_pk = int(in_nomine[4:])
-            print "\n\nIN_NOMINE %s _PK %s\n\n" % (in_nomine[:3], in_nomine[4:])
             action.in_nomine_org = Organization.objects.get(pk=in_nomine_pk)
             action.save()
 
@@ -416,53 +413,13 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 
             #WAS: if m2m_value is not None:
             if len(m2m_value) != 0:
-                #DONE Matteo: retest. 
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
-                #for o in m2m_values_old:
-                #    print "m2m_o %s" % o.id
                 m2m_values_new = m2m_value
-                #for o in m2m_values_new:
-                #    print "m2m_n %s" % o.id
 
-#                to_add = []
-#                to_remove = []
-#                #WAS: to_keep = []
-#                count = 0
-#                values_new_length = len(m2m_values_new)
-#
-#                for obj_new in m2m_values_new:
-#                    to_add.append(obj_new)
-#
-#                for obj_old in m2m_values_old:
-#                    #print "old %s" % obj_old.id
-#                    for obj_new in m2m_values_new:
-#                        #print "new %s" % obj_new.id
-#                        if obj_old.id == obj_new.id:
-#                            #already present, does not need 
-#                            #to be added
-#                            to_add.remove(obj_new)
-#                            break
-#                        else:
-#                            count = count + 1
-#
-#                    if values_new_length == count:
-#                        #the old value is not present in the new set
-#                        #of selected values
-#                        to_remove.append(obj_old)
-#                    #WAS: else:
-#                    #WAS:     #the old value is present in the new set
-#                    #WAS:     #of selected values
-#                    #WAS:     to_keep.append(obj_old)
-#                    count = 0
-#
-#                #for o in to_add:
-#                #    print "-----------TO_ADD------------%s" % o.id
-#                #for o in to_remove:
-#                #    print "-----------TO_REMOVE------------%s" % o.id
-#                #for o in to_keep:
-#                #    print "-----------TO_KEEP------------%s" % o.id
-                to_add, to_remove = self.update_values(m2m_values_old, m2m_values_new)
+                to_add, to_remove = self.update_values(m2m_values_old, 
+                    m2m_values_new
+                )
 
                 getattr(action, m2m_attr).add(*to_add)
                 getattr(action, m2m_attr).remove(*to_remove)
@@ -507,13 +464,6 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 to_remove.append(obj_old)
 
             count = 0
-
-        #for o in to_add:
-        #    print "-----------TO_ADD------------%s" % o.id
-        #for o in to_remove:
-        #    print "-----------TO_REMOVE------------%s" % o.id
-        #for o in to_keep:
-        #    print "-----------TO_KEEP------------%s" % o.id
         
         return to_add, to_remove
 

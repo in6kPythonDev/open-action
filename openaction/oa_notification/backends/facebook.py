@@ -12,7 +12,7 @@ class FBInboxBackend(EmailBackend):
         try:
             fb_recipient.email = recipient.get_external_info('facebook')['email']
         except KeyError as e:
-            raise ValueError("User %s recipient, has no facebook info 'email'" % user)
+            raise ValueError("User %s recipient, has no facebook info 'email'" % fb_recipient)
 
         return super(EmailBackend, self).deliver(
             fb_recipient, sender, notice_type, extra_content

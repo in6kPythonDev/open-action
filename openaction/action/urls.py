@@ -15,7 +15,7 @@ urlpatterns = patterns('',
     url(r'^create/$', action_views.ActionCreateView.as_view(), 
         name='action-create'
     ),
-    url(r'^/(?P<pk>\d+)/edit/$', action_views.ActionUpdateView.as_view(),
+    url(r'^(?P<pk>\d+)/edit/$', action_views.ActionUpdateView.as_view(),
         name='action-update'
     ),
     url(r'^(?P<pk>\d+)/vote/add/$', action_views.ActionVoteView.as_view(), 

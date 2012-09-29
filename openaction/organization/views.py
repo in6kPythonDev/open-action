@@ -31,7 +31,6 @@ class UserFollowOrgView(UserOrgMapView):
             org=org,
         )
         if mapping.is_follower:
-            #DONE: Matteo raise appropriate exception
             raise exceptions.UserCannotFollowOrgTwice(user, org) 
         else:
             mapping.is_follower=True
@@ -54,7 +53,6 @@ class UserRepresentOrgView(UserOrgMapView):
             org=org,
         )
         if mapping.is_representative:
-            #DONE: Matteo raise appropriate exception
             raise exceptions.UserCannotRepresentOrgTwice(user, org) 
         else:
             mapping.is_representative=True

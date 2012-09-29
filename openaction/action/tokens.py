@@ -55,12 +55,10 @@ class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
         # Check that the timestamp/uid has not been tampered with
         recomputed_token = self._make_token_with_timestamp(user, ts)
 
-        print "ricalcolo re_token=%s token=%s" % (recomputed_token, token)
+        log.debug("Ricalcolo re_token=%s token=%s" % (recomputed_token, token))
         if not constant_time_compare(recomputed_token, token):
-            print ("CIELCIO")
             return False
 
-        print "tempo comparato"
         # Check the timestamp is within limit
         if (self._num_days(self._today()) - ts) > settings.REFERRAL_TOKEN_RESET_TIMEOUT_DAYS:
             return False
@@ -90,7 +88,7 @@ class ActionReferralTokenGenerator(PasswordResetTokenGenerator):
         # UID PART to recognize user by token
         uid_part = base64.encodestring("%s%s" % (TOKEN_UID_PREFIX, user.id))
 
-        print "\nts_b36:%s!\nuid_part:%s!\nTOK_UID_POSTFIX:%s!\nhash:%s!\n" % (ts_b36, uid_part, TOKEN_UID_POSTFIX, hash)
+        log.debug("\nts_b36:%s!\nuid_part:%s!\nTOK_UID_POSTFIX:%s!\nhash:%s!\n" % (ts_b36, uid_part, TOKEN_UID_POSTFIX, hash))
 
         return "%s-%s%s%s" % (ts_b36, uid_part, TOKEN_UID_POSTFIX, hash)
 

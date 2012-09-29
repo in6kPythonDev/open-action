@@ -15,7 +15,7 @@ from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 
-import logging
+import logging, traceback
 
 log = logging.getLogger(settings.PROJECT_NAME)
 
@@ -79,8 +79,8 @@ class ResponseWrappedView(View):
         try:
             rv = super(ResponseWrappedView, self).dispatch(request, *args, **kwargs)
         except Exception as e:
-            log.debug("%s:%s user %s exception raised %s" % (
-                view_name, method, request.user, e
+            log.debug("%s:%s user %s exception raised %s tb=%s" % (
+                view_name, method, request.user, e, traceback.format_exc()
             ))
             if request.is_ajax():
                 rv = response_error(request, msg=e)

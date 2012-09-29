@@ -45,7 +45,10 @@ class Action(models.Model, Resource):
 
     moderator_set = models.ManyToManyField(User, null=True, blank=True, related_name="moderated_action_set")
     geoname_set = models.ManyToManyField('Geoname', null=True, blank=True)
-    category_set = models.ManyToManyField('ActionCategory', null=True, blank=True)
+    category_set = models.ManyToManyField('ActionCategory', 
+        null=True, blank=True,
+        help_text=u"La scelta degli argomenti può aiutarti a definire meglio i prossimi passi"
+    )
     politician_set = models.ManyToManyField('Politician', null=True, blank=True)
     media_set = models.ManyToManyField('Media', null=True, blank=True)
 
@@ -67,37 +70,39 @@ class Action(models.Model, Resource):
     def status(self):
 
         if self.victory:
-            status = const.ACTION_STATUS['victory']
+            status = const.ACTION_STATUS_VICTORY
         elif self.thread.closed:
-            status = const.ACTION_STATUS['closed']
+            status = const.ACTION_STATUS_CLOSED
         elif self.question.deleted:
-            status = const.ACTION_STATUS['deleted']
+            status = const.ACTION_STATUS_DELETED
         elif self.score == 0:
             # cannot be voted until all fields are set
             # so the Action goes into "ready" status
-            status = const.ACTION_STATUS['draft']
+            status = const.ACTION_STATUS_DRAFT
         elif not self.threshold or self.score < self.threshold:
-            status = const.ACTION_STATUS['ready']
+            status = const.ACTION_STATUS_READY
         elif self.score >= self.threshold:
-            status = const.ACTION_STATUS['active']
+            status = const.ACTION_STATUS_ACTIVE
 
         return status
+
+    def status_display(self):
+        return const.ACTION_STATUS[self.status]
 
     def update_status(self, value):
         """ Update status and save it """
 
         old_status = self.status
-        #TODO: upgrade ACTION_STATUS[key] -> ACTION_STATUS_key
-        if value == const.ACTION_STATUS['victory']:
+        if value == const.ACTION_STATUS_VICTORY:
             self.victory = True
             self.save()
-        elif value == const.ACTION_STATUS['closed']:
+        elif value == const.ACTION_STATUS_CLOSED:
             self.thread.closed = True
             self.thread.save()
-        elif value == const.ACTION_STATUS['deleted']:
+        elif value == const.ACTION_STATUS_DELETED:
             self.question.deleted = True
             self.question.save()
-        elif value == const.ACTION_STATUS['draft']:
+        elif value == const.ACTION_STATUS_DRAFT:
             log.warning("Setting of DRAFT status, this shouldn't be done")
             self.question.score = 0
             self.question.save()
@@ -177,7 +182,7 @@ class Action(models.Model, Resource):
     def title(self):
         status = ""
         if self.status != const.ACTION_STATUS_ACTIVE:
-            status = u" [%s]" % self.status
+            status = u" [%s]" % self.status_display()
         return u"%s%s" % (self.bare_title, status)
 
     @property
@@ -215,8 +220,7 @@ class Action(models.Model, Resource):
 
     @property
     def votes(self):
-        #Matteo
-        # self.question.votes returns a RelatedManager on which the methods
+        #NOTE: self.question.votes returns a RelatedManager on which the methods
         # 'declareds' and 'anonymous' of VoteManager cannot be called
         #WAS: return Vote.objects.all() & self.question.votes.all()
         return Vote.objects.filter(voted_post=self.question)
@@ -301,11 +305,9 @@ class Action(models.Model, Resource):
         """
         try:
             # get the User instance
-            print "\nToken: !%s!\n" % token
             user_pk = self.token_generator.get_user_pk_from_token(token)
             user_calling_for_action = User.objects.get(pk=user_pk)
         except Exception as e:
-            print "\nexception raised: %s\n" % e
             raise exceptions.InvalidReferralTokenException()
 
         checked = self.token_generator.check_token((self, user_calling_for_action), token)
@@ -409,7 +411,6 @@ class Geoname(models.Model):
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
 
-    #added by Matteo
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.kind)
 

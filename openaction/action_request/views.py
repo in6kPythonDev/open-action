@@ -7,7 +7,8 @@ import askbot.utils.decorators as askbot_decorators
 from action_request import forms as action_request_forms
 from action.models import Action
 from action_request.models import ActionRequest
-from action_request.signals import action_moderation_request_submitted
+from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed
+from action_request import const
 
 from lib import views_support
 
@@ -35,13 +36,13 @@ class ActionModerationRequestView(ActionRequestView):
 
     @transaction.commit_on_success
     def form_valid(self, form):
-        print "\nform_valid\n"
 
         sender = self.request.user
         action = self.get_object()
+
         recipient = form.cleaned_data['follower']
         request_notes = form.cleaned_data['request_text']
-        request_type = 'moderation'
+        request_type = const.REQUEST_TYPE['mod']
 
         sender.assert_can_request_moderation_for_action(sender, recipient, action)
 
@@ -68,11 +69,6 @@ class ActionRequestProcessView(FormView, SingleObjectMixin, views_support.LoginR
     def dispatch(self, request, *args, **kwargs):
         return super(ActionRequestProcessView, self).dispatch(request, *args, **kwargs)
 
-    def get_form_kwargs(self):
-        kwargs = super(ActionRequestProcessView, self).get_form_kwargs()
-        kwargs['action_request'] = self.get_object()
-        return kwargs
-
 class ActionRequestModerationProcessView(ActionRequestProcessView):
     """ A User decides to accept or refuse a moderation request sent to him 
     by another User"""
@@ -84,13 +80,23 @@ class ActionRequestModerationProcessView(ActionRequestProcessView):
     def form_valid(self, form):
 
         user = self.request.user
-        action = self.get_object().action
+        action_request = self.get_object()
+        action = action_request.action
+        accepted = form.cleaned_data['accept_request']
         answer_notes = form.cleaned_data['answer_text']
 
-        user.assert_can_process_moderation_for_action(action)
+        user.assert_can_process_moderation_for_action(action_request)
 
-        action.moderator_set.add(user)
-        action.save()
+        action_request.is_processed = True
+        action_request.is_accepted = accepted
+        action_request.answer_notes = answer_notes
+        action_request.save()
+
+        if accepted:
+            action.moderator_set.add(user)
+            #KO: this is not needed action.save()
+
+        action_moderation_request_processed.send(sender=action_request)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)

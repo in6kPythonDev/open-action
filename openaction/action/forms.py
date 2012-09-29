@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from django import forms
 import askbot.forms as askbot_forms
@@ -7,7 +8,7 @@ class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
 
     in_nomine = forms.ChoiceField(required=True,
-        choices=()
+        choices=() #will be set in __init__
     )
 
     geoname_set = forms.ModelMultipleChoiceField(
@@ -15,8 +16,9 @@ class ActionForm(askbot_forms.AskForm):
         required=False
     )
     category_set = forms.ModelMultipleChoiceField(
-        queryset=ActionCategory.objects, label="Categorie",
-        required=False
+        queryset=ActionCategory.objects, label=u"Ambiti",
+        required=False,
+        help_text=u"La scelta degli ambiti può aiutarti a definire meglio i prossimi passi"
     )
     politician_set = forms.ModelMultipleChoiceField(
         queryset=Politician.objects, label="Politici",
@@ -27,8 +29,7 @@ class ActionForm(askbot_forms.AskForm):
         required=False
     ) 
 
-    def __init__(self, *args, **kw):
-        request = kw.pop('request', None)
+    def __init__(self, request, *args, **kw):
         user = request.user
         choices = [("user-%s" % user.pk, user),]
         orgs = user.orgs_represented
