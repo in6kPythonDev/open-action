@@ -107,18 +107,20 @@ def comment_check_before_save(sender, **kwargs):
     #WAS:         raise CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
 
     if post.is_comment():
-        if post.action.status in (
+        status = post.action.status
+        if status in (
             action_const.ACTION_STATUS_DRAFT,
             action_const.ACTION_STATUS_DELETED,
         ):
-            raise exceptions.CommentActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+            raise exceptions.CommentActionInvalidStatusException(status)
 
     elif post.is_answer():
-        if post.action.status in (
+        status = post.action.status
+        if status in (
             action_const.ACTION_STATUS_DRAFT,
             action_const.ACTION_STATUS_DELETED,
         ):
-            raise exceptions.BlogpostActionInvalidStatusException(action_const.ACTION_STATUS_DRAFT)
+            raise exceptions.BlogpostActionInvalidStatusException(status)
         
 
 @receiver(pre_save, sender=Vote)

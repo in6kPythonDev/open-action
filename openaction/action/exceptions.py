@@ -13,9 +13,9 @@ class ActionInvalidStatusException(exceptions.PermissionDenied):
     def __init__(self, status):
         if status == action_const.ACTION_STATUS_DRAFT:
             self._status = u"in stato bozza"
-        elif status == action_const.ACTION_STATUS['deleted']:
+        elif status == action_const.ACTION_STATUS_DELETED:
             self._status = u"stata cancellata"
-        elif status == action_const.ACTION_STATUS['closed']:
+        elif status == action_const.ACTION_STATUS_CLOSED:
             self._status = u"stata chiusa"
         elif status == action_const.ACTION_STATUS_ACTIVE:
             self._status = u"già attiva"
