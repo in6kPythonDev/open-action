@@ -85,27 +85,16 @@ class ActionRequestModerationProcessView(ActionRequestProcessView):
         accepted = form.cleaned_data['accept_request']
         answer_notes = form.cleaned_data['answer_text']
 
-        already_accepted = action_request.check_same_type_already_accepted()
-        #KO: remove according LESSON user.check_moderation_response_already_answered(action_request)
-
-        user.assert_can_process_moderation_for_action(action_request, 
-            already_accepted
-        )
+        user.assert_can_process_moderation_for_action(action_request)
 
         action_request.is_processed = True
+        action_request.is_accepted = accepted
+        action_request.answer_notes = answer_notes
+        action_request.save()
 
-        if accepted and not already_accepted:
-
-            action_request.is_accepted = True
-            action_request.answer_notes = answer_notes
-            action_request.save()
-
+        if accepted:
             action.moderator_set.add(user)
             #KO: this is not needed action.save()
-        else:
-            action_request.is_accepted = False
-            action_request.answer_notes = answer_notes
-            action_request.save()
 
         action_moderation_request_processed.send(sender=action_request)
 
