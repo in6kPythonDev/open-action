@@ -39,6 +39,7 @@ class ActionModerationRequestView(ActionRequestView):
 
         sender = self.request.user
         action = self.get_object()
+
         recipient = form.cleaned_data['follower']
         request_notes = form.cleaned_data['request_text']
         request_type = const.REQUEST_TYPE['mod']

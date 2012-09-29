@@ -101,21 +101,24 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             is_ajax=True
         )
 
+        #success
+        self._check_for_success_response(response)
+        #self.assertTrue(login_user.is_following_action(self._action))
+        self.assertTrue(follower.is_following_action(self._action))
+
         logged_in = self._login(user)
 
         if logged_in:
-            #success
-            self._check_for_success_response(response)
+
             #check that user is following action
             login_user = [self._author, user][bool(user)]
-            #self.assertTrue(login_user.is_following_action(self._action))
-            self.assertTrue(follower.is_following_action(self._action))
 
             #sending moderation request
             #follower = self.create_user(username='follower')
             request_text = "Ti chiedo di moderare la mia action"
 
-            response = self._do_POST_create_action_moderation_request(action=self._action,
+            response = self._do_POST_create_action_moderation_request(
+                action=self._action,
                 ajax=True,
                 follower=follower.pk,
                 request_text=request_text
@@ -126,7 +129,8 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response, is_ajax=True)
  
             try:
-                action_req_objs = ActionRequest.objects.filter(action=self._action,
+                action_req_objs = ActionRequest.objects.filter(
+                    action=self._action,
                     sender=login_user,
                     recipient=follower,
                     request_notes=request_text
@@ -139,7 +143,8 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
 
 
             #testing that the action owner cannot send more than three notices
-            response = self._do_POST_create_action_moderation_request(action=self._action,
+            response = self._do_POST_create_action_moderation_request(
+                action=self._action,
                 ajax=True,
                 follower=follower.pk,
                 request_text=request_text
@@ -158,7 +163,8 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             self.assertTrue(action_req_objs)
             self.assertTrue(action_req_objs.count() == 2)
 
-            response = self._do_POST_create_action_moderation_request(action=self._action,
+            response = self._do_POST_create_action_moderation_request(
+                action=self._action,
                 ajax=True,
                 follower=follower.pk,
                 request_text=request_text
@@ -181,7 +187,8 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             action_req_obj_second = action_req_objs[1]
             action_req_obj_third = action_req_objs[2]
 
-            response = self._do_POST_create_action_moderation_request(action=self._action,
+            response = self._do_POST_create_action_moderation_request(
+                action=self._action,
                 ajax=True,
                 follower=follower.pk,
                 request_text=request_text
@@ -192,7 +199,8 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
 
             #test that only the action owner can ask for moderation
             self._login(follower)
-            response = self._do_POST_create_action_moderation_request(action=self._action,
+            response = self._do_POST_create_action_moderation_request(
+                action=self._action,
                 ajax=True,
                 follower=follower.pk,
                 request_text=request_text
