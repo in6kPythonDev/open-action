@@ -69,4 +69,4 @@ class UserProfileForm(ModelForm):
     """
     class Meta:
         model = UserProfile
-        exclude = ('user', 'privacy_level', 'home_page', 'description')
+        exclude = ('user', 'privacy_level')
