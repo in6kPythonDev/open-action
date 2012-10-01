@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
 from django.shortcuts import render_to_response, redirect
 from django.contrib.messages.api import get_messages
+from django.utils.translation import ugettext as _
 
 from social_auth import __version__ as version
 from social_auth.utils import setting
@@ -65,8 +66,10 @@ def login_form(request):
         else:
             error = _('Form is invalid')
 
-    user_form = UserSocialRegistrationForm()
-    profile_form = ProfileSocialRegistrationForm()
+    else:
+        user_form = UserSocialRegistrationForm()
+        profile_form = ProfileSocialRegistrationForm()
+
     return render_to_response('login_form.html', {
             'error': error,
             'user_form': user_form,
