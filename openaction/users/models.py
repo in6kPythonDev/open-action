@@ -8,9 +8,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User, Group
 from model_utils import Choices
 import sys
-#from open_municipio.monitoring.models import Monitoring
-#from open_municipio.newscache.models import News
-#from open_municipio.people.models import Person
+
+#LF from open_municipio.monitoring.models import Monitoring
+#LF from open_municipio.newscache.models import News
+#LF from open_municipio.people.models import Person
 
 
 class UserProfile(models.Model):
@@ -55,7 +56,7 @@ class UserProfile(models.Model):
     # this needs to be verified, before assigning the user to the *Politicians* group
     # and linking the user's profile to a Person instance
     says_is_politician = models.BooleanField(_('i am a politician'), default=False)
-    #COMMENT LF: person = models.OneToOneField(Person, blank=True, null=True)
+    #LF person = models.OneToOneField(Person, blank=True, null=True)
 
     # user's privacy options
     privacy_level = models.IntegerField(_('privacy level'), choices=PRIVACY_LEVELS, default=PRIVACY_LEVELS.none)
@@ -66,10 +67,13 @@ class UserProfile(models.Model):
     # TODO: ``city`` must be a foreign key to a proper, dedicated table of locations
     city = models.CharField(_(u'location'), max_length=128)
 
-    # manager to handle the list of news that have the act as related object
-    #COMMENT LF: related_news_set = generic.GenericRelation(News,
-    #COMMENT LF:                                        content_type_field='related_content_type',
-    #COMMENT LF:                                        object_id_field='related_object_pk')
+    #LF # manager to handle the list of news that have the act as related object
+    #LF related_news_set = generic.GenericRelation(News,
+    #LF                                         content_type_field='related_content_type',
+    #LF                                        object_id_field='related_object_pk')
+
+    description = models.TextField(blank=True)
+    home_page = models.URLField(blank=True, verify_exists=True, verbose_name="sito web")
 
     class Meta:
         db_table = u'users_user_profile'
@@ -82,13 +86,6 @@ class UserProfile(models.Model):
         return 'profiles_profile_detail', (), { 'username': self.user.username }
 
     @property
-    def related_news(self):
-        """
-        Returns the related_news_set as a list of objects
-        """
-        return self.related_news_set.all()
-
-    @property
     def public_name(self):
         """
         Returns the public user name, based on the uses_nickname flag
@@ -98,34 +95,26 @@ class UserProfile(models.Model):
         else:
             return self.user.get_full_name()
 
-    @property
-    def monitored_objects(self):
-        """
-        Returns objects monitored by this user (as a list).
-        """
-        return [o.content_object for o in Monitoring.objects.filter(user=self.user)]
+    #LF @property
+    #LF def related_news(self):
+    #LF     """
+    #LF     Returns the related_news_set as a list of objects
+    #LF     """
+    #LF     return self.related_news_set.all()
 
-    def is_editor(self):
-        try:
-            self.user.groups.get(name='editors')
-            return True
+    #LF @property
+    #LF def monitored_objects(self):
+    #LF     """
+    #LF     Returns objects monitored by this user (as a list).
+    #LF     """
+    #LF     return [o.content_object for o in Monitoring.objects.filter(user=self.user)]
+
+    #LF def is_editor(self):
+    #LF     try:
+    #LF         self.user.groups.get(name='editors')
+    #LF         return True
         except ObjectDoesNotExist:
             return False
 
 
 
-
-@receiver(post_save, sender=UserProfile)
-def update_group(**kwargs):
-    """
-    see if user has been linked/unlinked to a politician and
-    add/remove to politicians group
-    """
-    profile = kwargs['instance']
-
-    politician_group = Group.objects.get(name='politicians')
-
-    if profile.person is None:
-        profile.user.groups.remove(politician_group)
-    else:
-        profile.user.groups.add(politician_group)
