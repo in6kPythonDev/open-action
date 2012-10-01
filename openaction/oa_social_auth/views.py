@@ -58,7 +58,7 @@ def login_form(request):
             session_variable = setting('SOCIAL_AUTH_PARTIAL_PIPELINE_KEY', 'partial_pipeline')
             request.session['saved_username'] = user_form.cleaned_data['username']
             #LF: request.session['saved_privacy_level'] = profile_form.cleaned_data['privacy_level']
-            #LF: request.session['saved_wants_newsletter'] = profile_form.cleaned_data['wants_newsletter']
+            request.session['saved_wants_newsletter'] = profile_form.cleaned_data['wants_newsletter']
             request.session['saved_city'] = profile_form.cleaned_data['city']
             backend = request.session[session_variable]['backend']
             return redirect('socialauth_complete', backend=backend)
