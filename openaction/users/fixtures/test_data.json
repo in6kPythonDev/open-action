@@ -120,7 +120,6 @@
             "says_is_politician": false, 
             "wants_newsletter": false, 
             "privacy_level": 3, 
-            "person": null, 
             "user": 3, 
             "uses_nickname": true
         }
@@ -133,7 +132,6 @@
             "says_is_politician": true, 
             "wants_newsletter": false, 
             "privacy_level": 3, 
-            "person": null,
             "user": 4,
             "uses_nickname": false
         }
@@ -146,7 +144,6 @@
             "says_is_politician": true, 
             "wants_newsletter": false, 
             "privacy_level": 3, 
-            "person": null,
             "user": 7,
             "uses_nickname": false
         }
@@ -159,7 +156,6 @@
             "says_is_politician": true,
             "wants_newsletter": false,
             "privacy_level": 3,
-            "person": null,
             "user": 8,
             "uses_nickname": false
         }
@@ -172,7 +168,6 @@
             "says_is_politician": true,
             "wants_newsletter": false,
             "privacy_level": 3,
-            "person": null,
             "user": 9,
             "uses_nickname": true
         }

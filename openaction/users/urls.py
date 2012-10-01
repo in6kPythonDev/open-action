@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
-from open_municipio.users.forms import UserProfileForm
-from open_municipio.users.views import UserDetailView, UserProfileListView, UserProfileDetailView
+from users.forms import UserProfileForm
+from users.views import UserDetailView, UserProfileListView, UserProfileDetailView
 from django.contrib.auth.models import User
 
 urlpatterns = patterns('',

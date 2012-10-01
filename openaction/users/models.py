@@ -1,3 +1,5 @@
+#LF Taken and modified from OpenMunicipio
+
 from django.contrib.contenttypes import generic
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models

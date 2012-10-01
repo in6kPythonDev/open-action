@@ -1,4 +1,4 @@
-# Taken and modified from OpenMunicipio
+#LF Taken and modified from OpenMunicipio
 
 from django import forms
 from django.forms.models import ModelForm
@@ -33,7 +33,7 @@ class UserRegistrationForm(RegistrationFormUniqueEmail):
                                        label=_(u'User wants only his nickname to be publicly shown'),
                                        required=False)
     wants_newsletter = forms.BooleanField(required=False, label=_('Wants newsletter'))
-    privacy_level = forms.ChoiceField(choices=UserProfile.PRIVACY_LEVELS, label=_('Privacy level'))
+    # privacy_level = forms.ChoiceField(choices=UserProfile.PRIVACY_LEVELS, label=_('Privacy level'))
     tos = forms.BooleanField(widget=forms.CheckboxInput(attrs=attrs_dict),
                              label=_(u'I have read and agree to the Terms of Service'),
                              error_messages={'required': _("You must agree to the terms to register")})
@@ -59,7 +59,7 @@ class ProfileSocialRegistrationForm(ModelForm):
     """
     class Meta:
         model = UserProfile
-        exclude = ('user', 'person')
+        exclude = ('user', )
 
 
 class UserProfileForm(ModelForm):
@@ -69,4 +69,4 @@ class UserProfileForm(ModelForm):
     """
     class Meta:
         model = UserProfile
-        exclude = ('user', 'person')
+        exclude = ('user', )
