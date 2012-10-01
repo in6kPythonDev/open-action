@@ -28,18 +28,18 @@ def user_created(sender, user, request, **kwargs):
     # LF QUESTION: form.data instead of form.cleaned_data, to not call twice form.is_valid?
     # LF QUESTION: why tos and pri are not saved in the db?
     form = UserRegistrationForm(request.POST)
-    user.first_name = form.data['first_name']
-    user.last_name = form.data['last_name']
+    user.first_name = form.cleaned_data['first_name']
+    user.last_name = form.cleaned_data['last_name']
     user.save()
     
     extra_data = UserProfile(user=user)
-    extra_data.says_is_politician = form.data['says_is_politician']
-    extra_data.uses_nickname = form.data['uses_nickname']
-    extra_data.privacy_level = UserProfile.PRIVACY_LEVELS.all #LF form.data['privacy_level']
+    extra_data.says_is_politician = form.cleaned_data['says_is_politician']
+    extra_data.uses_nickname = form.cleaned_data['uses_nickname']
+    extra_data.privacy_level = UserProfile._meta.get_field_by_name('privacy_level')[0].default #LF form.cleaned_data['privacy_level']
     extra_data.wants_newsletter = False
     if 'wants_newsletter' in request.POST:
-        extra_data.wants_newsletter = form.data['wants_newsletter']
-    extra_data.city = form.data['city']
+        extra_data.wants_newsletter = form.cleaned_data['wants_newsletter']
+    extra_data.city = form.cleaned_data['city']
     extra_data.save()
    
 

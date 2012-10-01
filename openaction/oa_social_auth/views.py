@@ -61,6 +61,8 @@ def login_form(request):
             #LF: request.session['saved_privacy_level'] = profile_form.cleaned_data['privacy_level']
             request.session['saved_wants_newsletter'] = profile_form.cleaned_data['wants_newsletter']
             request.session['saved_city'] = profile_form.cleaned_data['city']
+            request.session['saved_uses_nickname'] = profile_form.cleaned_data['uses_nickname']
+            request.session['saved_says_is_politician'] = profile_form.cleaned_data['says_is_politician']
             backend = request.session[session_variable]['backend']
             return redirect('socialauth_complete', backend=backend)
         else:

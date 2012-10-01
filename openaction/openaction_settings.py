@@ -5,6 +5,10 @@ import settings
 #--------------------------------------------------------------------------------
 # Social auth authentication
 
+LOGIN_URL          = '/social_auth/login-form/'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_ERROR_URL    = '/social_auth/login-error/'
+
 # Taken from open_municipio social-auth integration
 
 FACEBOOK_EXTENDED_PERMISSIONS = ['email'] # if this is missing, only username is retrieved
@@ -15,10 +19,10 @@ SOCIAL_AUTH_PIPELINE = (
     'social_auth.backends.pipeline.social.social_auth_user',
     'social_auth.backends.pipeline.associate.associate_by_email',
     'social_auth.backends.pipeline.misc.save_status_to_session',
-    'om_auth.pipeline.redirect_to_form',
-    'om_auth.pipeline.extra_data',
+    'oa_social_auth.pipeline.redirect_to_form',
+    'oa_social_auth.pipeline.extra_data',
     'social_auth.backends.pipeline.user.create_user',
-    'om_auth.pipeline.create_profile',
+    'oa_social_auth.pipeline.create_profile',
     'social_auth.backends.pipeline.social.associate_user',
     'social_auth.backends.pipeline.social.load_extra_data',
     'social_auth.backends.pipeline.user.update_user_details',

@@ -115,8 +115,8 @@ class UserProfile(models.Model):
     #LF     try:
     #LF         self.user.groups.get(name='editors')
     #LF         return True
-        except ObjectDoesNotExist:
-            return False
+    #LF     except ObjectDoesNotExist:
+    #LF         return False
 
 
 
