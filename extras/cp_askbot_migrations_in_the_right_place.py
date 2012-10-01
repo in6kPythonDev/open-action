@@ -1,16 +1,19 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys, os, shutil
 
 script_path = os.path.abspath(__file__)
 
-oa_path =  os.path.sep.join(script_path.split(os.path.sep)[:-2])
+oa_path = os.path.dirname(script_path)
 
 migration_file = '0001_openaction_askbot_extensions.py'
 
-migration_path_from = oa_path + '/openaction/askbot_extensions/migrations/' + migration_file
+migration_path_from = os.path.join(oa_path,'openaction', 'askbot_extensions', 'migrations',  migration_file)
 
-migration_path_to = oa_path + '/submodules/askbot-devel/askbot/migrations/'
+#KO: migration_path_to = oa_path + '/submodules/askbot-devel/askbot/migrations/'
+#LF: installation dir can be retrieved by dirname(module.__file__)
+import askbot
+migration_path_to = os.path.join(os.path.dirname(askbot.__file__), 'migrations')
 
 migration_files = os.listdir(migration_path_to)
 
