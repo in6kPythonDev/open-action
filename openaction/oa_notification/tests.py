@@ -6,6 +6,7 @@ Replace this with more appropriate tests for your application.
 """
 
 from django.core.urlresolvers import reverse
+from django.test.client import Client
 
 from askbot.models import Post, User
 from askbot.models.repute import Vote
@@ -138,6 +139,8 @@ class NotificationTest(OpenActionViewTestCase):
             ajax
         )
         return response
+
+#--------------------------------------------------------------------------------
 
     def test_notice_settings(self):
 

@@ -34,3 +34,12 @@ class UserCannotModerateActionException(exceptions.PermissionDenied):
 
     def __unicode__(self):
         return u"L'utente %s non puo moderare l'azione %s poichè non la sta seguendo" % (self.user, self.action)
+
+class UserCannotUpdateAlreadyAcceptedModerationRequest(exceptions.PermissionDenied):
+
+    def __init__(self, user, action):
+        self.user = user
+        self.action = action
+
+    def __unicode__(self):
+        return u"L'utente %s ha già accettato di moderare l'azione %s" % (self.user, self.action)

@@ -24,33 +24,26 @@ TODO
 * nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action                     | OK testato 
 * NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica                       | OK testato
 * nelle view e nei test: solo l'owner della Action la puo modificare (text)                                     | OK testato
-
-
-* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione. v
-* nel modello Action aggiungere campo -- moderator_set -- v
-* solo owner e moderatori (che insieme compongono i -- referrers --) possono scrivere blogpost per una action. Implementare il controllo nelle assert nel modello User. v
-* tutti i referrers possono settare lo stato victory che però dovà essere verificato ed eventualmente accettato dallo staff:
-    fare un modello "ActionRequest" con campi: v
+* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione. | OK testato
+* nel modello Action aggiungere campo -- moderator_set --   | OK testato 
+* solo owner e moderatori (che insieme compongono i -- referrers --) possono scrivere blogpost per una action. Implementare il controllo nelle assert nel modello User. | OK testato
+* tutti i referrers possono settare lo stato victory che però dovà essere verificato ed eventualmente accettato dallo staff: --> DA IMPLEMENTARE
+    fare un modello "ActionRequest" con campi: | OK testato
         * Action, 
         * il tipo di richiesta, 
         * le note,
         * 'requested_at' datetime,
         * un campo 'is_processed' per considerare la richiesta processata e non visualizzarla piu nell'admin
-* controllare campi da nascondere nelle form v
-* TESTARE l'aggiunta del voto tramite token v
-* inserire un controllo che logghi il caso in cui un utente voti con se stesso come referente v
-* inserire campo 'is_deleted' nel modello ActionCategory v
-* nessuna operazione è eseguibile sulla Action se questa è in stato 'canceled' --> implementare controlli nelle estensioni di askbot (asserts e pre_save) v
-* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). v 
-
-* Creare una nuova a applicazione (organization) con tre modelli ( vedere documento di analisi) v
-* creare una vista, relativa al modello NoticeSetting, che aggiunga nuovi tipi di notifiche relative ad un particolare utente e collegate ad uno o piu backends
-
-* rinominare l'applicazione 'connection' in 'organization' v
-* spostare UserNotice in oa_notification/models.py v
-* implementare una gestione di segnale che alla creazione di un post nel blog nella post_save del modello Post (controllando che l'istanza sia di tipo answer) prenda i referrers ed i followers della action e invii loro una notifica --> in oa_notification/handlers.py v
-* nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True v
-* Implementare il backend di openaction --> eredita da notification.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) v
+* inserire un controllo che logghi il caso in cui un utente voti con se stesso come referente | OK testato
+* inserire campo 'is_deleted' nel modello ActionCategory | OK testato
+* nessuna operazione è eseguibile sulla Action se questa è in stato 'canceled' --> implementare controlli nelle estensioni di askbot (asserts e pre_save) | OK testato
+* I tag sono inseriti nella form di update di una Action alla stregua dei campi xxx_set (inserimento di una lista di tags che vanno a sovrascrivere la vecchia lista). Per questo sarebbe meglio creare un metodo generico che presi in input due set di oggetti (relativi nel nostro caso rispettivamente agli oggetti da collegare all'istanza della form e a quelli da scollegare) ritorni come output due set di oggetti tali che il primo set indica gli oggetti da rimuovere e il secondo quelli da aggiungere (nel nostro caso rispettivamente quelli da scollegare dall'istanza e quelli da collegarvi). --> ANDREBBE SPOSTATO IN UN MODULO DI UTILITY
+* Creare una nuova a applicazione (organization) con tre modelli ( vedere documento di analisi) | OK testato 
+* creare una vista, relativa al modello NoticeSetting, che aggiunga nuovi tipi di notifiche relative ad un particolare utente e collegate ad uno o piu backends --> ??
+* rinominare l'applicazione 'connection' in 'organization' | OK testato 
+* implementare una gestione di segnale che alla creazione di un post nel blog nella post_save del modello Post (controllando che l'istanza sia di tipo answer) prenda i referrers ed i followers della action e invii loro una notifica --> in oa_notification/handlers.py | OK testato  
+* nella post_save dell'user, nel caso in cui questo sia attivo (is_active = True) creare un'istanza di NoticeSetting per l'utente con backend openaction = True | OK testato 
+* Implementare il backend di openaction --> eredita da notification.backend.base.BasBackend e al suo interno instanzia UserNotice (vedere ad esempio l'implementazione di oa_notification/backend/facebook.py ) | OK testato 
 * Creare una property in organization che ritorni il QS degli utenti che seguono l'associazione v
 
 * sostituire UserNotice con Notice nel backend di openaction V
@@ -63,6 +56,21 @@ TODO
 * provare a escluedere i nuovi attributie che estendono Vote, lasciando solo referral --> sembrano non funzionar, non vengon aggiunti nel db...... --> risolto tramite migrazione con South V
 * Creare Azione per l'associazione: V
     * la form avrà un campo choice che conterrà l'utente e tutte le associazioni che rappresenta: nel caso l'utente non rappresenti nessuna associazione, il campo choice verrà nascosto
+
+* Modificare tramite add_to_class in askbot_extensions/models le choices dell'attributo '' di Activity, sostituendole con quelli in askbot_extensions/const (comprendono le vecchie choices di Activity) V
+* Implementare un handler che gestisca il segnale post_action_status_update che crei un'Activity (nota: impostare anche l'attributo question oltre alla chiave generica). Le attività da registrare per ora sono il passaggio allo stato 'victory' o 'closed'. Il segnale va inviato dalla vista, in modo da passare nei parametri anche l'utente che ha scatenato l'attività
+* Implementare una vista contentente tutti i dati e le attività di un Utente, e che comprenda:
+    * dettagli User e UserProfile dell'utente;
+    * social network collegati;
+    * lista delle ultime attività;
+    * numero di notifiche non lette;
+    * numero azioni attive;
+    * numero degli attivisti coinvolti (per quanti voti l'utente ha fatto da referral);
+    * 3 liste:
+        * azioni aderite in ordine decrescente;
+        * amici (friends);
+        * organizzazioni seguite.
+* Controllare problemi sui test di oa_notification
 
 * Nuova applicazione per: (nome = action_request)
     ** se in futuro sarà generica, action diventerà una property e verrà aggiunto un generic_field che conterrà il riferimento al modello a cui in quel momento si desidera utilizzare

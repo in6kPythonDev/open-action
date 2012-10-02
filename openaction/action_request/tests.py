@@ -4,6 +4,7 @@ from django.conf import settings
 from action.tests import OpenActionViewTestCase
 from action_request.models import ActionRequest
 from action import const
+from action_request import const as ar_const
 from action_request import exceptions as action_request_exceptions
 from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed
 from oa_notification.handlers import notify_action_moderation_request, notify_action_moderation_processed
@@ -27,6 +28,19 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
         
         self._action = self._create_action(title="Action N#1")
 
+        self.follower = self.create_user(username='user2')
+        self._login(self.follower)
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_READY)
+        
+        self._POST(
+            reverse('action-follow', args=(self._action.pk,)),
+            is_ajax=True
+        )
+        ##success
+        #self._check_for_success_response(response)
+        ##self.assertTrue(login_user.is_following_action(self._action))
+        #self.assertTrue(self.follower.is_following_action(self._action))
  
     def _POST(self, url, is_ajax, **kwargs):
         
@@ -79,181 +93,236 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             **kwargs
         )
         return response
+
+    def _get_moderation_request_objs(self, 
+        action, 
+        sender, 
+        recipient, 
+        request_notes
+    ):
+        try:
+            action_req_objs = ActionRequest.objects.filter(
+                action=action,
+                sender=sender,
+                recipient=recipient,
+                request_notes=request_notes
+            )
+        except ActionRequest.DoesNotExist as e:
+            action_req_objs = False
+
+        return action_req_objs
+
+    def _get_notice_objs(self,
+        notice_label,
+        recipient
+    ):
+        notice_type = NoticeType.objects.get(label=notice_label)
+        try:
+            notice_obj = Notice.objects.filter(recipient=recipient, 
+                notice_type=notice_type
+            )
+        except Notice.DoesNotExist as e:
+            notice_obj = False
+
+        return notice_obj
+
 #--------------------------------------------------------------------------------
 
-    def test_create_action_moderation_request(self, user=None):
+    def test_only_action_owner_can_ask_moderation(self):
 
-        follower = self.create_user(username='user2')
-
-        self._login(follower)
-
-        #action = self._create_action()
-
-        self._action.compute_threshold()
-        self._action.update_status(const.ACTION_STATUS_READY)
-
-        #response = self._do_POST_follow_action(
-        #    action=self._action,
-        #    ajax=True
-        #)
-        response = self._POST(
-            reverse('action-follow', args=(self._action.pk,)),
-            is_ajax=True
+        request_text = "Sono un moderatore, vorresti darmi una mano a moderare questa action?"
+    
+        self._login(self.follower)
+        response = self._do_POST_create_action_moderation_request(
+            action=self._action,
+            ajax=True,
+            follower=self.follower.pk,
+            request_text=request_text
+        )
+        self._check_for_error_response(response, 
+            e=action_request_exceptions.RequestActionModerationNotOwnerException
         )
 
-        #success
-        self._check_for_success_response(response)
-        #self.assertTrue(login_user.is_following_action(self._action))
-        self.assertTrue(follower.is_following_action(self._action))
+    def test_create_action_moderation_request(self, user=None):
 
         logged_in = self._login(user)
 
         if logged_in:
 
-            #check that user is following action
             login_user = [self._author, user][bool(user)]
 
             #sending moderation request
-            #follower = self.create_user(username='follower')
             request_text = "Ti chiedo di moderare la mia action"
 
             response = self._do_POST_create_action_moderation_request(
                 action=self._action,
                 ajax=True,
-                follower=follower.pk,
+                follower=self.follower.pk,
                 request_text=request_text
             )
 
-            print "\n\n----------------response %s\n\n" % response
+            #print "\n\n----------------response %s\n\n" % response
 
             self._check_for_redirect_response(response, is_ajax=True)
  
-            try:
-                action_req_objs = ActionRequest.objects.filter(
+            action_req_objs = self._get_moderation_request_objs( 
                     action=self._action,
                     sender=login_user,
-                    recipient=follower,
+                    recipient=self.follower,
                     request_notes=request_text
-                )
-            except ActionRequest.DoesNotExist as e:
-                action_req_objs = False
+            )
 
             self.assertTrue(action_req_objs)
             self.assertTrue(action_req_objs.count() == 1)
 
+    def test_action_owner_cannot_send_more_than_three_notices(self, user=None):
 
-            #testing that the action owner cannot send more than three notices
-            response = self._do_POST_create_action_moderation_request(
-                action=self._action,
-                ajax=True,
-                follower=follower.pk,
-                request_text=request_text
-            )
-            self._check_for_redirect_response(response, is_ajax=True)
+        logged_in = self._login(user)
+        login_user = [self._author, user][bool(user)]
+        request_text = "Ti chiedo di moderare la mia action"
+        n_tries = [1,2,3]
 
-            try:
-                action_req_objs = ActionRequest.objects.filter(action=self._action,
-                    sender=login_user,
-                    recipient=follower,
-                    request_notes=request_text
+        if logged_in:
+
+            for n_try in n_tries:
+                response = self._do_POST_create_action_moderation_request(
+                    action=self._action,
+                    ajax=True,
+                    follower=self.follower.pk,
+                    request_text=request_text
                 )
-            except ActionRequest.DoesNotExist as e:
-                action_req_objs = False
+                self._check_for_redirect_response(response, is_ajax=True)
 
-            self.assertTrue(action_req_objs)
-            self.assertTrue(action_req_objs.count() == 2)
-
-            response = self._do_POST_create_action_moderation_request(
-                action=self._action,
-                ajax=True,
-                follower=follower.pk,
-                request_text=request_text
-            )
-            self._check_for_redirect_response(response, is_ajax=True)
-
-            try:
-                action_req_objs = ActionRequest.objects.filter(action=self._action,
-                    sender=login_user,
-                    recipient=follower,
-                    request_notes=request_text
+                #checking request #n_try
+                action_req_objs = self._get_moderation_request_objs( 
+                        action=self._action,
+                        sender=login_user,
+                        recipient=self.follower,
+                        request_notes=request_text
                 )
-            except ActionRequest.DoesNotExist as e:
-                action_req_objs = False
+                self.assertTrue(action_req_objs)
+                self.assertTrue(action_req_objs.count() == n_try)
 
-            self.assertTrue(action_req_objs)
-            self.assertTrue(action_req_objs.count() == 3)
+            #response = self._do_POST_create_action_moderation_request(
+            #    action=self._action,
+            #    ajax=True,
+            #    follower=self.follower.pk,
+            #    request_text=request_text
+            #)
+            #self._check_for_redirect_response(response, is_ajax=True)
 
-            action_req_obj_first = action_req_objs[0]
-            action_req_obj_second = action_req_objs[1]
-            action_req_obj_third = action_req_objs[2]
+            ##checking request #2
+            #action_req_objs = self._get_moderation_request_objs( 
+            #        action=self._action,
+            #        sender=login_user,
+            #        recipient=self.follower,
+            #        request_notes=request_text
+            #)
+            #self.assertTrue(action_req_objs)
+            #self.assertTrue(action_req_objs.count() == 2)
+
+            #response = self._do_POST_create_action_moderation_request(
+            #    action=self._action,
+            #    ajax=True,
+            #    follower=self.follower.pk,
+            #    request_text=request_text
+            #)
+            #self._check_for_redirect_response(response, is_ajax=True)
+
+            ##checking request #3
+            #action_req_objs = self._get_moderation_request_objs( 
+            #        action=self._action,
+            #        sender=login_user,
+            #        recipient=self.follower,
+            #        request_notes=request_text
+            #)
+            #self.assertTrue(action_req_objs)
+            #self.assertTrue(action_req_objs.count() == 3)
+
+            #action_req_obj_first = action_req_objs[0]
+            #action_req_obj_second = action_req_objs[1]
+            #action_req_obj_third = action_req_objs[2]
 
             response = self._do_POST_create_action_moderation_request(
                 action=self._action,
                 ajax=True,
-                follower=follower.pk,
+                follower=self.follower.pk,
                 request_text=request_text
             )
             self._check_for_error_response(response, 
                 e=action_request_exceptions.CannotRequestModerationToUser
             )
 
-            #test that only the action owner can ask for moderation
-            self._login(follower)
-            response = self._do_POST_create_action_moderation_request(
-                action=self._action,
-                ajax=True,
-                follower=follower.pk,
-                request_text=request_text
+            notice_obj = self._get_notice_objs(notice_label="mod_proposal", 
+                recipient=self.follower
             )
-            self._check_for_error_response(response, 
-                e=action_request_exceptions.RequestActionModerationNotOwnerException
-            )
-
-            #test the signal sending and handling
-            notice_type = NoticeType.objects.get(label="mod_proposal")
-            try:
-                notice_obj = Notice.objects.filter(recipient=follower, 
-                    notice_type=notice_type
-                )
-            except Notice.DoesNotExist as e:
-                notice_obj = False
-
             self.assertTrue(notice_obj)
             self.assertTrue(notice_obj.count() <= settings.MAX_MODERATION_REQUESTS)
 
-            #test the follower user response
+
+    def test_follower_user_responses(self, user=None):
+
+        logged_in = self._login(user)
+        login_user = [self._author, user][bool(user)]
+        request_text = "Ti chiedo di moderare la mia action"
+        request_type = ar_const.REQUEST_TYPE_MODERATION
+        action_requests = [0,1,2]
+
+        if logged_in:
+
+            for a_r in action_requests:
+                n = int(a_r)
+                action_requests[n] = ActionRequest(
+                    action=self._action,
+                    sender=login_user,
+                    recipient=self.follower,
+                    request_notes=request_text,
+                    request_type=request_type 
+                )
+                action_requests[n].save()
+        else:
+            raise Exception
+
+        for a_r in action_requests:
+            print("\naction_requests_created.pk=%s\n" % a_r.pk)
+        for a_r in ActionRequest.objects.all():
+            print("\naction_requests.pk=%s\n" % a_r.pk)
+
+        logged_in = self._login(self.follower)
+
+        if logged_in:
             answer_text = "non mi va di moderare la tua action del cavolo"
 
-            response = self._do_POST_process_action_moderation_request(action_request=action_req_obj_first,
+            response = self._do_POST_process_action_moderation_request(action_request=action_requests[0],
                 ajax=True,
                 accept_request=0,
                 answer_text=answer_text
             )
 
+
+            #print("RESPONSE-----------------------: %s" % response)
+
             self._check_for_redirect_response(response, is_ajax=True)
 
-            action_request_not_accepted = ActionRequest.objects.get(pk=action_req_obj_first.pk)
-
+            action_request_not_accepted = ActionRequest.objects.get(pk=action_requests[0].pk)
+            print("\nis_accepted=%s\n" % action_request_not_accepted.is_accepted)
             self.assertTrue(action_request_not_accepted.is_processed)
             self.assertTrue(not action_request_not_accepted.is_accepted)
             self.assertTrue(
                 action_request_not_accepted.answer_notes == answer_text
             )
-            
-            notice_type = NoticeType.objects.get(label="answer_mod_proposal")
-            try:
-                notice_obj = Notice.objects.get(recipient=login_user, 
-                    notice_type=notice_type
-                )
-            except Notice.DoesNotExist as e:
-                notice_obj = False
+
+            notice_obj = self._get_notice_objs(
+                notice_label="answer_mod_proposal",
+                recipient=login_user
+            )
 
             self.assertTrue(notice_obj)
 
             #test the follower user response
             answer_text = "che figata, accetto subito!"
 
-            response = self._do_POST_process_action_moderation_request(action_request=action_req_obj_second,
+            response = self._do_POST_process_action_moderation_request(action_request=action_requests[1],
                 ajax=True,
                 accept_request=1,
                 answer_text=answer_text
@@ -261,7 +330,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
 
             self._check_for_redirect_response(response, is_ajax=True)
 
-            action_request_accepted = ActionRequest.objects.get(pk=action_req_obj_second.pk)
+            action_request_accepted = ActionRequest.objects.get(pk=action_requests[1].pk)
 
             self.assertTrue(action_request_accepted.is_processed)
             self.assertTrue(action_request_accepted.is_accepted)
@@ -270,9 +339,9 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             )
 
             #test the follower user response
-            answer_text = "mmh on mi ricordo se ho accettato, accetto ora per sicurezza"
+            answer_text = "mmh non mi ricordo se ho accettato, accetto ora per sicurezza"
 
-            response = self._do_POST_process_action_moderation_request(action_request=action_req_obj_third,
+            response = self._do_POST_process_action_moderation_request(action_request=action_requests[2],
                 ajax=True,
                 accept_request=1,
                 answer_text=answer_text
@@ -280,7 +349,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
 
             self._check_for_redirect_response(response, is_ajax=True)
 
-            act_req_accepted_sencond_time = ActionRequest.objects.get(pk=action_req_obj_third.pk)
+            act_req_accepted_sencond_time = ActionRequest.objects.get(pk=action_requests[2].pk)
 
             self.assertTrue(act_req_accepted_sencond_time.is_processed)
             self.assertTrue(not act_req_accepted_sencond_time.is_accepted)
