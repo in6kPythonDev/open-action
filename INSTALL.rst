@@ -94,12 +94,7 @@ OpenAction installation guide
         ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth 
 
 
- Deploy Guide
-==============
+Now Open Action is installed correcty.
 
-At this point, Open Action is installed and ready to run.
-
-To deploy your installation you can follow different steps, depending on
-witch webserver you use. 
-
+If you want to deploy your installation, follow the guide in DEPLOY.rst
 
