@@ -1,11 +1,14 @@
 
 from askbot.const import *
+from django.utils.translation import ugettext as _
 
 OA_TYPE_ACTIVITY_SET_VICTORY = 100
+OA_TYPE_ACTIVITY_SET_CLOSURE = 101
 
 TYPE_ACTIVITY_CHOICES = (
 
     (OA_TYPE_ACTIVITY_SET_VICTORY, "impostato la vittoria sull'azione"),
+    (OA_TYPE_ACTIVITY_SET_CLOSURE, "impostato la chiusura sull'azione"),
 
     # TODO: Matteo or Antonio: rinominare la descrizione
     (TYPE_ACTIVITY_ASK_QUESTION, _('asked a question')),

@@ -7,7 +7,7 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
 from django.conf import settings
 
-from askbot.models import Thread, Vote, User, Post
+from askbot.models import Thread, Vote, User, Post, Activity
 from action import exceptions
 from action_request import exceptions as action_request_exceptions
 from action import const as action_const
@@ -20,6 +20,7 @@ from lib.djangolib import ModelExtender
 from lib import ClassProperty
 
 from askbot_extensions import managers
+from askbot_extensions import consts as ae_const
 
 
 #--------------------------------------------------------------------------------
@@ -298,15 +299,17 @@ class UserExtension(AskbotModelExtender):
 
         return True
 
-    def _askbot_ext_assert_can_process_moderation_for_action(self, action_request, already_accepted):
+    def _askbot_ext_assert_can_process_moderation_for_action(self, action_request):
         """ Check permissions. If user is not following action --> raise exception """
         already_accepted = action_request.check_same_type_already_accepted()
 
         if already_accepted:
-            raise ValueError("TODO Matteo:UserCannotUpdateAlreadyAcceptedModerationRequest")
+            #raise ValueError("TODO Matteo:UserCannotUpdateAlreadyAcceptedModerationRequest")
+            raise action_request_exceptions.UserCannotUpdateAlreadyAcceptedModerationRequest(self, action_request.action)
 
         # Check if user is among followers and not already a moderator
-        followers = action_request.action.thread.followed_by.all()
+        #WAS: followers = action_request.action.thread.followed_by.all()
+        followers = action_request.action.followers
         followers_not_moderators = followers.exclude(pk__in=action_request.action.moderator_set.all())
         if self not in followers_not_moderators:
             raise action_request_exceptions.UserCannotModerateActionException(self, action_request.action)
@@ -319,24 +322,24 @@ class UserExtension(AskbotModelExtender):
 
         return True
 
-    def _askbot_ext_check_moderation_response_already_answered(self, action_request):
-        """ """
+    #def _askbot_ext_check_moderation_response_already_answered(self, action_request):
+    #    """ """
 
-        return action_request.check_same_type_already_accepted()
+    #    return action_request.check_same_type_already_accepted()
 
-        # LESSON: this method should not be here since it has nothing to do with "self"
-        # read this LESSON and delete this method, changing the invoking code appropriately
-        
-        #KO: action_requests = ActionRequest.objects.filter(recipient=action_request.recipient,
-        #KO:     action=action_request.action,
-        #KO:     request_type=action_request_const.REQUEST_TYPE['mod']
-        #KO: )
+    #    # LESSON: this method should not be here since it has nothing to do with "self"
+    #    # read this LESSON and delete this method, changing the invoking code appropriately
+    #    
+    #    #KO: action_requests = ActionRequest.objects.filter(recipient=action_request.recipient,
+    #    #KO:     action=action_request.action,
+    #    #KO:     request_type=action_request_const.REQUEST_TYPE['mod']
+    #    #KO: )
 
-        #KO: for action_request in action_requests:
-        #KO:     if action_request.is_accepted:
-        #KO:         return True
+    #    #KO: for action_request in action_requests:
+    #    #KO:     if action_request.is_accepted:
+    #    #KO:         return True
 
-        #KO: return False
+    #    #KO: return False
 
 #--------------------------------------------------------------------------------
 
@@ -360,19 +363,18 @@ class UserExtension(AskbotModelExtender):
         return symmetric_friends
 
     @property
-    def _askbot_ext_orgs_followed(self):
-        #TODO Matteo rename in followed_orgs
+    def _askbot_ext_followed_orgs(self):
         orgs_pk = self.orgmap_set.filter(is_follower=True).values_list('org__pk', flat=True)
         return Organization.objects.filter(pk__in=orgs_pk)
 
     @property
-    def _askbot_ext_orgs_represented(self):
-        #TODO Matteo rename in represented_orgs
+    def _askbot_ext_represented_orgs(self):
         orgs_pk = self.orgmap_set.filter(is_representative=True).values_list('org__pk', flat=True)
         return Organization.objects.filter(pk__in=orgs_pk)
 
 
 User.add_to_class('ext_noattr', UserExtension())
 
-
+#Duplicate db column
+Activity.add_to_class('activity_type', models.SmallIntegerField(choices = ae_const.TYPE_ACTIVITY_CHOICES))
 

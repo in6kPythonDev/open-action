@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 
 from askbot.models import Post, User
 from askbot.models.repute import Vote
+from askbot.models.user import Activity
 from notification import models as notification
 from action.models import Action
 from action.signals import post_action_status_update, post_declared_vote_add 
@@ -12,6 +13,7 @@ from action_request.signals import action_moderation_request_submitted, action_m
 from action_request.models import ActionRequest
 from oa_notification import consts as notification_consts
 from action import const as action_consts
+from askbot_extensions import consts as ae_consts
 
 import logging
 
@@ -49,7 +51,8 @@ def notify_add_blog_post(sender, **kwargs):
             action = post.action
 
             referrers = action.referrers
-            followers = action.thread.followed_by.all()
+            #WAS: followers = action.thread.followed_by.all()
+            followers = action.followers
             # recipients
             users = referrers | followers
 
@@ -166,6 +169,39 @@ def notify_post_status_update(sender, **kwargs):
     else:
         #TODO placeholder old_status other than READY
         pass
+
+@receiver(post_action_status_update, sender=Action)
+def register_status_update_activity(sender, **kwargs):
+    """ Create a new Activity if the status is 'victory' or 'closed' """
+ 
+    #1 joined action reached a level step
+    action = sender
+    old_status = kwargs['old_status']
+    user = kwargs['user']#??? the user who triggers the Activity
+    question = action.question
+
+    activity_type = [
+        ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE, 
+        ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY
+    ][old_status in (action_consts.ACTION_STATUS_VICTORY)]
+
+    log.debug("ACTIVITY with Action:%s status:%s" % (action, old_status)) 
+
+    #if old_status in (action_consts.ACTION_STATUS_VICTORY):
+    activity = Activity(
+            user=user,
+            content_object=action,
+            activity_type=activity_type,
+            question=question
+    )
+    #elif old_status in (action_consts.ACTION_STATUS_CLOSED):
+    #    activity = Activity(
+    #            user=user,
+    #            content_object=action,
+    #            activity_type=ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY,
+    #            question=question
+    #    )    
+
 
 #NOTE: KO: the default settings should have been setted in the user pre_save
 #@receiver(post_save, sender=User)
