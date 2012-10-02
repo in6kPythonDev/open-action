@@ -4,7 +4,7 @@ import sys, os, shutil
 
 script_path = os.path.abspath(__file__)
 
-oa_path = os.path.dirname(script_path)
+oa_path = os.path.join(os.path.dirname(script_path), os.pardir)
 
 migration_file = '0001_openaction_askbot_extensions.py'
 
@@ -32,6 +32,6 @@ max_name += 1
 
 max_name = str(max_name).zfill(4)
 
-migration_path_to = migration_path_to + max_name + (migration_file[4:])
+migration_path_to = os.path.join(migration_path_to, max_name + (migration_file[4:]) )
 
 shutil.copy(migration_path_from, migration_path_to)
