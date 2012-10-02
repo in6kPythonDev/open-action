@@ -9,11 +9,6 @@
 
 CLONEDIR = '' 
 
-# path to the dir where you want to deploy openaction
-# (often something like /var/www/openaction )
-
-WEBDIR   = ''  
-
 # path to your virtualenv directory 
 # (something like /var/lib/virtualenvs/openaction )
 
@@ -21,16 +16,22 @@ VIRTUALENVDIR = ''
 
 ######## STOP EDITING HERE ########
 
-ALLDIRS = [VIRTUALENVDIR+'/lib/python2.6/site-packages/']
-
 import sys 
 import site 
+import os
 
-import os, sys
-sys.path.append(WEBDIR)
+current_directory = os.path.dirname(__file__)
+parent_directory = os.path.dirname(current_directory)
+module_name = os.path.basename(current_directory)
+
+print current_directory, parent_directory, module_name
+
+ALLDIRS = [os.path.join(VIRTUALENVDIR,'lib','python2.6','site-packages/')]
+
+sys.path.append(parent_directory)
+sys.path.append(current_directory)
 sys.path.append(CLONEDIR)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-
+os.environ['DJANGO_SETTINGS_MODULE'] = module_name+'.settings'
 
 # Remember original sys.path.
 prev_sys_path = list(sys.path) 
