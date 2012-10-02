@@ -13,7 +13,8 @@ class ModerationForm(forms.Form):
     def __init__(self, *args, **kwargs):
         action = kwargs.pop('action')
  
-        followers = action.thread.followed_by.all()
+        #WAS: followers = action.thread.followed_by.all()
+        followers = action.followers
         followers_not_moderators = followers.exclude(pk__in=action.moderator_set.all())
 
         ModerationForm.base_fields['follower'].queryset = followers_not_moderators
@@ -28,7 +29,9 @@ class ModerationProcessForm(forms.Form):
 
     accept_request = forms.ChoiceField(required=True, choices=CHOICES)
 
-    answer_text = forms.TextField(required=False)
+    #WAS: forms has no attribute TextField 
+    #WAS: answer_text = forms.TextField(required=False)
+    answer_text = forms.CharField(required=False)
 
     # LESSON: you are simply doing nothing here. :)
     # because you manipulate cleaned_data and return self.cleaned_data.

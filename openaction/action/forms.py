@@ -32,7 +32,7 @@ class ActionForm(askbot_forms.AskForm):
     def __init__(self, request, *args, **kw):
         user = request.user
         choices = [("user-%s" % user.pk, user),]
-        orgs = user.orgs_represented
+        orgs = user.represented_orgs
         for org in orgs:
             choices.append(
                 ("org-%s" % org.pk, org)

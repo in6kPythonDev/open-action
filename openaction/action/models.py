@@ -147,6 +147,12 @@ class Action(models.Model, Resource):
         return owners | moderators
 
     @property
+    def followers(self):
+        """ The users who are following the Action """
+
+        return self.thread.followed_by.all()
+
+    @property
     def pingbacks(self):
         pass
 
