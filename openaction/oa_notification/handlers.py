@@ -170,37 +170,36 @@ def notify_post_status_update(sender, **kwargs):
         #TODO placeholder old_status other than READY
         pass
 
-@receiver(post_action_status_update, sender=Action)
+#@receiver(post_action_status_update, sender=Action)
+@receiver(post_save, sender=ActionRequest)
 def register_status_update_activity(sender, **kwargs):
     """ Create a new Activity if the status is 'victory' or 'closed' """
  
-    #1 joined action reached a level step
-    action = sender
-    old_status = kwargs['old_status']
-    user = kwargs['user']#??? the user who triggers the Activity
-    question = action.question
+    if kwargs['created']:
+        action_request = kwargs['instance']
 
-    activity_type = [
-        ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE, 
-        ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY
-    ][old_status in (action_consts.ACTION_STATUS_VICTORY)]
+        action = action_request.action
+        user = action_request.sender
+        question = action.question
+        old_status = action.status
 
-    log.debug("ACTIVITY with Action:%s status:%s" % (action, old_status)) 
+        if old_status in (action_consts.ACTION_STATUS_VICTORY,
+            action_consts.ACTION_STATUS_CLOSED
+        ):
+            activity_type = [
+                ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE, 
+                ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY
+            ][old_status in (action_consts.ACTION_STATUS_VICTORY)]
 
-    #if old_status in (action_consts.ACTION_STATUS_VICTORY):
-    activity = Activity(
-            user=user,
-            content_object=action,
-            activity_type=activity_type,
-            question=question
-    )
-    #elif old_status in (action_consts.ACTION_STATUS_CLOSED):
-    #    activity = Activity(
-    #            user=user,
-    #            content_object=action,
-    #            activity_type=ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY,
-    #            question=question
-    #    )    
+            log.debug("ACTIVITY with Action:%s status:%s" % (action, old_status)) 
+
+            activity = Activity(
+                    user=user,
+                    content_object=action,
+                    activity_type=activity_type,
+                    question=question
+            )
+            activity.save()
 
 
 #NOTE: KO: the default settings should have been setted in the user pre_save

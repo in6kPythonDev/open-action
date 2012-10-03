@@ -1,15 +1,18 @@
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 
 from action.tests import OpenActionViewTestCase
 from action_request.models import ActionRequest
 from action import const
 from action_request import const as ar_const
+from askbot_extensions import consts as ae_consts
 from action_request import exceptions as action_request_exceptions
 from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed
 from oa_notification.handlers import notify_action_moderation_request, notify_action_moderation_processed
 from notification.models import Notice, NoticeType
 from oa_notification import models as oa_notification
+from askbot.models.user import Activity
 
 import datetime
 
@@ -356,3 +359,47 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             self.assertTrue(
                 act_req_accepted_sencond_time.answer_notes == answer_text
             )
+
+    def test_update_action_active_status_register(self, user=None):
+        """ Test whether a new Activity is registered when the Action is set as
+        active by the Action owner (after the staff accept this change) """
+
+        logged_in = self._login(user)
+        login_user = [self._author, user][bool(user)]
+
+        self._action.compute_threshold()
+        self._action.update_status(const.ACTION_STATUS_VICTORY)
+
+        request_text = "Vorrei impostare la mia action come vittoriosa"
+        request_type = ar_const.REQUEST_TYPE_SET_VICTORY
+
+        if logged_in:
+
+            #post_action_status_update.send(sender = self._action, 
+            #    old_status=const.ACTION_STATUS_READY, 
+            #    user=self._action.owner
+            #)
+            #ActionRequest
+            action_request = ActionRequest(
+                action=self._action,
+                sender=login_user,
+                recipient=self.follower,
+                request_notes=request_text,
+                request_type=request_type 
+            )
+            action_request.save()
+
+            ctype = ContentType.objects.get_for_model(self._action.__class__)
+            obj_pk = self._action.pk
+            try:
+                activity_obj = Activity.objects.get(
+                    user=[self._author, user][bool(user)],
+                    content_type=ctype,
+                    object_id=obj_pk,
+                    activity_type=ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY,
+                    question=self._action.question
+                )
+            except Activity.DoesNotExist as e:
+                activity_obj = False
+
+            self.assertTrue(activity_obj)

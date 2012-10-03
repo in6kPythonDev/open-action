@@ -33,6 +33,7 @@ class ActionRequest(models.Model, Resource):
     REQUEST_CHOICES = (
         (const.REQUEST_TYPE['mod'],'Moderazione'),
         (const.REQUEST_TYPE['msg'],'Messaggio'),
+        (const.REQUEST_TYPE['vict'],'Vittoria Azione'),
     ) 
     
     action = models.ForeignKey(Action)
