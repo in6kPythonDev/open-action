@@ -1,0 +1,32 @@
+
+<VirtualHost *:80>
+
+    ServerName yoursite.com
+
+    # just / if you install openaction on a root domain
+    WSGIScriptAlias /OA_WEB_DIR /YOUR_CGI_PATH/django_venv.wsgi
+     
+    #Alias /m/ /OA_DEPLOY_DIR/static/
+    #Alias /upfiles/ /OA_DEPLOY_DIR/askbot/upfiles/
+    
+    <DirectoryMatch "/OA_DEPLOY_DIR/askbot/skins/([^/]+)/media">
+       Order deny,allow
+       Allow from all
+    </DirectoryMatch>
+    
+    <Directory "/OA_DEPLOY_DIR/askbot/upfiles">
+       Order deny,allow
+       Allow from all
+    </Directory>
+    
+    #must be a distinct name within your apache configuration
+    WSGIDaemonProcess openaction
+    WSGIProcessGroup openaction
+    
+    #make all admin stuff except media go through secure connection
+    <LocationMatch "/admin(?!/media)">
+      RewriteEngine on
+      RewriteRule /admin(.*)$ https://yoursite.com/OA_WEB_DIR/admin$1 [L,R=301]
+    </LocationMatch>
+
+</VirtualHost>

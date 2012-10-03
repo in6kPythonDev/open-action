@@ -14,7 +14,7 @@ CLONEDIR = ''
 
 VIRTUALENVDIR = ''
 
-######## STOP EDITING HERE ########
+######## DO NOT EDIT BELOW THIS LINE ########
 
 import sys 
 import site 
@@ -24,7 +24,7 @@ current_directory = os.path.dirname(__file__)
 parent_directory = os.path.dirname(current_directory)
 module_name = os.path.basename(current_directory)
 
-print current_directory, parent_directory, module_name
+#KO: print current_directory, parent_directory, module_name
 
 ALLDIRS = [os.path.join(VIRTUALENVDIR,'lib','python2.6','site-packages/')]
 

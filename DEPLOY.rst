@@ -3,9 +3,21 @@ Deploy Open Action
 
 When Open Action is correcty installed and you get no errors when you 
 run the django web server (python manage.py runserver) and visit 
-127.0.0.1:8000, you are ready to deploy your installation.
+http://127.0.0.1:8000/ASKBOT_URL/ (set in settings.py), 
+you are ready to deploy your installation.
 
-We will only explain the most common situation: apache2 + modwsgi + virtualenv
+2 minutes' deploy with apache2 + mod_wsgi + virtualenv
+------------------------------------------------------
+
+1. extras/deploy/deploy_with_apache2_wsgi_venv.sh
+2. answer questions
+3. copy django_venv.wsgi in your web cgi executable folder
+4. copy oa.apache2 in your virtualhost sites dir
+
+A bit more detailed guide
+-------------------------
+
+We will only explain the most common situation: apache2 + mod_wsgi + virtualenv
 
 0.  Add your openaction site in the apache2 configuration
 
@@ -16,11 +28,11 @@ We will only explain the most common situation: apache2 + modwsgi + virtualenv
 
     In both case you have to insert in your apache configuration the following
     lines, replacing OA_DEPLOY_DIR with the web folder where Open Action is
-    deployed, and OA_WEB_DIR with the path you want to reach Open Action from
-    the browser.
+    installed, and OA_WEB_DIR (must match ASKBOT_URL) 
+    with the path you want to reach Open Action with the browser.
 
     # just / if you install openaction on a root domain
-    WSGIScriptAlias /OA_WEB_DIR /OA_DEPLOY_DIR/django_venv.wsgi
+    WSGIScriptAlias /OA_WEB_DIR /YOUR_CGI_PATH/django_venv.wsgi
      
     #Alias /m/ /OA_DEPLOY_DIR/static/
     #Alias /upfiles/ /OA_DEPLOY_DIR/askbot/upfiles/
@@ -48,7 +60,7 @@ We will only explain the most common situation: apache2 + modwsgi + virtualenv
 
 1.  Set up the wsgi launch script
 
-    1.1 Copy django_venv.wsgi.dist from the dir where you cloned openaction to the
+    1.1 Copy extras/django_venv.wsgi.dist from the dir where you cloned openaction to the
         openaction deploy folder.
 
     1.2 Rename it django_venv.wsgi
@@ -58,3 +70,12 @@ We will only explain the most common situation: apache2 + modwsgi + virtualenv
 Now Open Action is ready to run on your web server.
 
 If you get a 500 error check Apache's error log for debugging. 
+
+Note about mod_wsgi and virtualenv
+----------------------------------
+
+Problem could be related to mod_wsgi + virtualenv + your default interpreter, 
+please follow WSGI documentation at
+http://code.google.com/p/modwsgi/wiki/VirtualEnvironments
+
+(if the interpreter of you virtualenv is different from system python interpreter, see the WSGIPythonHome directive)
