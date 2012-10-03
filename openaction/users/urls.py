@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 from users.forms import UserProfileForm
-from users.views import UserDetailView, UserProfileListView, UserProfileDetailView
+from users.views import UserDetailView, UserProfileListView, UserProfileDetailView, UserProfileView
 from django.contrib.auth.models import User
 
 urlpatterns = patterns('',
@@ -10,17 +10,29 @@ urlpatterns = patterns('',
          context_object_name='registered_user',
          template_name='users/user_detail.html',
     ), name='users_user_detail'),
-)
-
-urlpatterns += patterns('profiles.views',
-    url(r'^profile/edit/$',
-       'edit_profile',
-       { 'form_class': UserProfileForm },
-       name='profiles_edit_profile'),
     url(r'^profile/(?P<username>\w+)/$',
         UserProfileDetailView.as_view(),
        name='profiles_profile_detail'),
     url(r'^$',
         UserProfileListView.as_view(),
        name='profiles_profile_list'),
+    url(r'^profile/(?P<username>\w+)/details/$',
+        UserProfileView.as_view(),
+       name='user-profile-details'),
 )
+
+#urlpatterns += patterns('profiles.views',
+#    url(r'^profile/edit/$',
+#       'edit_profile',
+#       { 'form_class': UserProfileForm },
+#       name='profiles_edit_profile'),
+#    url(r'^profile/(?P<username>\w+)/$',
+#        UserProfileDetailView.as_view(),
+#       name='profiles_profile_detail'),
+#    url(r'^$',
+#        UserProfileListView.as_view(),
+#       name='profiles_profile_list'),
+#    url(r'^profile/(?P<username>\w+)/$',
+#        UserProfileView.as_view(),
+#       name='user-profile-details'),
+#)
