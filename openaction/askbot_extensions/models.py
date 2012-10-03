@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver 
 from django.conf import settings
+from django.db import connection
 
 from askbot.models import Thread, Vote, User, Post, Activity
 from action import exceptions
@@ -22,7 +23,7 @@ from lib import ClassProperty
 from askbot_extensions import managers
 from askbot_extensions import consts as ae_const
 
-
+import os
 #--------------------------------------------------------------------------------
 
 class AskbotModelExtender(ModelExtender):
@@ -375,6 +376,27 @@ class UserExtension(AskbotModelExtender):
 
 User.add_to_class('ext_noattr', UserExtension())
 
-#Duplicate db column
+#remove old attribute to prevent duplicates in the Activity fields.
+#1- search 'activity_type' into the Activity local_fields and save the index
+local_fields = Activity._meta.local_fields
+
+for field in local_fields:
+    if field.name == 'activity_type':
+        index = local_fields.index(field)
+        break
+
+#2- remove the found element from the local_fields list.
+Activity._meta.local_fields.pop(index)
+
+#3- add to class
 Activity.add_to_class('activity_type', models.SmallIntegerField(choices = ae_const.TYPE_ACTIVITY_CHOICES))
 
+#4- move the added field to the last index to the previous one
+field = local_fields.pop()
+local_fields.insert(index, field)
+
+#5- clean cache(s)
+#del Activity._meta._field_cache
+#del Activity._meta._field_name_cache
+
+#print("\n\nActivity._meta.local_fields: %s\n\n" % Activity._meta.local_fields)
