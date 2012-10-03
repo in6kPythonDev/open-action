@@ -16,7 +16,6 @@ from django.core.exceptions import PermissionDenied
 
 from askbot.models import Post, User
 from askbot.models.repute import Vote
-from askbot.models.user import Activity
 
 from notification.models import Notice 
 from organization.models import Organization, UserOrgMap
@@ -981,29 +980,3 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
 
-    def test_update_action_active_status_register(self, user=None):
-        """ Test whether a new Activity is registered when the Action is set as
-        active by the Action owner (after the staff accept this change) """
-
-        logged_in = self._login(user)
-
-        self._action.compute_threshold()
-        self._action.update_status(const.ACTION_STATUS_READY)
-
-        if logged_in:
-
-            post_action_status_update.send(old_status=const.ACTION_STATUS_READY, 
-                user=self._action.owner
-            )
-
-            try:
-                activity_obj = Activity.objects.get(
-                    user=[self._author, user][bool(user)],
-                    content_object=self._action,
-                    activity_type=ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY,
-                    question=self._action.question
-                )
-            except Activity.DoesNotExist as e:
-                activity_obj = False
-
-            self.assertTrue(activity_obj)

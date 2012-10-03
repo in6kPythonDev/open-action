@@ -57,7 +57,8 @@ class Action(models.Model, Resource):
     image = models.ImageField(null=True, blank=True, upload_to=get_action_image_path)
 
     class Meta:
-        get_latest_by = "thread"
+        #get_latest_by = "thread"
+        ordering = ['-thread']
 
     def __unicode__(self):
         return self.title
@@ -116,7 +117,8 @@ class Action(models.Model, Resource):
             raise ValueError("Invalid status %s for action %s" % (value, self))
 
         post_action_status_update.send(sender=self,
-            old_status=old_status
+            old_status=old_status,
+            user=None
         )
 
     @property
