@@ -57,9 +57,9 @@ TODO
 * Creare Azione per l'associazione: V
     * la form avrà un campo choice che conterrà l'utente e tutte le associazioni che rappresenta: nel caso l'utente non rappresenti nessuna associazione, il campo choice verrà nascosto
 
-* Modificare tramite add_to_class in askbot_extensions/models le choices dell'attributo '' di Activity, sostituendole con quelli in askbot_extensions/const (comprendono le vecchie choices di Activity) V
-* Implementare un handler che gestisca il segnale post_action_status_update che crei un'Activity (nota: impostare anche l'attributo question oltre alla chiave generica). Le attività da registrare per ora sono il passaggio allo stato 'victory' o 'closed'. Il segnale va inviato dalla vista, in modo da passare nei parametri anche l'utente che ha scatenato l'attività
-* Implementare una vista contentente tutti i dati e le attività di un Utente, e che comprenda:
+* Modificare tramite add_to_class in askbot_extensions/models le choices dell'attributo '' di Activity, sostituendole con quelli in askbot_extensions/const (comprendono le vecchie choices di Activity) V (da testare)
+* Implementare un handler che gestisca la pre_save di ActionRequest per creare un'Activity (nota: impostare anche l'attributo question oltre alla chiave generica). Le attività da registrare per ora sono il passaggio allo stato 'victory' o 'closed'. Il segnale va inviato dalla vista, in modo da passare nei parametri anche l'utente che ha scatenato l'attività V 
+* Implementare una vista contentente tutti i dati e le attività di un Utente, e che comprenda: V (da testare)
     * dettagli User e UserProfile dell'utente;
     * social network collegati;
     * lista delle ultime attività;
@@ -70,7 +70,8 @@ TODO
         * azioni aderite in ordine decrescente;
         * amici (friends);
         * organizzazioni seguite.
-* Controllare problemi sui test di oa_notification
+    NOTA: problemi con il test, la vista processa la richiesta correttamente (get_context_data non solleva eccezioni) ma il client non riceve un Http_response.
+* Controllare problemi sui test di action_request
 
 * Nuova applicazione per: (nome = action_request)
     ** se in futuro sarà generica, action diventerà una property e verrà aggiunto un generic_field che conterrà il riferimento al modello a cui in quel momento si desidera utilizzare

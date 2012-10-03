@@ -90,6 +90,7 @@ INSTALLED_APPS.append('friendship')
 INSTALLED_APPS.append('notification')
 INSTALLED_APPS.append('oa_notification')
 INSTALLED_APPS.append('action_request')
+INSTALLED_APPS.append('users')
 
 
 PROJECT_NAME = "openaction"
