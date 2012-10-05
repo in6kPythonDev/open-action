@@ -14,6 +14,7 @@ import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as action_const
 from action import forms
+from action.signals import action_moderator_removed
 from askbot_extensions import utils as askbot_extensions_utils
 from organization.models import Organization
 import exceptions
@@ -515,3 +516,37 @@ class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
         user.unfollow_action(action)
         
         return views_support.response_success(request)
+
+class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
+
+    model = Action
+    form_class = forms.ModeratorRemoveForm
+    template_name = 'moderation/remove.html'
+
+    @method_decorator(askbot_decorators.check_spam('text'))
+    def dispatch(self, request, *args, **kwargs):
+        return super(ActionModerationRemoveView, self).dispatch(request, *args, **kwargs)
+ 
+    def get_form_kwargs(self):
+        kwargs = super(ActionModerationRemoveView, self).get_form_kwargs()
+        kwargs['action'] = self.get_object()
+        return kwargs
+
+    @transaction.commit_on_success
+    def form_valid(self, form):
+
+        sender = self.request.user
+        action = self.get_object()
+        moderator = form.cleaned_data['moderator']
+        #notes = form.cleaned_data['text']
+
+        sender.assert_can_remove_action_moderator(sender, moderator, action)
+
+        action.moderator_set.remove(moderator)
+
+        action_moderator_removed.send(sender=action, 
+            moderator=moderator
+        )
+
+        success_url = action.get_absolute_url()
+        return views_support.response_redirect(self.request, success_url)

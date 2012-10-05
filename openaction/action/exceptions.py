@@ -96,3 +96,13 @@ class UserIsNotActionReferralException(UserIsNotActionOwnerException):
 
     def __unicode__(self):
         return u"L'utente %s non può aggiungere un articolo nel blog dell'azione %s poichè non ne è né autore né moderatore." % (self.user, self.action)
+
+class UserCannotRemoveActionModeratorException(exceptions.PermissionDenied):
+
+    def __init__(self, user, moderator, action):
+        self.user = user
+        self.moderator = moderator
+        sefl.action = action
+
+    def __unicode__(self):
+        return u"L'utente %s non può rimuovere il moderatore %s dall'azione %s perchè non ne è il proprietrario." % (self.user, self.moderator, self.action)

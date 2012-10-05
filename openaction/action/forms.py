@@ -3,6 +3,7 @@
 from django import forms
 import askbot.forms as askbot_forms
 from action.models import Geoname, ActionCategory, Politician, Media
+from askbot.models import User
 
 class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
@@ -77,3 +78,21 @@ class BlogpostCommentForm(SingleTextareaForm):
 class ActionBlogpostForm(SingleTextareaForm):
     pass
 
+#--------------------------------------------------------------------------------
+
+class ModeratorRemoveForm(forms.Form):
+
+    moderator = forms.ModelChoiceField(required=True,
+        queryset=User.objects.none()
+    )
+
+    #text = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        action = kwargs.pop('action')
+ 
+        #WAS: followers = action.thread.followed_by.all()
+        moderators = action.moderator_set.all()
+
+        ModeratorRemoveForm.base_fields['moderator'].queryset = moderators
+        super(ModeratorRemoveForm, self).__init__(*args, **kwargs)

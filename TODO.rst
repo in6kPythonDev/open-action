@@ -73,14 +73,17 @@ TODO
     NOTA: problemi con il test, la vista processa la richiesta correttamente (get_context_data non solleva eccezioni) ma il client non riceve un Http_response.
 * Controllare problemi sui test di action_request
 
-* Nuova applicazione per: (nome = action_request)
+* Nuova applicazione per: (nome = action_request) V
     ** se in futuro sarà generica, action diventerà una property e verrà aggiunto un generic_field che conterrà il riferimento al modello a cui in quel momento si desidera utilizzare
-    * aggiungere un moderatore all'Azione: gestione tramite segnale inviato dalla vista e gestito da un handler apposito:
+    * aggiungere un moderatore all'Azione: gestione tramite segnale inviato dalla vista e gestito da un handler apposito: V
         * [vista] owner sceglie un utente (un referral della action) a cui inviare la richiesta di moderazione
         * [segnale] l'utente scelto riceve una notifica con l'url di accettazione 
         * [vista] l'utente accetta o rifiuta (motivando la scelta) e la action request viene modificata di conseguenza, notificando la cosa all'owner della action
-    * inviare un messaggio privato: gestione come sopra
-* controllare la possibilità di spostare la migrazione dei campi aggiunti in vote da askbot ad askbot_extensions
+    * inviare un messaggio privato:
+        * [vista] referral sceglie un utente a cui inviare il messaggio
+        * [segnale] l'utente scelto riceve una notifica con l'url di accettazione 
+        * [vista] l'utente risponde al messaggio
+* controllare la possibilità di spostare la migrazione dei campi aggiunti in vote da askbot ad askbot_extensions V
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
