@@ -8,9 +8,10 @@ from askbot.models.repute import Vote
 from askbot.models.user import Activity
 from notification import models as notification
 from action.models import Action
-from action.signals import post_action_status_update, post_declared_vote_add 
-from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed
+from action.signals import post_action_status_update, post_declared_vote_add, action_moderator_removed 
+from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed, action_message_sent
 from action_request.models import ActionRequest
+from action_request import consts as ar_consts
 from oa_notification import consts as notification_consts
 from action import const as action_consts
 from askbot_extensions import consts as ae_consts
@@ -170,7 +171,6 @@ def notify_post_status_update(sender, **kwargs):
         #TODO placeholder old_status other than READY
         pass
 
-#@receiver(post_action_status_update, sender=Action)
 @receiver(post_save, sender=ActionRequest)
 def register_status_update_activity(sender, **kwargs):
     """ Create a new Activity if the status is 'victory' or 'closed' """
@@ -181,17 +181,19 @@ def register_status_update_activity(sender, **kwargs):
         action = action_request.action
         user = action_request.sender
         question = action.question
-        old_status = action.status
+        request_type = action_request.request_type
+        activity_type = None
 
-        if old_status in (action_consts.ACTION_STATUS_VICTORY,
-            action_consts.ACTION_STATUS_CLOSED
-        ):
-            activity_type = [
-                ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE, 
-                ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY
-            ][old_status in (action_consts.ACTION_STATUS_VICTORY)]
+        print("\n\n-------------request_type: %s" % request_type)
 
-            log.debug("ACTIVITY with Action:%s status:%s" % (action, old_status)) 
+        if not action_request.is_processed:
+            if request_type in (ar_consts.REQUEST_TYPE_SET_VICTORY,):
+                activity_type = ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY
+            elif request_type in (ar_consts.REQUEST_TYPE_SET_CLOSURE,):
+                activity_type = ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE
+ 
+        if activity_type:
+            log.debug("ACTIVITY with Action:%s activity_type:%s" % (action, activity_type)) 
 
             activity = Activity(
                     user=user,
@@ -200,6 +202,21 @@ def register_status_update_activity(sender, **kwargs):
                     question=question
             )
             activity.save()
+        else:#processed
+            if action_request.is_accepted:
+                extra_context = ({
+                    "action" : action,
+                }) 
+                #recipients
+                users = action.referrers
+
+                notification.send(users=users,
+                    label="status_update",
+                    extra_context=extra_context,
+                    on_site=True, 
+                    sender=None, 
+                    now=True
+                )
 
 
 #NOTE: KO: the default settings should have been setted in the user pre_save
@@ -255,6 +272,35 @@ def notify_action_moderation_request(sender, **kwargs):
         now=True
     )
 
+@receiver(action_message_sent, sender=ActionRequest)
+def notify_action_message_sent(sender, **kwargs):
+    """ Notify to an action follower that he received a message
+    from another referrer of the Action"""
+
+    action_request = sender
+
+    #recipients
+    if action_request.recipient:
+        users = [action_request.recipient]
+    else:
+        # Send notification to staff users
+        # OpenPolis/ActionAID people who manage the software
+        users = User.objects.filter(is_staff=True)
+
+    #extra_context
+    extra_context = ({
+        "action_request" : action_request,
+        "process_url" : reverse("actionrequest-message-reply", args=(action_request.pk,))
+    }) 
+
+    notification.send(users=users,
+        label="message_your_action",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
+
 #handle the moderation processing of the questioned user
 @receiver(action_moderation_request_processed, sender=ActionRequest)
 def notify_action_moderation_processed(sender, **kwargs):
@@ -273,6 +319,30 @@ def notify_action_moderation_processed(sender, **kwargs):
 
     notification.send(users=users,
         label="answer_mod_proposal",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
+
+@receiver(action_moderator_removed, sender=Action)
+def notify_action_moderation_processed(sender, **kwargs):
+    """ Notify to an Action moderator that the Action owner removed him
+    from the Action moderators list"""
+
+    action = sender
+    moderator = kwargs['moderator']
+
+    #recipients
+    users = [moderator]
+    #extra_context
+    extra_context = ({
+        "action" : action,
+        "response_url" : reverse("action-message-send", args=(action.pk,))
+    }) 
+
+    notification.send(users=users,
+        label="mod_removal",
         extra_context=extra_context,
         on_site=True, 
         sender=None, 

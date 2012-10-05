@@ -56,7 +56,16 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
         "mod_proposal", _("Moderator Proposal"),
         _("an action owner offered you to become a moderator"), default=2
     )
-
+    ##### added by Matteo
+    notification.create_notice_type(
+        "mod_removal", _("Moderator Removal"),
+        _("an action owner removed you from the action moderators"), default=2
+    )
+    notification.create_notice_type(
+        "status_update", _("Action status update Request"),
+        _("an action owner would like to change its action status"), default=2
+    )
+    ######
     notification.create_notice_type(
         "answer_mod_proposal", _("Answer Received"),
         _("you received an answer about your moderator proposal"), default=2,

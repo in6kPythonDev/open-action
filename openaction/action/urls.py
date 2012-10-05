@@ -53,8 +53,21 @@ urlpatterns = patterns('',
         name='action-unfollow'
     ),
     #request to a user to moderate action
-    url(r'^(?P<pk>\d+)/moderate/$', action_request_views.ActionModerationRequestView.as_view(), 
+    url(r'^(?P<pk>\d+)/moderator/add/$', action_request_views.ActionModerationRequestView.as_view(), 
         name='action-moderation-request'
     ),
+    #private message between same Action referrers
+    url(r'^(?P<pk>\d+)/message/send/$', action_request_views.ActionMessageRequestView.as_view(), 
+        name='action-message-send'
+    ),
+    #remove moderator
+    url(r'^(?P<pk>\d+)/moderator/remove/$', action_views.ActionModerationRemoveView.as_view(), 
+        name='action-moderation-remove'
+    ),
+    #request to change action status to the staff
+    url(r'^(?P<pk>\d+)/status/change/$', action_request_views.ActionSetStatusRequestView.as_view(), 
+        name='action-status-change-request'
+    ),
+
 )
 

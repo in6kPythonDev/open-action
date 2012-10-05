@@ -15,7 +15,7 @@ from action import const as action_const
 from notification import models as notification
 from friendship import models as friendship
 from action_request.models import ActionRequest
-from action_request import const as action_request_const
+from action_request import consts as ar_consts
 from organization.models import Organization
 from lib.djangolib import ModelExtender
 from lib import ClassProperty
@@ -288,17 +288,31 @@ class UserExtension(AskbotModelExtender):
 
         return True
 
+    def _askbot_ext_assert_can_remove_action_moderator(self, user, moderator, action):
+
+        if user != action.owner:
+            raise exceptions.UserCannotRemoveActionModeratorException(user, moderator, action)
+
+        return True
+
     def _askbot_ext_assert_can_request_moderation_for_action(self, sender, recipient, action):
         """ Check permissions. If user is not action owner --> raise exception """
         if action.owner != sender:
             raise action_request_exceptions.RequestActionModerationNotOwnerException(sender, action)
         elif ActionRequest.objects.filter(recipient=recipient,
                 action=action,
-                request_type=action_request_const.REQUEST_TYPE['mod']
+                request_type=ar_consts.REQUEST_TYPE['mod']
             ).count() >= settings.MAX_MODERATION_REQUESTS:
                 raise action_request_exceptions.CannotRequestModerationToUser(sender, recipient, action)
 
         return True
+
+    def _askbot_ext_assert_can_send_action_message(self, sender, recipient, action):
+
+        if sender not in action.referrers:
+            raise action_request_exceptions.SenderRequestActionMessageNotReferrerException(sender, action)
+        elif recipient not in action.referrers:
+            raise action_request_exceptions.RecipientRequestActionMessageNotReferrerException(sender, recipient, action)
 
     def _askbot_ext_assert_can_process_moderation_for_action(self, action_request):
         """ Check permissions. If user is not following action --> raise exception """
@@ -317,31 +331,39 @@ class UserExtension(AskbotModelExtender):
 
 
         #KO: because ther can be a past processed NOT ACCEPTED moderator request 
-        #KO: elif action_request.is_processed or action_request.request_type != action_request_const.REQUEST_TYPE['mod']:
-        elif action_request.request_type != action_request_const.REQUEST_TYPE['mod']:
+        #KO: elif action_request.is_processed or action_request.request_type != ar_consts.REQUEST_TYPE['mod']:
+        elif action_request.request_type != ar_consts.REQUEST_TYPE['mod']:
             raise exceptions.ParanoidException()
 
         return True
 
-    #def _askbot_ext_check_moderation_response_already_answered(self, action_request):
-    #    """ """
+    def _askbot_ext_assert_can_reply_to_action_message(self, action_request):
 
-    #    return action_request.check_same_type_already_accepted()
+        recipient = action_request.recipient
+        action = action_request.action
 
-    #    # LESSON: this method should not be here since it has nothing to do with "self"
-    #    # read this LESSON and delete this method, changing the invoking code appropriately
-    #    
-    #    #KO: action_requests = ActionRequest.objects.filter(recipient=action_request.recipient,
-    #    #KO:     action=action_request.action,
-    #    #KO:     request_type=action_request_const.REQUEST_TYPE['mod']
-    #    #KO: )
+        if recipient not in action.referrers:
+            raise action_request_exceptions.UserCannotReplyToReferrerMessage(action_request)
 
-    #    #KO: for action_request in action_requests:
-    #    #KO:     if action_request.is_accepted:
-    #    #KO:         return True
+        return True
+ 
+    def _askbot_ext_assert_can_ask_action_status_update(self, user, action, request_type):
 
-    #    #KO: return False
+        if user not in action.referrers:
+            raise action_request_exceptions.UserCannotAskActionUpdate(user, action)
+        try:
+            act_req_obj = ActionRequest.objects.get(
+                action=action,
+                sender=user,
+                request_type=request_type,
+                is_processed=False
+            )
+        except ActionRequest.DoesNotExist as e:
+            #ok, created for the first time 
+            return True 
 
+        #action request already created
+        raise action_request_exceptions.ActionStatusUpdateRequestAlreadySent(user, action)
 #--------------------------------------------------------------------------------
 
     def _askbot_ext_follow_action(self, action):

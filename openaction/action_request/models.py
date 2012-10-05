@@ -3,7 +3,7 @@ from django.db import models
 from base.models import Resource
 from action.models import Action
 from askbot.models.user import User
-from action_request import const
+from action_request import consts
 
 
 class ActionRequest(models.Model, Resource):
@@ -17,7 +17,8 @@ class ActionRequest(models.Model, Resource):
 
     * moderator reguest: issued by the owner of the action to a follower
     * message request: issued by a user to referrers of the action
-    * set_victory request: issued by a referrer of the action to OpenAction staff (NULL recipient)
+    * set_status (i.e. set_victory) request: issued by a referrer of the 
+    action to OpenAction staff (NULL recipient)
     """
 
     #TODOFUTURE: this could be implemented with GenericForeignKey
@@ -31,9 +32,10 @@ class ActionRequest(models.Model, Resource):
     #TODOFUTURE: Every action that use this application should be able to define its
     # REQUEST_TYPE_CHOICES
     REQUEST_CHOICES = (
-        (const.REQUEST_TYPE['mod'],'Moderazione'),
-        (const.REQUEST_TYPE['msg'],'Messaggio'),
-        (const.REQUEST_TYPE['vict'],'Vittoria Azione'),
+        (consts.REQUEST_TYPE['mod'],'Moderazione'),
+        (consts.REQUEST_TYPE['msg'],'Messaggio'),
+        (consts.REQUEST_TYPE['vict'],'Vittoria Azione'),
+        (consts.REQUEST_TYPE['clos'],'Chiusura Azione'),
     ) 
     
     action = models.ForeignKey(Action)

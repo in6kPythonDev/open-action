@@ -1,6 +1,7 @@
 from django import forms
 
 from askbot.models.user import User
+from action import const as a_consts
 
 class ModerationForm(forms.Form):
 
@@ -44,4 +45,35 @@ class ModerationProcessForm(forms.Form):
     #    #print "errors=%s\n" % self.errors
     #    cleaned_data['accept_request'] = int(accepted)
     #    return self.cleaned_data
+
+class MessageForm(forms.Form):
+
+    referrer = forms.ModelChoiceField(required=True,
+        queryset=User.objects.none()
+    )
+
+    message_text = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        action = kwargs.pop('action')
+ 
+        referrers = action.referrers
+        ModerationForm.base_fields['referrer'].queryset = referrers
+
+        super(MessageForm, self).__init__(*args, **kwargs)
+
+class MessageResponseForm(forms.Form):
+
+    message_text = forms.CharField()
+
+class SetStatusForm(forms.Form):
+
+    CHOICES = (
+        (a_consts.ACTION_STATUS_VICTORY, 'Vittoria'),
+        (a_consts.ACTION_STATUS_CLOSED, 'Chiusura'),
+    )
+
+    status_to_set = forms.ChoiceField(required=True, choices=CHOICES)
+
+    request_text = forms.CharField(required=False)
 
