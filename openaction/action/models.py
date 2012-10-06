@@ -57,7 +57,7 @@ class Action(models.Model, Resource):
     image = models.ImageField(null=True, blank=True, upload_to=get_action_image_path)
 
     class Meta:
-        #get_latest_by = "thread"
+        get_latest_by = "thread"
         ordering = ['-thread']
 
     def __unicode__(self):
