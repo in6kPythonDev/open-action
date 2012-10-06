@@ -326,7 +326,7 @@ def notify_action_moderation_processed(sender, **kwargs):
     )
 
 @receiver(action_moderator_removed, sender=Action)
-def notify_action_moderation_processed(sender, **kwargs):
+def notify_action_moderation_removed(sender, **kwargs):
     """ Notify to an Action moderator that the Action owner removed him
     from the Action moderators list"""
 

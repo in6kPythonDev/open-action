@@ -319,8 +319,11 @@ class UserExtension(AskbotModelExtender):
         already_accepted = action_request.check_same_type_already_accepted()
 
         if already_accepted:
-            #raise ValueError("TODO Matteo:UserCannotUpdateAlreadyAcceptedModerationRequest")
-            raise action_request_exceptions.UserCannotUpdateAlreadyAcceptedModerationRequest(self, action_request.action)
+            #NOTE: Matteo: if we raise exception we do not process the new (improperly accepted) action_request.raise action_request_exceptions.UserCannotUpdateAlreadyAcceptedModerationRequest(self, action_request.action)
+            return False
+
+        if action_request.request_type != ar_consts.REQUEST_TYPE['mod']:
+            raise exceptions.ParanoidException()
 
         # Check if user is among followers and not already a moderator
         #WAS: followers = action_request.action.thread.followed_by.all()
@@ -328,12 +331,6 @@ class UserExtension(AskbotModelExtender):
         followers_not_moderators = followers.exclude(pk__in=action_request.action.moderator_set.all())
         if self not in followers_not_moderators:
             raise action_request_exceptions.UserCannotModerateActionException(self, action_request.action)
-
-
-        #KO: because ther can be a past processed NOT ACCEPTED moderator request 
-        #KO: elif action_request.is_processed or action_request.request_type != ar_consts.REQUEST_TYPE['mod']:
-        elif action_request.request_type != ar_consts.REQUEST_TYPE['mod']:
-            raise exceptions.ParanoidException()
 
         return True
 

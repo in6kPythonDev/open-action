@@ -26,8 +26,8 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
         #manually create notice types
         oa_notification.create_notice_types("","","")
 
-        for notice_type in NoticeType.objects.all():
-            print "added notice_type %s" % notice_type
+        #for notice_type in NoticeType.objects.all():
+        #    print "added notice_type %s" % notice_type
         
         self._action = self._create_action(title="Action N#1")
 
@@ -304,10 +304,10 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
         else:
             raise Exception
 
-        for a_r in action_requests:
-            print("\naction_requests_created.pk=%s\n" % a_r.pk)
-        for a_r in ActionRequest.objects.all():
-            print("\naction_requests.pk=%s\n" % a_r.pk)
+        #for a_r in action_requests:
+        #    print("\naction_requests_created.pk=%s\n" % a_r.pk)
+        #for a_r in ActionRequest.objects.all():
+        #    print("\naction_requests.pk=%s\n" % a_r.pk)
 
         logged_in = self._login(self.follower)
 
