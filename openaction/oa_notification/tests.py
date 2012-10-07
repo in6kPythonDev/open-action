@@ -34,8 +34,8 @@ class OaNotificationTest(ActionViewTest):
         #manually create notice types
         oa_notification.create_notice_types("","","")
 
-        for notice_type in NoticeType.objects.all():
-            print "added notice_type %s" % notice_type
+        #for notice_type in NoticeType.objects.all():
+        #    print "added notice_type %s" % notice_type
 
 #-----------------TESTS----------------------------------------------------------
 

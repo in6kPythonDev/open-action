@@ -97,16 +97,18 @@ class UserProfileView(DetailView, views_support.LoginRequiredView):
 
 
         context.update({
-            'user_profile' : user_profile,
-            'user' : user,
-            'action_list' : user_action_list,
+            #'user_profile' : user_profile,
+            #'user' : user,
+            'actions_list' : user_action_list,
             'friends_list' : user_friends_list,
-            'followed_organization' : user_followed_organizations_list,
+            'followed_organizations_list' : user_followed_organizations_list,
             'activities' : user_activities,
             'unread_notices' : user_notices_unread,
             'number_of_active_actions' : user_active_actions_number,
             'number_of_involved_activists' : user_involved_activists,
         })
+
+        print("\n\nCONTEXT: %s\n\n" % context)
 
         return context
 
