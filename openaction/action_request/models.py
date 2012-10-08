@@ -40,7 +40,7 @@ class ActionRequest(models.Model, Resource):
     
     action = models.ForeignKey(Action)
     sender = models.ForeignKey(User, null=True, blank=True, related_name="request_set")
-    recipient = models.ForeignKey(User, null=True, blank=True, related_name="request_receiver_set")
+    recipient_set = models.ManyToManyField(User, null=True, blank=True, related_name="request_receiver_set")
     request_type = models.CharField(max_length=256, choices=REQUEST_CHOICES)
     request_notes = models.TextField(blank=True, default="")
     answer_notes = models.TextField(blank=True, default="")
@@ -49,6 +49,23 @@ class ActionRequest(models.Model, Resource):
 
     created_on = models.DateTimeField(auto_now_add=True)
     last_update_on = models.DateTimeField(auto_now=True)
+    
+    @property
+    def recipients(self):
+        return self.recipient_set.all()
+
+    @property
+    def recipient(self):
+        recipients = self.recipients
+        # don't use count() or exists() here
+        # because we need to retrieve the first element
+        if len(recipients) == 1:
+            return recipients[0]
+        elif len(recipients) > 1:
+            raise ProgrammingError("more than one recipient for this action request type. Review your code")
+        else:
+            raise ProgrammingError("no recipients for this action request. Review your code")
+            
         
     def check_same_type_already_accepted(self):
         return ActionRequest.objects.filter(
