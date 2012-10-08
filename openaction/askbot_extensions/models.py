@@ -17,6 +17,7 @@ from friendship import models as friendship
 from action_request.models import ActionRequest
 from action_request import consts as ar_consts
 from organization.models import Organization
+from action.models import Action
 from lib.djangolib import ModelExtender
 from lib import ClassProperty
 
@@ -177,18 +178,25 @@ class UserExtension(AskbotModelExtender):
         """Unique resource name"""
         return '%s/%s' % (self.resource_type, self.pk)
 
-    def action_impact_factor(self, action):
+    @property
+    def _askbot_ext_action_impact_factor(self, action):
         """Return impact factor for a specific action."""
         # TODO: TOCACHE
-        return action.votes.referred_by(referral=self).count()
+        return action.votes.referred_by(self).count()
 
-    def global_impact_factor(self):
+    @property
+    def _askbot_ext_global_impact_factor(self):
         """Return global impact factor of this user.
 
         How many votes have been done thanks to this user?
         """
         # TODO: TOCACHE
-        return Vote.objects.referred_by(referral=self).count()
+        return Vote.objects.referred_by(self).count()
+
+    @property
+    def _askbot_ext_involved_users(self):
+        return Vote.objects.referred_by(self).values_list('user').distinct()
+        
 
     def _askbot_ext_assert_can_vote_action(self, action):
         """Check permission. If invalid --> raise exception"""
@@ -315,7 +323,17 @@ class UserExtension(AskbotModelExtender):
             raise action_request_exceptions.RecipientRequestActionMessageNotReferrerException(sender, recipient, action)
 
     def _askbot_ext_assert_can_process_moderation_for_action(self, action_request):
-        """ Check permissions. If user is not following action --> raise exception """
+        """ Check permissions for answers to moderation requests. 
+
+        If user is not following action --> raise exception.
+
+        If request is already been processed --> raise UserCannotProcessTwiceARequest
+
+        If request has not been processed --> user can process it
+        """
+
+        #TODO Matteo: da rifare
+        # mi raccomando assert se falso --> eccezione
         already_accepted = action_request.check_same_type_already_accepted()
 
         if already_accepted:
@@ -373,6 +391,7 @@ class UserExtension(AskbotModelExtender):
         #WAS: return action.thread.followed_by.filter(id=self.id).exists() 
         return action.thread.is_followed_by(self)
 
+    @property
     def _askbot_ext_friends(self):
         """Return User list of friendship friends (symmetric).
 
@@ -391,6 +410,12 @@ class UserExtension(AskbotModelExtender):
     def _askbot_ext_represented_orgs(self):
         orgs_pk = self.orgmap_set.filter(is_representative=True).values_list('org__pk', flat=True)
         return Organization.objects.filter(pk__in=orgs_pk)
+
+    @property
+    def _askbot_ext_actions(self):
+       
+        thread_pks = self.votes.declareds().values_list('post__thread__pk', flat=True).distinct()
+        return Action.objects.filter(thread__pk__in=thread_pks)
 
 
 User.add_to_class('ext_noattr', UserExtension())

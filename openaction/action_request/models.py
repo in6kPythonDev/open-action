@@ -44,7 +44,7 @@ class ActionRequest(models.Model, Resource):
     request_type = models.CharField(max_length=256, choices=REQUEST_CHOICES)
     request_notes = models.TextField(blank=True, default="")
     answer_notes = models.TextField(blank=True, default="")
-    is_accepted = models.BooleanField(default=False)
+    is_accepted = models.NullBooleanField(default=None)
     is_processed = models.BooleanField(default=False)
 
     created_on = models.DateTimeField(auto_now_add=True)

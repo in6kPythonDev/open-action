@@ -24,30 +24,6 @@ class UserDetailView(DetailView):
 
         return object
 
-class UserProfileDetailView(DetailView):
-    model = UserProfile
-    template_name = 'profiles/profile_detail.html'
-    context_object_name = 'profile'
-
-    def get_object(self, queryset=None):
-
-        # object lookup using username
-        object = UserProfile.objects.get(user__username=self.kwargs['username'])
-
-        return object
-
-    def get_context_data(self, **kwargs):
-        # call the base implementation first to get a context
-        context = super(UserProfileDetailView, self).get_context_data(**kwargs)
-
-        context['voted_actions'] = "TODO"
-        context['friends'] = "TODO"
-        context['followed_orgs'] = "TODO"
-        context['represented_orgs'] = "TODO"
-
-        return context
-
-
 class UserProfileListView(ListView):
     model = UserProfile
     template_name = 'profiles/profile_list.html'
@@ -67,73 +43,37 @@ class UserProfileListView(ListView):
 class UserProfileView(DetailView, views_support.LoginRequiredView):
 
     model = UserProfile
-    template_name = 'profiles/user_profile.html'
+    template_name = 'profiles/profile_detail.html'
+    context_object_name = 'profile'
 
     def get_object(self, queryset=None):
+
         # object lookup using username
-        profile = UserProfile.objects.get(user__username=self.kwargs['username'])
-        return profile
+        object = UserProfile.objects.get(user__username=self.kwargs['username'])
+
+        return object
 
     def get_context_data(self, **kwargs):
+
         context = super(UserProfileView, self).get_context_data(**kwargs)
-
-        #detVails
-        user_profile = self.get_object()
-        user = user_profile.user
+        user = self.get_object().user
        
-        #lists 
-        user_action_list = self.actions(user)
-        user_friends_list = user.friends() 
-        user_followed_organizations_list = user.orgmap_set.all() 
-
-        #information
-        user_activities = user.activity_set.all()
-        user_notices_unread = user.recieved_notices.filter(unseen=True)
-        user_active_actions_number = len(self.active_actions(
-                user, user_action_list
-            )
-        )
-        user_involved_activists = self.involved_actvists_number(user)
-
+        #note: typo from django-notification "recieved" :)
+        num_of_notices_unread = user.recieved_notices.filter(unseen=True).count()
 
         context.update({
-            #'user_profile' : user_profile,
-            #'user' : user,
-            'actions_list' : user_action_list,
-            'friends_list' : user_friends_list,
-            'followed_organizations_list' : user_followed_organizations_list,
-            'activities' : user_activities,
-            'unread_notices' : user_notices_unread,
-            'number_of_active_actions' : user_active_actions_number,
-            'number_of_involved_activists' : user_involved_activists,
+            'voted_actions' : user.actions,
+            'friends' : user.friends,
+            'followed_orgs' : user.followed_orgs,
+            'represented_orgs' : user.represented_orgs,
+            'activities' : user.activity_set.all(),
+            'num_of_notices_unread' : num_of_notices_unread,
+            'num_of_voted_actions_active' : len(user.actions.actives()),
+            'num_of_involved_activists' : user.involved_users.count(),
+            'global_impact_factor' : user.global_impact_factor,
         })
 
         print("\n\nCONTEXT: %s\n\n" % context)
 
         return context
 
-    #def active_actions(self, user):
-    #    active_actions = [] 
-
-    #    for action in Action.objects.all():
-    #        if action.status in (a_consts.ACTION_STATUS_ACTIVE) and user.pk in action.voters:
-    #            active_actions.append(action)
-
-    #    return active_actions
-       
-    def actions(self, user):
-        user_votes = user.votes.all()
-        questions = Post.objects.filter(pk__in=user_votes)
-        actions = Action.objects.filter(pk__in=questions)
-
-        return actions
-
-    def active_actions(self, user, actions):
-        active_actions = [action for action in actions  if action.status in (
-            a_consts.ACTION_STATUS_ACTIVE
-        )]
-
-        return active_actions
- 
-    def involved_actvists_number(self, user):
-        return Vote.objects.filter(referral=user).count()

@@ -47,12 +47,10 @@ class ActionDetailView(DetailView):
 #---------------------------------------------------------------------------------
 
 class VoteView(SingleObjectMixin, views_support.LoginRequiredView):
-    """Add a vote to a post  
-      
-    **TODO**
-    SUCCESSIVAMENTE (ma non lo fare)
-    * prenderemo via url HTTP il parametro "token" per capire
-      da chi e' stato inviato il link
+    """Base class to add a vote to an action
+
+    Include facility method to check referral token variable in url
+    and return referral user if found.
     """
 
     def get_referral(self, action):

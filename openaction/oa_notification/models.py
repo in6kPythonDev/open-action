@@ -58,11 +58,11 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
     )
     ##### added by Matteo
     notification.create_notice_type(
-        "mod_removal", _("Moderator Removal"),
+        "mod_removal", _("Moderator removal"),
         _("an action owner removed you from the action moderators"), default=2
     )
     notification.create_notice_type(
-        "status_update", _("Action status update Request"),
+        "status_update", _("Action status update request"),
         _("an action owner would like to change its action status"), default=2
     )
     ######

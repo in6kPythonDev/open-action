@@ -12,7 +12,7 @@ from askbot.models.repute  import Vote
 from base.models import Resource
 from base.utils import get_resource_icon_path
 
-from action import const, exceptions, tokens
+from action import const, exceptions, tokens, managers
 from action.signals import post_action_status_update
 from organization.models import Organization
 
@@ -55,6 +55,8 @@ class Action(models.Model, Resource):
     media_set = models.ManyToManyField('Media', null=True, blank=True)
 
     image = models.ImageField(null=True, blank=True, upload_to=get_action_image_path)
+
+    objects = managers.ActionManager()
 
     class Meta:
         get_latest_by = "thread"

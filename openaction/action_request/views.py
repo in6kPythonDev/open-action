@@ -184,13 +184,18 @@ class ActionRequestModerationProcessView(ActionRequestProcessView):
         accepted = form.cleaned_data['accept_request']
         answer_notes = form.cleaned_data['answer_text']
 
-        can_accept = user.assert_can_process_moderation_for_action(action_request)
+        user.assert_can_process_moderation_for_action(action_request)
 
         action_request.is_processed = True
-        action_request.is_accepted = [False, [False, True][accepted=='1']][can_accept]
+        #NOTE: weird behaivour. Cleaned data for accepted return a string 
+        action_request.is_accepted = [False, True][accepted=='1']
         print("action_request is accepted: %s" % action_request.is_accepted)
         action_request.answer_notes = answer_notes
         action_request.save()
+
+        # For all same request_types ActionRequest --> 
+        # set processed, is_accepted, 
+        # and in answer_notes write ("processed with #action_request.pk")
 
         if action_request.is_accepted:
             print("action.moderator_set.add(user)")

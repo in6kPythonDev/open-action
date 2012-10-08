@@ -8,8 +8,12 @@ from askbot.models.repute import Vote
 from askbot.models.user import Activity
 from notification import models as notification
 from action.models import Action
-from action.signals import post_action_status_update, post_declared_vote_add, action_moderator_removed 
-from action_request.signals import action_moderation_request_submitted, action_moderation_request_processed, action_message_sent
+from action.signals import (post_action_status_update, 
+    post_declared_vote_add, action_moderator_removed 
+)
+from action_request.signals import (action_moderation_request_submitted, 
+    action_moderation_request_processed, action_message_sent
+)
 from action_request.models import ActionRequest
 from action_request import consts as ar_consts
 from oa_notification import consts as notification_consts
@@ -175,48 +179,65 @@ def notify_post_status_update(sender, **kwargs):
 def register_status_update_activity(sender, **kwargs):
     """ Create a new Activity if the status is 'victory' or 'closed' """
  
-    if kwargs['created']:
-        action_request = kwargs['instance']
+    action_request = kwargs['instance']
 
-        action = action_request.action
-        user = action_request.sender
-        question = action.question
-        request_type = action_request.request_type
-        activity_type = None
+    # check request type because this is a generic post_save handler
 
-        print("\n\n-------------request_type: %s" % request_type)
+    activity_type_notices_map = {
+        ar_consts.REQUEST_TYPE_SET_VICTORY : ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY,
+        ar_consts.REQUEST_TYPE_SET_CLOSURE : ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE, 
+    }
+    
+    if request_type in activity_type_notices_map.keys():
 
-        if not action_request.is_processed:
-            if request_type in (ar_consts.REQUEST_TYPE_SET_VICTORY,):
-                activity_type = ae_consts.OA_TYPE_ACTIVITY_SET_VICTORY
-            elif request_type in (ar_consts.REQUEST_TYPE_SET_CLOSURE,):
-                activity_type = ae_consts.OA_TYPE_ACTIVITY_SET_CLOSURE
- 
-        if activity_type:
-            log.debug("ACTIVITY with Action:%s activity_type:%s" % (action, activity_type)) 
+        activity_type = activity_type_notices_map[request_type]
 
-            activity = Activity(
-                    user=user,
-                    content_object=action,
-                    activity_type=activity_type,
-                    question=question
-            )
-            activity.save()
-        else:#processed
-            if action_request.is_accepted:
-                extra_context = ({
-                    "action" : action,
-                }) 
-                #recipients
-                users = action.referrers
+        if kwargs['created']:
+            # Send notification to OpenAction staff
+            # "status_update_request" --> ask to process it
 
-                notification.send(users=users,
-                    label="status_update",
-                    extra_context=extra_context,
-                    on_site=True, 
-                    sender=None, 
-                    now=True
-                )
+
+        else:
+            # We are updating the action request.
+            # If it is processed --> notify sender if it is accepted or not
+
+
+        #TODO: Matteo
+#        action = action_request.action
+#        user = action_request.sender
+#        question = action.question
+#        request_type = action_request.request_type
+#        activity_type = None
+#
+#        print("\n\n-------------request_type: %s" % request_type)
+#
+#        if not action_request.is_processed:
+# 
+#        if activity_type:
+#            log.debug("ACTIVITY with Action:%s activity_type:%s" % (action, activity_type)) 
+#
+#            activity = Activity(
+#                user=user,
+#                content_object=action,
+#                activity_type=activity_type,
+#                question=question
+#            )
+#            activity.save()
+#        else: #processed
+#            if action_request.is_accepted:
+#                extra_context = ({
+#                    "action" : action,
+#                }) 
+#                #recipients
+#                users = action.referrers
+#
+#                notification.send(users=users,
+#                    label="status_update",
+#                    extra_context=extra_context,
+#                    on_site=True, 
+#                    sender=None, 
+#                    now=True
+#                )
 
 
 #NOTE: KO: the default settings should have been setted in the user pre_save
@@ -274,18 +295,14 @@ def notify_action_moderation_request(sender, **kwargs):
 
 @receiver(action_message_sent, sender=ActionRequest)
 def notify_action_message_sent(sender, **kwargs):
-    """ Notify to an action follower that he received a message
-    from another referrer of the Action"""
+    """ Notify to action referrers that someone sent a private message
+    regarding a referred action.
+    """
 
     action_request = sender
 
-    #recipients
-    if action_request.recipient:
-        users = [action_request.recipient]
-    else:
-        # Send notification to staff users
-        # OpenPolis/ActionAID people who manage the software
-        users = User.objects.filter(is_staff=True)
+    # Action message is routed to action referrers
+    users = action_request.recipients
 
     #extra_context
     extra_context = ({
@@ -305,13 +322,15 @@ def notify_action_message_sent(sender, **kwargs):
 @receiver(action_moderation_request_processed, sender=ActionRequest)
 def notify_action_moderation_processed(sender, **kwargs):
     """ Notify to the Action owner that an Action follower sent a response
-    to an Action moderation request"""
+    to an Action moderation request
+
+    """
 
     action_request = sender
 
     #recipients
-    users = []
-    users.append(action_request.action.owner)
+    users = (action_request.action.owner,)
+
     #extra_context
     extra_context = ({
         "action_request" : action_request,
