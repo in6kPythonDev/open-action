@@ -18,8 +18,8 @@ class ModerationForm(forms.Form):
         followers = action.followers
         followers_not_moderators = followers.exclude(pk__in=action.moderator_set.all())
 
-        ModerationForm.base_fields['follower'].queryset = followers_not_moderators
         super(ModerationForm, self).__init__(*args, **kwargs)
+        self.fields['follower'].queryset = followers_not_moderators
 
 class ModerationProcessForm(forms.Form):
 
@@ -48,19 +48,19 @@ class ModerationProcessForm(forms.Form):
 
 class MessageForm(forms.Form):
 
-    referrer = forms.ModelChoiceField(required=True,
-        queryset=User.objects.none()
-    )
+    #referrer = forms.ModelChoiceField(required=True,
+    #    queryset=User.objects.none()
+    #)
 
     message_text = forms.CharField(required=False)
 
-    def __init__(self, *args, **kwargs):
-        action = kwargs.pop('action')
+    #def __init__(self, *args, **kwargs):
+    #    action = kwargs.pop('action')
  
-        referrers = action.referrers
-        ModerationForm.base_fields['referrer'].queryset = referrers
+    #    referrers = action.referrers
 
-        super(MessageForm, self).__init__(*args, **kwargs)
+    #    super(MessageForm, self).__init__(*args, **kwargs)
+    #    self.fields['referrer'].queryset = referrers
 
 class MessageResponseForm(forms.Form):
 

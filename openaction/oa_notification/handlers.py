@@ -12,8 +12,11 @@ from action.signals import (post_action_status_update,
     post_declared_vote_add, action_moderator_removed 
 )
 from action_request.signals import (action_moderation_request_submitted, 
-    action_moderation_request_processed, action_message_sent
+    action_moderation_request_processed, 
+    action_message_sent, 
+    action_message_replied
 )
+
 from action_request.models import ActionRequest
 from action_request import consts as ar_consts
 from oa_notification import consts as notification_consts
@@ -116,7 +119,7 @@ def notify_user_comment_your_action(sender, **kwargs):
             commenter = post.author
             action = post.action
 
-            extra_content = ({
+            extra_context = ({
                 "user" : commenter,
                 "action" : action
             }) 
@@ -180,6 +183,10 @@ def register_status_update_activity(sender, **kwargs):
     """ Create a new Activity if the status is 'victory' or 'closed' """
  
     action_request = kwargs['instance']
+    action = action_request.action
+    user = action_request.sender
+    question = action.question
+    request_type = action_request.request_type
 
     # check request type because this is a generic post_save handler
 
@@ -196,49 +203,48 @@ def register_status_update_activity(sender, **kwargs):
             # Send notification to OpenAction staff
             # "status_update_request" --> ask to process it
 
+            log.debug("ACTIVITY with Action:%s activity_type:%s" % (action, activity_type)) 
+
+            activity = Activity(
+                user=user,
+                content_object=action,
+                activity_type=activity_type,
+                question=question
+            )
+            activity.save()
+
+            extra_context = ({
+                "action" : action,
+            }) 
+            #recipients
+            users = action.referrers
+
+            notification.send(users=users,
+                label="status_update",
+                extra_context=extra_context,
+                on_site=True, 
+                sender=None, 
+                now=True
+            )
 
         else:
             # We are updating the action request.
             # If it is processed --> notify sender if it is accepted or not
 
+            if action_request.is_accepted:
+                extra_context = ({
+                    "action" : action,
+                }) 
+                #recipients
+                users = (sender,)
 
-        #TODO: Matteo
-#        action = action_request.action
-#        user = action_request.sender
-#        question = action.question
-#        request_type = action_request.request_type
-#        activity_type = None
-#
-#        print("\n\n-------------request_type: %s" % request_type)
-#
-#        if not action_request.is_processed:
-# 
-#        if activity_type:
-#            log.debug("ACTIVITY with Action:%s activity_type:%s" % (action, activity_type)) 
-#
-#            activity = Activity(
-#                user=user,
-#                content_object=action,
-#                activity_type=activity_type,
-#                question=question
-#            )
-#            activity.save()
-#        else: #processed
-#            if action_request.is_accepted:
-#                extra_context = ({
-#                    "action" : action,
-#                }) 
-#                #recipients
-#                users = action.referrers
-#
-#                notification.send(users=users,
-#                    label="status_update",
-#                    extra_context=extra_context,
-#                    on_site=True, 
-#                    sender=None, 
-#                    now=True
-#                )
-
+                notification.send(users=users,
+                    label="status_update",
+                    extra_context=extra_context,
+                    on_site=True, 
+                    sender=None, 
+                    now=True
+                )
 
 #NOTE: KO: the default settings should have been setted in the user pre_save
 #@receiver(post_save, sender=User)
@@ -272,8 +278,8 @@ def notify_action_moderation_request(sender, **kwargs):
     action_request = sender
 
     #recipients
-    if action_request.recipient:
-        users = [action_request.recipient]
+    if action_request.recipient_set.count() != 0:
+        users = action_request.recipient_set.all()
     else:
         # Send notification to staff users
         # OpenPolis/ActionAID people who manage the software
@@ -302,7 +308,7 @@ def notify_action_message_sent(sender, **kwargs):
     action_request = sender
 
     # Action message is routed to action referrers
-    users = action_request.recipients
+    users = action_request.recipient_set.all()
 
     #extra_context
     extra_context = ({
@@ -312,6 +318,47 @@ def notify_action_message_sent(sender, **kwargs):
 
     notification.send(users=users,
         label="message_your_action",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
+
+@receiver(action_message_replied, sender=ActionRequest)
+def notify_action_message_replied(sender, **kwargs):
+    """ Notify to the user who sent the private message and to all the 
+    action referrers that one of them replied to the message.
+
+    The replier is the referrer who replied to the message.
+    """
+
+    action_request = sender
+    replier = kwargs['replier']
+
+    users = [action_request.sender]
+    #extra_context
+    extra_context = ({
+        "action_request" : action_request,
+        "replier" : replier,
+    }) 
+
+    notification.send(users=users,
+        label="message_replied_referrers",
+        extra_context=extra_context,
+        on_site=True, 
+        sender=None, 
+        now=True
+    )
+
+    users = action_request.recipient_set.all()
+    #extra_context
+    extra_context = ({
+        "action_request" : action_request,
+        "replier" : replier,
+    }) 
+
+    notification.send(users=users,
+        label="message_replied_user",
         extra_context=extra_context,
         on_site=True, 
         sender=None, 
@@ -353,7 +400,7 @@ def notify_action_moderation_removed(sender, **kwargs):
     moderator = kwargs['moderator']
 
     #recipients
-    users = [moderator]
+    users = (moderator,)
     #extra_context
     extra_context = ({
         "action" : action,

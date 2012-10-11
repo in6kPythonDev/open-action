@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 from users.forms import UserProfileForm
-from users.views import UserDetailView, UserProfileListView, UserProfileDetailView, UserProfileView
+from users.views import UserDetailView, UserProfileListView, UserProfileDetailView
 from django.contrib.auth.models import User
 
 urlpatterns = patterns('',
@@ -17,7 +17,7 @@ urlpatterns = patterns('',
         UserProfileListView.as_view(),
        name='profiles_profile_list'),
     url(r'^profile/(?P<username>\w+)/details/$',
-        UserProfileView.as_view(),
+        UserProfileDetailView.as_view(),
        name='user-profile-details'),
 )
 

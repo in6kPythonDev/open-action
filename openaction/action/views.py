@@ -518,15 +518,17 @@ class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
         return views_support.response_success(request)
 
 class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
+    """ Allow to the Action owner to remove an Action moderator.
+
+    The ex-moderator is notified of this and he can send a message to 
+    the Action owner asking for the reasons behind his removal. 
+
+    """ 
 
     model = Action
     form_class = forms.ModeratorRemoveForm
     template_name = 'moderation/remove.html'
 
-    @method_decorator(askbot_decorators.check_spam('text'))
-    def dispatch(self, request, *args, **kwargs):
-        return super(ActionModerationRemoveView, self).dispatch(request, *args, **kwargs)
- 
     def get_form_kwargs(self):
         kwargs = super(ActionModerationRemoveView, self).get_form_kwargs()
         kwargs['action'] = self.get_object()
@@ -540,7 +542,10 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         moderator = form.cleaned_data['moderator']
         #notes = form.cleaned_data['text']
 
-        sender.assert_can_remove_action_moderator(sender, moderator, action)
+        sender.assert_can_remove_action_moderator(
+            moderator, 
+            action
+        )
 
         action.moderator_set.remove(moderator)
 

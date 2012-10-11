@@ -120,8 +120,7 @@ class Action(models.Model, Resource):
             raise ValueError("Invalid status %s for action %s" % (value, self))
 
         post_action_status_update.send(sender=self,
-            old_status=old_status,
-            user=None
+            old_status=old_status
         )
 
     @property

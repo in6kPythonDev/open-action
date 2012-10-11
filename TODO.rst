@@ -56,7 +56,6 @@ TODO
 * provare a escluedere i nuovi attributie che estendono Vote, lasciando solo referral --> sembrano non funzionar, non vengon aggiunti nel db...... --> risolto tramite migrazione con South V
 * Creare Azione per l'associazione: V
     * la form avrà un campo choice che conterrà l'utente e tutte le associazioni che rappresenta: nel caso l'utente non rappresenti nessuna associazione, il campo choice verrà nascosto
-
 * Modificare tramite add_to_class in askbot_extensions/models le choices dell'attributo '' di Activity, sostituendole con quelli in askbot_extensions/const (comprendono le vecchie choices di Activity) V (da testare)
 * Implementare un handler che gestisca la pre_save di ActionRequest per creare un'Activity (nota: impostare anche l'attributo question oltre alla chiave generica). Le attività da registrare per ora sono il passaggio allo stato 'victory' o 'closed'. Il segnale va inviato dalla vista, in modo da passare nei parametri anche l'utente che ha scatenato l'attività V 
 * Implementare una vista contentente tutti i dati e le attività di un Utente, e che comprenda: V (da testare)
@@ -72,7 +71,6 @@ TODO
         * organizzazioni seguite.
     NOTA: problemi con il test, la vista processa la richiesta correttamente (get_context_data non solleva eccezioni) ma il client non riceve un Http_response.
 * Controllare problemi sui test di action_request
-
 * Nuova applicazione per: (nome = action_request) V
     ** se in futuro sarà generica, action diventerà una property e verrà aggiunto un generic_field che conterrà il riferimento al modello a cui in quel momento si desidera utilizzare
     * aggiungere un moderatore all'Azione: gestione tramite segnale inviato dalla vista e gestito da un handler apposito: V
@@ -85,17 +83,35 @@ TODO
         * [vista] l'utente risponde al messaggio
 * controllare la possibilità di spostare la migrazione dei campi aggiunti in vote da askbot ad askbot_extensions V
 
+* rimuovre il parametro user dal segnale post_action_status_update
+* eliminare i decoratori per lo spam da tutte le viste che non trattano la Action direttamente (p.s. il decoratore necessita che nella form si aspecificato un campo di nome 'text' con il testo da controllare)
+* nelle forms dove vengono modificate variabili di classe modificare invece varibili di istanza
+* eliminare users/templates/user_profile.html
+NOTA: recipient --> recipient_set fare il refactoring
+    * modificare il codice in corrispondenza della dichiarazione del recipient di una ActionRequest: ora i recipients possono essere piu di uno (fk --> m2m)
+* modificare implementazione della gestione delle richieste:
+    * se una richiesta viene processata, tutte le richieste vengono automaticamente processate con lo stesso esito.
+    * per questo, la prima richiesta ad essere processata invia la notifica al sender, mentre tutte le altre sollevano un'eccezione del tipo "requestAlreadyAccepted" da visualizzre all'utente che l'ha sollevato cliccando sulla notifica ricevuta
+* modificare implementazioni dei messaggi privati:
+    * un mp viene inviato da un utente a tutti i referrers, e mai il contrario
+    * aggiungere un controllo che impedisca di inviare piu di n messaggi per la stessa action
+* assert errata nella vista dell'invio di un messaggio
+* controllare che chi sta processando una richiesta per una action ne sia effettivamente il (o uno dei) recipient
+* ricontrollare la registrazione di un'activity in seguito ad una richiesta di cambio di status di una Action allo staff
+* NullBoooleanField --> controllare utilizzo sulla documentazione
+
+* COMMENTARE LE VISTE
+* meglio usare distinct o unordered_unique (lib/__init__.py)? --> da testare
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 * [TODO futuro]: controllare (e quindi attivare) quale backand ha scelto l'utente (per ora previsti FB e TW) 
-* [non prioritario] implementare generiche viste per il modello UserNotice (List/Add/Edit/Delete)
 * [non prioritario] testare l'aggiunta dei tags in fase di creazione del blogpost V
 * [non prioritario] modifica dei tag di una azione: i referrers (e di conseguenza i moderatori) possono modificare i tag di una Action.
-* [in sospeso] Moderatori: leggere specifiche - a cosa servono i moderatori?:
-    viste:
-        * ActionModeratorsAdd, 
-        * ActionModeratorsManage
-* [non prioritario] Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
+* [non prioritario] rinominare action.const in action.consts con consegiente refactoring.
+* [non prioritario] utilizzare sempre direttamente le costanti piuttosto che recuperarle tramite la chiave del dizionario in cui sono salvate
+* [non prioritario] controllare ed eventualmente rinominare gli alias per le costanti
+* Documentazione viste e modello https://github.com/openpolis/open-action/wiki/
 
 NOTE
 ^^^^

@@ -115,6 +115,24 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
         )
         return response
 
+    def _do_POST_send_message_to_action_referrers(self, action, ajax=False, **kwargs):
+
+        response = self._POST(
+            reverse('action-message-send', args=(action.pk,)),
+            ajax,
+            **kwargs
+        )
+        return response
+
+    def _do_POST_reply_to_message(self, action_request, ajax=False, **kwargs):
+
+        response = self._POST(
+            reverse('actionrequest-message-reply', args=(action_request.pk,)),
+            ajax,
+            **kwargs
+        )
+        return response
+
     def _get_moderation_request_objs(self, 
         action, 
         sender, 
@@ -125,7 +143,23 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             action_req_objs = ActionRequest.objects.filter(
                 action=action,
                 sender=sender,
-                recipient=recipient,
+                recipient_set=recipient,
+                request_notes=request_notes
+            )
+        except ActionRequest.DoesNotExist as e:
+            action_req_objs = False
+
+        return action_req_objs
+
+    def _get_send_message_request_objs(self, 
+        action, 
+        sender, 
+        request_notes
+    ):
+        try:
+            action_req_objs = ActionRequest.objects.filter(
+                action=action,
+                sender=sender,
                 request_notes=request_notes
             )
         except ActionRequest.DoesNotExist as e:
@@ -148,6 +182,46 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
         return notice_obj
 
 #--------------------------------------------------------------------------------
+
+    def test_send_message_request(self):
+
+        sender = self.create_user(username='sender')
+        moderator1 = self.create_user(username='moderator1')
+        moderator2 = self.create_user(username='moderator2')
+
+        self._action.moderator_set.add(moderator1)
+        self.assertTrue(moderator1 in self._action.referrers)
+        self._action.moderator_set.add(moderator2)
+        self.assertTrue(moderator2 in self._action.referrers)
+
+        logged_in = self._login(sender)
+
+        if logged_in:
+
+            #sending message
+            message_text = "Ma io come posso partecipare a questa azione?"
+
+            response = self._do_POST_send_message_to_action_referrers(
+                action=self._action,
+                ajax=True,
+                message_text=message_text
+            )
+
+            #print "\n\n----------------response %s\n\n" % response
+
+            self._check_for_redirect_response(response, is_ajax=True)
+ 
+            send_msg_req_objs = self._get_send_message_request_objs( 
+                    action=self._action,
+                    sender=sender,
+                    request_notes=message_text
+            )
+
+            self.assertTrue(send_msg_req_objs)
+            print("send_msg_req_objs[0].recipient_set.count() %s " % send_msg_req_objs[0].recipient_set.count())
+            self.assertTrue(send_msg_req_objs[0].recipient_set.count() == 3)
+            self.assertTrue(moderator1 in send_msg_req_objs[0].recipient_set.all())
+            self.assertTrue(moderator2 in send_msg_req_objs[0].recipient_set.all())
 
     def test_only_action_owner_can_ask_moderation(self):
 
@@ -216,53 +290,13 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
 
                 #checking request #n_try
                 action_req_objs = self._get_moderation_request_objs( 
-                        action=self._action,
-                        sender=login_user,
-                        recipient=self.follower,
-                        request_notes=request_text
+                    action=self._action,
+                    sender=login_user,
+                    recipient=self.follower,
+                    request_notes=request_text
                 )
                 self.assertTrue(action_req_objs)
                 self.assertTrue(action_req_objs.count() == n_try)
-
-            #response = self._do_POST_create_action_moderation_request(
-            #    action=self._action,
-            #    ajax=True,
-            #    follower=self.follower.pk,
-            #    request_text=request_text
-            #)
-            #self._check_for_redirect_response(response, is_ajax=True)
-
-            ##checking request #2
-            #action_req_objs = self._get_moderation_request_objs( 
-            #        action=self._action,
-            #        sender=login_user,
-            #        recipient=self.follower,
-            #        request_notes=request_text
-            #)
-            #self.assertTrue(action_req_objs)
-            #self.assertTrue(action_req_objs.count() == 2)
-
-            #response = self._do_POST_create_action_moderation_request(
-            #    action=self._action,
-            #    ajax=True,
-            #    follower=self.follower.pk,
-            #    request_text=request_text
-            #)
-            #self._check_for_redirect_response(response, is_ajax=True)
-
-            ##checking request #3
-            #action_req_objs = self._get_moderation_request_objs( 
-            #        action=self._action,
-            #        sender=login_user,
-            #        recipient=self.follower,
-            #        request_notes=request_text
-            #)
-            #self.assertTrue(action_req_objs)
-            #self.assertTrue(action_req_objs.count() == 3)
-
-            #action_req_obj_first = action_req_objs[0]
-            #action_req_obj_second = action_req_objs[1]
-            #action_req_obj_third = action_req_objs[2]
 
             response = self._do_POST_create_action_moderation_request(
                 action=self._action,
@@ -287,7 +321,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
         login_user = [self._author, user][bool(user)]
         request_text = "Ti chiedo di moderare la mia action"
         request_type = ar_consts.REQUEST_TYPE_MODERATION
-        action_requests = [0,1,2]
+        action_requests = [0,1]
 
         if logged_in:
 
@@ -296,10 +330,11 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
                 action_requests[n] = ActionRequest(
                     action=self._action,
                     sender=login_user,
-                    recipient=self.follower,
                     request_notes=request_text,
                     request_type=request_type 
                 )
+                action_requests[n].save()
+                action_requests[n].recipient_set.add(self.follower)
                 action_requests[n].save()
         else:
             raise Exception
@@ -321,12 +356,11 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             )
 
 
-            #print("RESPONSE-----------------------: %s" % response)
 
             self._check_for_redirect_response(response, is_ajax=True)
 
             action_request_not_accepted = ActionRequest.objects.get(pk=action_requests[0].pk)
-            print("\nis_accepted=%s\n" % action_request_not_accepted.is_accepted)
+            #print("\nis_accepted=%s\n" % action_request_not_accepted.is_accepted)
             self.assertTrue(action_request_not_accepted.is_processed)
             self.assertTrue(not action_request_not_accepted.is_accepted)
             self.assertTrue(
@@ -349,34 +383,38 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
                 answer_text=answer_text
             )
 
-            self._check_for_redirect_response(response, is_ajax=True)
+            #print("\n\nRESPONSE-----------------------: %s" % response)
+            self._check_for_error_response(response, 
+                e=action_request_exceptions.UserCannotProcessARequestTwice
+            )
 
-            action_request_accepted = ActionRequest.objects.get(pk=action_requests[1].pk)
+            duplicated_action_request = ActionRequest.objects.get(pk=action_requests[1].pk)
+            answer_text = "moderation request processed and %s accepted with action_request %s" % (action_request_not_accepted.pk, ["","not"][not action_request_not_accepted.is_accepted])
 
-            self.assertTrue(action_request_accepted.is_processed)
-            self.assertTrue(action_request_accepted.is_accepted)
+            self.assertTrue(duplicated_action_request.is_processed)
+            self.assertTrue(not duplicated_action_request.is_accepted)
             self.assertTrue(
-                action_request_accepted.answer_notes == answer_text
+                duplicated_action_request.answer_notes == answer_text
             )
 
-            #test the follower user response
-            answer_text = "mmh non mi ricordo se ho accettato, accetto ora per sicurezza"
+            ##test the follower user response
+            #answer_text = "mmh non mi ricordo se ho accettato, accetto ora per sicurezza"
 
-            response = self._do_POST_process_action_moderation_request(action_request=action_requests[2],
-                ajax=True,
-                accept_request=1,
-                answer_text=answer_text
-            )
+            #response = self._do_POST_process_action_moderation_request(action_request=action_requests[2],
+            #    ajax=True,
+            #    accept_request=1,
+            #    answer_text=answer_text
+            #)
 
-            self._check_for_redirect_response(response, is_ajax=True)
+            #self._check_for_redirect_response(response, is_ajax=True)
 
-            act_req_accepted_sencond_time = ActionRequest.objects.get(pk=action_requests[2].pk)
+            #act_req_accepted_sencond_time = ActionRequest.objects.get(pk=action_requests[2].pk)
 
-            self.assertTrue(act_req_accepted_sencond_time.is_processed)
-            self.assertTrue(not act_req_accepted_sencond_time.is_accepted)
-            self.assertTrue(
-                act_req_accepted_sencond_time.answer_notes == answer_text
-            )
+            #self.assertTrue(act_req_accepted_sencond_time.is_processed)
+            #self.assertTrue(not act_req_accepted_sencond_time.is_accepted)
+            #self.assertTrue(
+            #    act_req_accepted_sencond_time.answer_notes == answer_text
+            #)
 
     def test_update_action_active_status_register(self, user=None):
         """ Test whether a new Activity is registered when the Action owner 
@@ -400,7 +438,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
                 status_to_set=status_to_set
             )
 
-            print("\n\n----------------response: %s\n" % response)
+            #print("\n\n----------------response: %s\n" % response)
 
             self._check_for_redirect_response(response, is_ajax=True)
 
@@ -427,7 +465,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
                 status_to_set=status_to_set
             )
 
-            print("\n\n----------------response: %s\n" % response)
+            #print("\n\n----------------response: %s\n" % response)
 
             self._check_for_error_response(response, 
                 e=action_request_exceptions.ActionStatusUpdateRequestAlreadySent
@@ -455,7 +493,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
                 status_to_set=status_to_set
             )
 
-            print("\n\n----------------response: %s\n" % response)
+            #print("\n\n----------------response: %s\n" % response)
 
             self._check_for_redirect_response(response, is_ajax=True)
 
@@ -482,7 +520,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
                 status_to_set=status_to_set
             )
 
-            print("\n\n----------------response: %s\n" % response)
+            #print("\n\n----------------response: %s\n" % response)
 
             self._check_for_error_response(response, 
                 e=action_request_exceptions.ActionStatusUpdateRequestAlreadySent
@@ -506,7 +544,7 @@ class ActionRequestModerationTest(OpenActionViewTestCase):
             status_to_set=status_to_set
         )
 
-        print("\n\n----------------response: %s\n" % response)
+        #print("\n\n----------------response: %s\n" % response)
 
         self._check_for_error_response(response, 
             e=action_request_exceptions.UserCannotAskActionUpdate

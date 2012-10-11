@@ -44,8 +44,8 @@ class ActionForm(askbot_forms.AskForm):
             choices.append(
                 ("org-%s" % org.pk, org)
             )
-        ActionForm.base_fields['in_nomine'].choices = choices
         super(ActionForm, self).__init__(*args, **kw)
+        self.fields['in_nomine'].choices = choices
         if not orgs:
             self.hide_field('in_nomine')
         
@@ -100,5 +100,5 @@ class ModeratorRemoveForm(forms.Form):
         #WAS: followers = action.thread.followed_by.all()
         moderators = action.moderator_set.all()
 
-        ModeratorRemoveForm.base_fields['moderator'].queryset = moderators
         super(ModeratorRemoveForm, self).__init__(*args, **kwargs)
+        self.fields['moderator'].queryset = moderators

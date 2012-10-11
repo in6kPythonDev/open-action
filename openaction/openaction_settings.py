@@ -161,7 +161,8 @@ LOGGING = {
 
 REFERRAL_TOKEN_RESET_TIMEOUT_DAYS = 5
 
-MAX_MODERATION_REQUESTS = 3 
+MAX_MODERATION_REQUESTS = 3
+MAX_DELIVERABLE_MESSAGES = 3
 
 #--------------------------------------------------------------------------------
 

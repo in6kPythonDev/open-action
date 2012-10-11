@@ -137,9 +137,6 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action = self._create_action()
         self.unloggable = self.create_user_unloggable("pluto")
 
-        #Handled in ActionRequest post_save
-        #post_action_status_update.connect(register_status_update_activity)
-
     def _POST(self, url, is_ajax, **kwargs):
         
         if is_ajax:

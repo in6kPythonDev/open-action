@@ -59,11 +59,19 @@ def create_notice_types(app, created_models, verbosity, **kwargs):
     ##### added by Matteo
     notification.create_notice_type(
         "mod_removal", _("Moderator removal"),
-        _("an action owner removed you from the action moderators"), default=2
+        _("the action owner removed you from the action moderators"), default=2
     )
     notification.create_notice_type(
         "status_update", _("Action status update request"),
         _("an action owner would like to change its action status"), default=2
+    )
+    notification.create_notice_type(
+        "message_replied_user", _("Message reply to user"),
+        _("an action referrer replied to a message you sent"), default=2
+    )
+    notification.create_notice_type(
+        "message_replied_referrers", _("Referrer replied to message"),
+        _("an action referrer replied to a message sent by a user to the action you are referring"), default=2
     )
     ######
     notification.create_notice_type(
