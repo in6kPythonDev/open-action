@@ -32,10 +32,10 @@ class ActionRequest(models.Model, Resource):
     #TODOFUTURE: Every action that use this application should be able to define its
     # REQUEST_TYPE_CHOICES
     REQUEST_CHOICES = (
-        (consts.REQUEST_TYPE['mod'],'Moderazione'),
-        (consts.REQUEST_TYPE['msg'],'Messaggio'),
-        (consts.REQUEST_TYPE['vict'],'Vittoria Azione'),
-        (consts.REQUEST_TYPE['clos'],'Chiusura Azione'),
+        (consts.REQUEST_TYPE_MODERATION,'Moderazione'),
+        (consts.REQUEST_TYPE_MESSAGE,'Messaggio'),
+        (consts.REQUEST_TYPE_SET_VICTORY,'Vittoria Azione'),
+        (consts.REQUEST_TYPE_SET_CLOSURE,'Chiusura Azione'),
     ) 
     
     action = models.ForeignKey(Action)

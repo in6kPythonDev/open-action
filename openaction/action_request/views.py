@@ -29,7 +29,7 @@ class ActionRequestView(FormView, SingleObjectMixin, views_support.LoginRequired
         return super(ActionRequestView, self).dispatch(request, *args, **kwargs)
 
 class ActionSetStatusRequestView(ActionRequestView):
-    """ Action owner asks to the Staff to set Action status """
+    """ An Action referrer asks to the Staff to set Action status """
 
     form_class = action_request_forms.SetStatusForm
     template_name = 'status/change.html'
@@ -43,9 +43,9 @@ class ActionSetStatusRequestView(ActionRequestView):
         status = form.cleaned_data['status_to_set']
 
         if status in (a_consts.ACTION_STATUS_VICTORY,):
-            request_type = consts.REQUEST_TYPE['vict']
+            request_type = consts.REQUEST_TYPE_SET_VICTORY
         elif status in (a_consts.ACTION_STATUS_CLOSED,):
-            request_type = consts.REQUEST_TYPE['clos']
+            request_type = consts.REQUEST_TYPE_SET_CLOSURE
 
         sender.assert_can_ask_action_status_update(
             action,
