@@ -27,7 +27,7 @@ class OpenPolisResourceBackend(base.CachedResourceBackend):
             self.save_in_cache(full_url, data)
 
         if not as_string:
-            data = json.load(data)
+            data = json.loads(data)
 
         return data
 

@@ -91,6 +91,7 @@ INSTALLED_APPS.append('notification')
 INSTALLED_APPS.append('oa_notification')
 INSTALLED_APPS.append('action_request')
 INSTALLED_APPS.append('users')
+INSTALLED_APPS.append('ajax_select')
 
 
 PROJECT_NAME = "openaction"
@@ -212,3 +213,15 @@ REDIS_SERVER_PORT = None
 
 # Redis Database identifier. None will use default values
 REDIS_DATABASE    = None
+
+#---------------------------------------------------------------------------------
+# Ajax select
+
+AJAX_LOOKUP_CHANNELS = {
+    'geonamechannel' : ( 'action.lookups' , 'GeonameLookup'),
+}
+# magically include jqueryUI/js/css
+AJAX_SELECT_BOOTSTRAP = True
+AJAX_SELECT_INLINES = 'inline'
+
+

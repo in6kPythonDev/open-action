@@ -15,6 +15,7 @@ from base.utils import get_resource_icon_path
 from action import const, exceptions, tokens, managers
 from action.signals import post_action_status_update
 from organization.models import Organization
+from external_resource.models import ExternalResource
 
 import askbot_extensions.utils
 import logging, datetime, os
@@ -424,6 +425,8 @@ class Geoname(models.Model):
 
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
+
+    external_resource = models.OneToOneField(ExternalResource)
 
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.kind)

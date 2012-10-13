@@ -36,8 +36,16 @@ class ExternalResource(models.Model, Resource):
     # TODO: NoSQL cache
     _data = models.TextField()
 
+    class Meta:
+        app_label = "external_resource"
+
     def __unicode__(self):
         return u"%s - %s" % (self.backend_name, self.ext_res_id)
+
+    @property
+    def ext_unique_id(self):
+        """Unique id: it may be overridden by 'proxy' subclasses for specific resources if needed."""
+        return self.ext_res_id
 
     @property
     def external_info(self):

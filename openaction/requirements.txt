@@ -5,3 +5,4 @@ django-social-auth
 django-registration
 -e git://github.com/brosner/django-notification.git#egg=django-notification
 redis
+django-ajax-selects

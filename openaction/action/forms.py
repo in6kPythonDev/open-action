@@ -2,8 +2,11 @@
 
 from django import forms
 import askbot.forms as askbot_forms
-from action.models import Geoname, ActionCategory, Politician, Media
+from action.models import Action, Geoname, ActionCategory, Politician, Media
 from askbot.models import User
+
+from ajax_select import make_ajax_field
+#from ajax_select.fields import autoselect_fields_check_can_add
 
 class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
@@ -12,9 +15,12 @@ class ActionForm(askbot_forms.AskForm):
         choices=() #will be set in __init__
     )
 
-    geoname_set = forms.ModelMultipleChoiceField(
-        queryset=Geoname.objects, label="Territori",
-        required=False
+    geoname_set = make_ajax_field(Action, 
+        label = "Territori",
+        model_fieldname='geoname_set',
+        channel='geonamechannel', 
+        help_text="Search for place by name or by city",
+        required=False,
     )
     category_set = forms.ModelMultipleChoiceField(
         queryset=ActionCategory.objects, label=u"Ambiti",
