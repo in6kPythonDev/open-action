@@ -2,8 +2,13 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 
 from action.tests import OpenActionViewTestCase
+from action import const
 from action_request import exceptions as ae_exceptions
 from users.models import UserProfile
+from organization.models import UserOrgMap
+from lib import views_support
+
+import datetime
 
 class UsersTests(OpenActionViewTestCase):
 
@@ -44,11 +49,11 @@ class UsersTests(OpenActionViewTestCase):
     #    )
     #    return response
 
-    def _do_GET_show_user_profile_details(self, username, ajax=False):
+    def _do_GET_show_user_profile_details(self, username):
 
         response = self._GET(
             reverse('user-profile-details', args=(username,)),
-            ajax
+            False
         )
         return response
     
@@ -95,9 +100,41 @@ class UsersTests(OpenActionViewTestCase):
             description=description
         )
 
-        response = self._do_GET_show_user_profile_details(username,
-            ajax=True
+        #follow ond represent organization
+        org_name = "Organization 1"
+        _org = self._create_organization(name=org_name)
+
+        mapping, created = UserOrgMap.objects.get_or_create(user=login_user,
+            org=_org,
+            is_follower=True,
+            is_representative=True
+        )
+        #join action
+        timestamp = datetime.datetime.now()
+        title = "title"
+        text = "text"
+        tagnames = "tagnames"
+
+        question = login_user.post_question(
+            title = title,
+            body_text = text,
+            tags=tagnames,
+            wiki = False,
+            is_anonymous = False,
+            timestamp = timestamp
         )
 
-        print "\nresponse_%s\n\n" % response 
-        self._check_for_success_response(response)
+        _action = question.action
+ 
+        _action.compute_threshold()
+        _action.update_status(const.ACTION_STATUS_READY)
+
+        _action.vote_add(login_user)
+
+        response = self._do_GET_show_user_profile_details(username)
+
+        print "\nresponse_%s\n\n" % response
+        #TODO: Matteo: I shouldn't test it like this, i should only test that 
+        # the response returns an HttpResponseObject with hyyp_status_code 200
+        #WAS: self._check_for_success_response(response)
+        self.assertEqual(response.status_code, views_support.HTTP_SUCCESS)

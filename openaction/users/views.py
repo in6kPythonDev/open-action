@@ -49,7 +49,7 @@ class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
 
     The page contains:
 
-    * voted actions : the actions the user ____ to
+    * voted actions : the actions the user joined to
     * friends : the user friends into the site
     * followed organizations : the organizations followed by the user
     * represented organizations : the organizations represented by the user
@@ -57,10 +57,10 @@ class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
     * number of unread notices : notices sent to the user that he has not 
     read yet
     * number of voted active actions : the number of the active actions the 
-    user ____ to
-    * number of activists involved : number of users who ___ an action and 
+    user joined to
+    * number of activists involved : number of users who joined an action and 
     for which he was the referral 
-    * global impact factor : how many ____ have been done thanks to the user
+    * global impact factor : how many joinings have been done thanks to the user
     
     """
 
@@ -94,6 +94,7 @@ class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
             'num_of_involved_activists' : user.involved_users.count(),
             'global_impact_factor' : user.global_impact_factor,
         })
+        #print("\nContext: %s" % context)
 
         return context
 

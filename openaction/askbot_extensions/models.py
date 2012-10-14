@@ -419,7 +419,8 @@ class UserExtension(AskbotModelExtender):
     @property
     def _askbot_ext_actions(self):
        
-        thread_pks = self.votes.declareds().values_list('post__thread__pk', flat=True).distinct()
+        #WAS: thread_pks = self.votes.declareds().values_list('post__thread__pk', flat=True).distinct()
+        thread_pks = Vote.objects.filter(pk__in=self.votes.all()).declareds().values_list('voted_post__pk', flat=True).distinct()
         return Action.objects.filter(thread__pk__in=thread_pks)
 
 
