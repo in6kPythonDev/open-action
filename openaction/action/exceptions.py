@@ -106,3 +106,11 @@ class UserCannotRemoveActionModeratorException(exceptions.PermissionDenied):
 
     def __unicode__(self):
         return u"L'utente %s non può rimuovere il moderatore %s dall'azione %s perchè non ne è il proprietrario." % (self.user, self.moderator, self.action)
+
+class ThresholdNotComputableException(exceptions.PermissionDenied):
+
+    def __init__(self, action):
+        self.action = action
+
+    def __unicode__(self):
+        return u"Non è possibile calcolare la soglia di adesioni oltre la quale l'azione %s diviene attiva" % self.action

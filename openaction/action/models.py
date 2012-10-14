@@ -81,11 +81,12 @@ class Action(models.Model, Resource):
             status = const.ACTION_STATUS_CLOSED
         elif self.question.deleted:
             status = const.ACTION_STATUS_DELETED
-        elif self.score == 0:
+        #was: elif self.score == 0:
+        elif not self._threshold:
             # cannot be voted until all fields are set
             # so the Action goes into "ready" status
             status = const.ACTION_STATUS_DRAFT
-        elif not self.threshold or self.score < self.threshold:
+        elif self.score < self.threshold:
             status = const.ACTION_STATUS_READY
         elif self.score >= self.threshold:
             status = const.ACTION_STATUS_ACTIVE
@@ -111,11 +112,12 @@ class Action(models.Model, Resource):
         elif value == const.ACTION_STATUS_DRAFT:
             log.warning("Setting of DRAFT status, this shouldn't be done")
             self.question.score = 0
+            self._threshold = None
             self.question.save()
+            self.save()
         elif value == const.ACTION_STATUS_READY:
             log.warning("Setting of READY status, this should be done only by bot")
-            self.question.score = self.threshold
-            self.question.save()
+            assert self.threshold #Force threshold computation
         else:
             raise ValueError("Invalid status %s for action %s" % (value, self))
 
@@ -271,16 +273,19 @@ class Action(models.Model, Resource):
         return self.thread.posts.filter(post_type="answer")
 
     def compute_threshold(self):
+        #TODO: Matteo
         """Compute threshold for an action to become ACTIVE.
 
         Threshold is the number of votes needed for an action to be
-        puglished and activate media and politicians contacts.
+        published and activate media and politicians contacts.
         """
 
-        #TODO
-        threshold = 3
-        self._threshold = threshold
-        self.save()
+        if self.can_be_ready(): #TODO Matteo: se ce stanno tutti i parametri
+            #TODO
+            threshold = 3
+        else:
+            raise exceptions.ThresholdNotComputableException(self)
+        return threshold
 
     @property
     def threshold(self):
@@ -290,9 +295,14 @@ class Action(models.Model, Resource):
         """
 
         if not self._threshold:
-           if self.status == const.ACTION_STATUS_READY:
-                self.compute_threshold() 
+            self._threshold = self.compute_threshold()
+            self.save()
         return self._threshold
+
+    def can_be_ready(self):
+        """ Check if it is possible to compute the threshold for an
+        Action """
+        return self.bare_title != '' and self.content != ''
 
     token_generator = tokens.ActionReferralTokenGenerator()
     def get_token_for_user(self, user):

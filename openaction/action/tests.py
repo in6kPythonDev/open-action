@@ -25,6 +25,7 @@ from action import const, exceptions
 from action.signals import post_action_status_update
 from oa_notification.handlers import register_status_update_activity
 from askbot_extensions import consts as ae_consts
+from oa_notification import models as oa_notification
 
 from askbot_extensions import models
 
@@ -136,6 +137,8 @@ class ActionViewTest(OpenActionViewTestCase):
         super(ActionViewTest, self).setUp()
         self._action = self._create_action()
         self.unloggable = self.create_user_unloggable("pluto")
+        #Manually create notice types
+        oa_notification.create_notice_types("","","")
 
     def _POST(self, url, is_ajax, **kwargs):
         
@@ -293,7 +296,21 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response)
 
 #------------------------------------------------------------------------------
-    
+
+    def test_cannot_set_ready_status_to_action_without_title(self):
+
+        self._action = self._create_action(title="")
+
+        try:
+            self._action.update_status(const.ACTION_STATUS_READY)
+        except exceptions.ThresholdNotComputableException as e:
+            expected_exception = e
+        except e:
+            expected_exception = False
+
+        self.assertTrue(expected_exception)
+            
+
     def test_add_vote_to_draft_action(self, user=None):
 
         self._action = self._create_action(title="action_vote")
@@ -320,7 +337,7 @@ class ActionViewTest(OpenActionViewTestCase):
             self._action = self._create_action()
         else:
             self._action = action
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         # Test for authenticated user
@@ -348,7 +365,7 @@ class ActionViewTest(OpenActionViewTestCase):
             self._action = self._create_action()
         else:
             self._action = action
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         # Test for authenticated user
@@ -404,7 +421,7 @@ class ActionViewTest(OpenActionViewTestCase):
     def test_not_add_two_votes_to_the_same_action(self):
 
         self._action = self._create_action(title="Action vote twice")
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         # Test for authenticated user
@@ -429,7 +446,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         logged_in = self._login(user)
 
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         comment = "Ohi, che bel castello..."
@@ -485,7 +502,7 @@ class ActionViewTest(OpenActionViewTestCase):
         logged_in = self._login(user)
         
         #restore action status 
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         #Adding blog_post to action 
@@ -522,7 +539,7 @@ class ActionViewTest(OpenActionViewTestCase):
         self._login()
 
         #restore action status 
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
         #already tested, does not need asserts
         text = "Altro blog post su action %s" % self._action
@@ -567,7 +584,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login()
 
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
         
         comment_text = "Aggiungo voto dell'utente %s" % self._author
@@ -612,7 +629,7 @@ class ActionViewTest(OpenActionViewTestCase):
         # Test for authenticated user
         self._login()
 
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         comment_text = "Aggiungo dell'utente %s" % self._author
@@ -890,7 +907,7 @@ class ActionViewTest(OpenActionViewTestCase):
         
         logged_in = self._login(user)
         
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
 
         response = self._do_POST_follow_action(
@@ -932,7 +949,7 @@ class ActionViewTest(OpenActionViewTestCase):
         
         logged_in = self._login(user)
         
-        self._action.compute_threshold()
+        #self._action.compute_threshold()
         self._action.update_status(const.ACTION_STATUS_READY)
         
         response = self._do_POST_follow_action(
