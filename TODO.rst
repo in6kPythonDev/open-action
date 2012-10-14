@@ -99,8 +99,8 @@ NOTA: recipient --> recipient_set fare il refactoring
 * controllare che chi sta processando una richiesta per una action ne sia effettivamente il (o uno dei) recipient
 * ricontrollare la registrazione di un'activity in seguito ad una richiesta di cambio di status di una Action allo staff
 * NullBoooleanField --> controllare utilizzo sulla documentazione
+# COMMENTARE LE VISTE
 
-* COMMENTARE LE VISTE
 * meglio usare distinct o unordered_unique (lib/__init__.py)? --> da testare
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
