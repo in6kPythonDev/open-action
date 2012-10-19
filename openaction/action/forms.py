@@ -48,7 +48,7 @@ class ActionForm(askbot_forms.AskForm):
         self.fields['in_nomine'].choices = choices
         if not orgs:
             self.hide_field('in_nomine')
-        
+
 
 class EditActionForm(askbot_forms.EditQuestionForm):
     # TOASK: Ajaxification of fields autocomplete?

@@ -26,6 +26,7 @@ from action.signals import post_action_status_update
 from oa_notification.handlers import register_status_update_activity
 from askbot_extensions import consts as ae_consts
 from oa_notification import models as oa_notification
+from external_resource.models import ExternalResource
 
 from askbot_extensions import models
 
@@ -235,11 +236,21 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         return response
 
-    def _create_geoname(self, pk, name, kind):
+    #def _create_geoname(self, pk, name, kind):
 
-        Geoname.objects.get_or_create(pk=pk,
-            name=name,
-            kind=kind 
+    #    Geoname.objects.get_or_create(pk=pk,
+    #        name=name,
+    #        kind=kind 
+    #    )
+
+    def _create_external_resource(self, pk, name, kind):
+
+        ExternalResource.objects.get_or_create(
+            backend_name = settings.EXTERNAL_API_BACKENDS_D['locations'],
+            ext_res_id = pk,
+            ext_res_type = "",
+            first_get_on = datetime.datetime.now(),
+            last_get_on = datetime.datetime.now()
         )
 
     def _test_edit_set(self, geoname_set, updated_geoname_set, user=None, **kwargs):
@@ -754,7 +765,39 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
 
-    def create_test_geonames(self):
+    #def create_test_geonames(self):
+
+    #    self._login()
+
+#   #     title = "Aggiungo una nuova action"
+#   #     tagnames = None
+#   #     text = "Blablablablablablabla"
+#   #     #Create geonames
+    #    self._create_geoname(pk=1, 
+    #        name='Italia', 
+    #        kind='Stato',
+    #    )
+    #    self._create_geoname(pk=2, 
+    #        name='Ancona', 
+    #        kind='Provincia'
+	#    )
+    #    self._create_geoname(pk=3, 
+    #        name='Fabriano', 
+    #        kind='Comune'
+    #    )
+    #    self._create_geoname(pk=4, 
+    #        name='Macerata', 
+    #        kind='Provincia'
+	#    )
+    #    self._create_geoname(pk=5, 
+    #        name='Camerino', 
+    #        kind='Comune'
+    #    )
+
+    #    for geo in Geoname.objects.all():
+    #        print "geo: %s" % geo.id
+
+    def create_test_external_resources(self):
 
         self._login()
 
@@ -764,7 +807,7 @@ class ActionViewTest(OpenActionViewTestCase):
 #        #Create geonames
         self._create_geoname(pk=1, 
             name='Italia', 
-            kind='Stato'
+            kind='Stato',
         )
         self._create_geoname(pk=2, 
             name='Ancona', 
@@ -785,7 +828,6 @@ class ActionViewTest(OpenActionViewTestCase):
 
         for geo in Geoname.objects.all():
             print "geo: %s" % geo.id
-
 
     def test_update_action_add_geonames(self, user=None):
 

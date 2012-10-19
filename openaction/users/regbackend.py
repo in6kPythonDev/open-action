@@ -8,9 +8,11 @@ from users.models import UserProfile
 from registration.signals import user_registered
 from registration.signals import user_activated
 
+from django.dispatch import receiver
+
 # TODO Matteo: transform connect to receivers decorators
-user_registered.connect(user_created)
-user_activated.connect(log_in_user)
+# user_registered.connect(user_created)
+# user_activated.connect(log_in_user)
 
 
 """
@@ -18,7 +20,7 @@ Functions listed below act as receivers and are used along the
 registration workflow.
 """
 
-
+@receiver(user_registered):#, sender=DefaultBackend or sender=SimpleBackend
 def user_created(sender, user, request, **kwargs):
     """
     As soon as a new ``User`` is created, the correspondent
@@ -42,7 +44,7 @@ def user_created(sender, user, request, **kwargs):
     extra_data.city = form.cleaned_data['city']
     extra_data.save()
    
-
+@receiver(user_activated):#, sender=DefaultBackend or sender=SimpleBackend
 def log_in_user(sender, user, request, **kwargs):
     """
     Dirty trick to let the user automatically logged-in at the end of

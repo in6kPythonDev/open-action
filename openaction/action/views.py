@@ -18,6 +18,7 @@ from action.signals import action_moderator_removed
 from askbot_extensions import utils as askbot_extensions_utils
 from organization.models import Organization
 import exceptions
+from ajax_select import get_lookup
 
 from lib import views_support
 
@@ -351,9 +352,43 @@ class ActionCreateView(ActionView):
             'politician_set',
             'media_set'
         ):
+            #TODO: Here we should perform the following checks:
+            #(for now only for the geonames)
+            # 1- take the E.R. ids and check if they are really present
+            #   into the external source
+            # 2- check if there exist geonames that have not the E.R.
+            #   passed by the form as external resource: in that case,
+            #   create them
+            # 3- update action geoname_set. I will not add the E.R. ids, 
+            #   but the geonames ids which are linked to the E.R. by a 
+            #   o2o relationship 
             m2m_value = form.cleaned_data.get(m2m_attr)
+
             if len(m2m_value) != 0:
-                getattr(action, m2m_attr).add(*m2m_value)
+                if m2m_attr == 'geoname_set':
+                    # 1-
+                    lookup = get_lookup(settings.AJAX_LOOKUP_CHANNELS['geonamechannel'])
+                    external_objects = lookup.get_objects(m2m_value)
+                    if len(external_objects) != len(m2m_value):
+                        raise exceptions.ParanoidException()
+                    #2-
+                    for ext_obj in external_objects:
+                        try:
+                            location = Geoname.objects.get(external_resource=ext_obj)
+                            #3-
+                            getattr(action, m2m_attr).add(location.pk)
+                        except:
+                            #TODO: were do I get this info ?
+                            location = Geoname(
+                                name="",
+                                kind=ext_obj.ext_res_type,
+                                external_resource=ext_obj
+                            )
+                            location.save()
+                            #3-
+                            getattr(action, m2m_attr).add(location.pk)
+                else:
+                    getattr(action, m2m_attr).add(*m2m_value)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
@@ -416,7 +451,29 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             if len(m2m_value) != 0:
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
-                m2m_values_new = m2m_value
+                if m2m_attr == 'geoname_set':
+                    m2m_values_new = []
+                    lookup = get_lookup(settings.AJAX_LOOKUP_CHANNELS['geonamechannel'])
+                    external_objects = lookup.get_objects(m2m_value)
+                    if len(external_objects) != len(m2m_value):
+                        raise exceptions.ParanoidException()
+                    #2-
+                    for ext_obj in external_objects:
+                        try:
+                            location = Geoname.objects.get(external_resource=ext_obj)
+                            m2m_values_new.append(location)
+                            #3-
+                        except:
+                            #TODO: were do I get this info ?
+                            location = Geoname(
+                                name="",
+                                kind=ext_obj.ext_res_type,
+                                external_resource=ext_obj
+                            )
+                            location.save()
+                            m2m_values_new.append(location)
+                else:
+                    m2m_values_new = m2m_value
 
                 to_add, to_remove = self.update_values(m2m_values_old, 
                     m2m_values_new
