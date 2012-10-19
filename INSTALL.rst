@@ -26,8 +26,7 @@ OpenAction installation guide
 
     3.2 Create the database (PostgreSQL)
 
-        You can use the script placed in extras/wipe_postgres_sb.sh
-        or run:
+        You can use the script placed in extras/wipe_postgres_sb.sh or run:
 
          su psql
          psql
@@ -70,8 +69,7 @@ OpenAction installation guide
 
 7. Integrate openaction project
 
-     7.1 Link (ln command) the 'action' app into the 
-         Askbot installation root directory
+     7.1 Link (ln command) the 'action' app into the Askbot installation root directory
      
         ln -s CLONEDIR/openaction/action/ WEBDIR/action
 
@@ -83,15 +81,43 @@ OpenAction installation guide
      
         ln -s CLONEDIR/openaction/lib/ WEBDIR/lib
 
-     7.4 Link the 'askbot_extensions' app into the 
-         Askbot installation root directory
+     7.4 Link the 'askbot_extensions' app into the Askbot installation root directory
      
         ln -s CLONEDIR/openaction/askbot_extensions/ WEBDIR/askbot_extension
 
-     7.5 Link the 'oa_social_auth' app into the 
-         Askbot installation root directory
+     7.5 Link the 'oa_social_auth' app into the Askbot installation root directory
      
         ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth 
+
+     7.6 Link the 'external_resource' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/external_resource/ WEBDIR/external_resource
+
+     7.7 Link the 'oa_notification' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/oa_notification/ WEBDIR/oa_notification
+
+     7.8 Link the 'organization' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/organization/ WEBDIR/organization
+
+     7.9 Link the 'friendship' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/friendship/ WEBDIR/friendship 
+
+     7.10 Link the 'action_request' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/action_request/ WEBDIR/action_request
+
+     7.11 Link the 'users' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/users/ WEBDIR/users
+
+     7.12 Link the 'ajax_select' app into the Askbot installation root directory
+     
+        ln -s CLONEDIR/openaction/ajax_select/ WEBDIR/ajax_select
+
+8. Run radis cache server (for ajax selects)
 
 
 Now Open Action is installed correcty.
