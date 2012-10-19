@@ -8,6 +8,12 @@ from action.models import Geoname
 import json
 from cgi import escape
 
+class GeonameDict(dict):
+
+    def __init__(self, pk, **kwargs):
+        self.pk = pk
+        super(GeonameDict, self).__init__(**kwargs)
+
 class GeonameLookup(LookupChannel):
 
     model = Geoname
@@ -18,7 +24,10 @@ class GeonameLookup(LookupChannel):
         backend = utils.load_backend(backend_name)
         full_url = backend.base_url + "locations/?namestartswith=%s" % q
         data = backend.get_data(full_url)
-        return data
+        fake_qs = []
+        for d in data:
+            fake_qs.append(GeonameDict(d["id"], **d))
+        return fake_qs
         
 
 #    def get_result(self,obj):
@@ -47,7 +56,7 @@ class GeonameLookup(LookupChannel):
             the superclass implementation uses django's permissions system to check.
             only those allowed to add will be offered a [+ add] popup link
             """
-        return True
+        return False
 
 #class PersonLookup(LookupChannel):
 #

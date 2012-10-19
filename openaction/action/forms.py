@@ -6,7 +6,6 @@ from action.models import Action, Geoname, ActionCategory, Politician, Media
 from askbot.models import User
 
 from ajax_select import make_ajax_field
-#from ajax_select.fields import autoselect_fields_check_can_add
 
 class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
@@ -48,6 +47,7 @@ class ActionForm(askbot_forms.AskForm):
         self.fields['in_nomine'].choices = choices
         if not orgs:
             self.hide_field('in_nomine')
+
 
 
 class EditActionForm(askbot_forms.EditQuestionForm):
