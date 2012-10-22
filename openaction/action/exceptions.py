@@ -6,7 +6,7 @@ from action import const as action_const
 class ParanoidException(exceptions.PermissionDenied):
     
     def __unicode__(self):
-        return u"Oops, qualcosa è andato storto, l'operazione che si sta provando a eseguire non è consntita."
+        return u"Oops, qualcosa è andato storto, l'operazione che si sta provando a eseguire non è consentita."
 
 class ActionInvalidStatusException(exceptions.PermissionDenied):
     
