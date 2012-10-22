@@ -471,7 +471,18 @@ class ActionCategory(models.Model, Resource):
 #--------------------------------------------------------------------------------
 
 class Politician(models.Model):
-    pass
+
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
+    birth_date = models.DateTimeField() 
+
+    external_resource = models.OneToOneField(ExternalResource)
+
+    def __unicode__(self):
+        return u"%s (%s)" % (self.name, self.kind)
+
+    class Meta:
+        unique_together = (('first_name','last_name','birth_date'),)
 
 #--------------------------------------------------------------------------------
 

@@ -11,21 +11,30 @@ from django.conf import settings
 from askbot.models import Post
 from askbot.models.repute import Vote
 import askbot.utils.decorators as askbot_decorators
-from action.models import Action
+from action.models import Action, Geoname, Politician, Media
 from action import const as action_const
 from action import forms
 from action.signals import action_moderator_removed
 from askbot_extensions import utils as askbot_extensions_utils
 from organization.models import Organization
-import exceptions
+from external_resource.models import ExternalResource
+from external_resource import utils
 from ajax_select import get_lookup
+from action.lookups import GeonameDict
 
 from lib import views_support
 
+import exceptions
 import logging, datetime
 
 log = logging.getLogger(settings.PROJECT_NAME)
 
+
+MAP_MODEL_SET_TO_CHANNEL = {
+    'geoname_set' : 'geonamechannel', 
+    'politician_set' : 'TODO',
+    'media_set' : 'TODO',
+}
 
 class ActionDetailView(DetailView):
     """ List the details of an Action """
@@ -273,9 +282,9 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
     form_class = forms.ActionForm
     
-    @method_decorator(askbot_decorators.check_spam('text'))
-    def dispatch(self, request, *args, **kwargs):
-        return super(ActionView, self).dispatch(request, *args, **kwargs)
+    #@method_decorator(askbot_decorators.check_spam('text'))
+    #def dispatch(self, request, *args, **kwargs):
+    #    return super(ActionView, self).dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         return {
@@ -298,6 +307,135 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('wiki')
         form.hide_field('ask_anonymously')
         return form
+        
+    def get_m2m_values(self, 
+            m2m_attr, 
+            m2m_value, 
+            model,
+            **kwargs
+    ):
+        """ Here we have to check if there are ExternalResource
+        objects with pk equal to the provided ids.
+        If there are ids that do not match with any ExternalResource
+        object pk, than create them. 
+        If the ExternalResource which pks match with some ids was
+        created too time ago, then check the openpolis Json to see
+        if there had been some changes.
+        
+        Finally check if there are Geoname objects linked to the found
+        ExternalResource objects. If not, create them.
+        
+        """
+        m2m_values = []
+        ext_res = []
+        new_ext_res = []
+
+        lookup = get_lookup(MAP_MODEL_SET_TO_CHANNEL[m2m_attr])
+        #print("\nm2m_value: %s" % m2m_value)
+        m2m_value = lookup.get_objects(m2m_value)
+        #print("\nJSON_DATA: %s\n" % m2m_value)
+        for json_datum in m2m_value:
+            try:
+                #print("\ndatum: %s" % json_datum)
+                _id = json_datum['id']
+                e_r = ExternalResource.objects.get(pk=_id)
+                if (datetime.datetime.now() - e_r.last_get_on).days < settings.MAX_TIME_ELAPSED:
+                    ext_res.append(e_r)
+                else:
+                    #WAS: datum = lookup.get_objects([_id])
+                    datum = lookup.get_objects([_id])[0]
+                    self.update_external_resource(e_r, datum)
+                    ext_res.append(e_r)
+            except ExternalResource.DoesNotExist as e:
+                #array of ExternalResource objects to create
+                new_ext_res.append(_id)
+
+        for _id in new_ext_res:
+            #Here i should GET json data and create object
+            #was: datum = lookup.get_objects([_id])
+            datum = lookup.get_objects([_id])[0]
+            #print("\ndatum: %s" % datum)
+            e_r = ExternalResource.objects.create(
+                backend_name = lookup.get_backend_name(),
+                ext_res_id = _id,
+                #WAS: ext_res_type = datum['location_type']['name'],
+                ext_res_type = datum[
+                    kwargs['ext_res_type']['type']][
+                    kwargs['ext_res_type']['name']],
+                first_get_on = datetime.datetime.now(),
+                last_get_on = datetime.datetime.now()
+            )
+            e_r.save()
+            ext_res.append(e_r)
+
+        for e_r in ext_res:
+            try:
+                instance = model.objects.get(external_resource=e_r)
+                #WAS: m2m_values.append(instance.pk)
+                m2m_values.append(instance)
+            except model.DoesNotExist as e:
+
+                instance = self.create_object(model,
+                    e_r,
+                    lookup,
+                    **kwargs
+                )
+                #WAS: m2m_values.append(instance.pk)
+                m2m_values.append(instance)
+
+        return m2m_values
+
+    def create_object(self,
+        model,
+        e_r,
+        lookup,
+        **kwargs
+    ):
+        """ Create object starting from json data """
+        if model == Geoname:
+            #Here i should GET json data to create obj
+            datum = lookup.get_objects([e_r.ext_res_id])[0]
+            instance = model(
+                #WAS: name=datum[kwargs['ext_res_name']],
+                name=datum['name'],
+                #WAS: kind=datum['location_type']['name'],
+                kind=datum[
+                    kwargs['ext_res_type']['type']][
+                    kwargs['ext_res_type']['name']],
+                external_resource=e_r
+            )
+            instance.save()
+        elif model == Politician:
+            #Here i should GET json data to create obj
+            datum = lookup.get_objects([e_r.ext_res_id])[0]
+            instance = model(
+                first_name=datum['first_name'],
+                last_name=datum['last_name'],
+                birth_date=datum['birth_date'],
+                #WAS: kind=datum['location_type']['name'],
+                kind=datum[
+                    kwargs['ext_res_type']['type']][
+                    kwargs['ext_res_type']['name']],
+                external_resource=e_r
+            )
+            instance.save()
+        elif model == Media:
+            #TODO
+            instance = None
+
+        return instance
+
+    def update_external_resource(self, e_r, json_datum):
+        """ Update external resource with the data get from the json """
+        if e_r.ext_res_id != json_datum['id']:
+            e_r.ext_res_id = json_datum['id']
+        if e_r.ext_res_type != json_datum['location_type']['name']:
+            e_r.ext_res_id = json_datum['location_type']['name']
+        e_r.last_get_on = datetime.datetime.now()
+        
+        e_r.save()
+
+        return
 
 class ActionCreateView(ActionView):
     """Create a new Action.
@@ -347,51 +485,45 @@ class ActionCreateView(ActionView):
             action.save()
 
         for m2m_attr in (
-            'geoname_set', 
             'category_set',
-            'politician_set',
-            'media_set'
         ):
-            #TODO: Here we should perform the following checks:
-            #(for now only for the geonames)
-            # 1- take the E.R. ids and check if they are really present
-            #   into the external source
-            # 2- check if there exist geonames that have not the E.R.
-            #   passed by the form as external resource: in that case,
-            #   create them
-            # 3- update action geoname_set. I will not add the E.R. ids, 
-            #   but the geonames ids which are linked to the E.R. by a 
-            #   o2o relationship 
             m2m_value = form.cleaned_data.get(m2m_attr)
 
             if len(m2m_value) != 0:
-                if m2m_attr == 'geoname_set':
-                    # 1-
-                    lookup = get_lookup(settings.AJAX_LOOKUP_CHANNELS['geonamechannel'])
-                    external_objects = lookup.get_objects(m2m_value)
-                    if len(external_objects) != len(m2m_value):
-                        raise exceptions.ParanoidException()
-                    #2-
-                    for ext_obj in external_objects:
-                        try:
-                            location = Geoname.objects.get(external_resource=ext_obj)
-                            #3-
-                            getattr(action, m2m_attr).add(location.pk)
-                        except:
-                            #TODO: were do I get this info ?
-                            location = Geoname(
-                                name="",
-                                kind=ext_obj.ext_res_type,
-                                external_resource=ext_obj
-                            )
-                            location.save()
-                            #3-
-                            getattr(action, m2m_attr).add(location.pk)
-                else:
-                    getattr(action, m2m_attr).add(*m2m_value)
+                getattr(action, m2m_attr).add(*m2m_value)
+
+        for m2m_attr in (
+            'geoname_set', 
+            'politician_set',
+            'media_set'
+        ):
+            #Theese attributes should contain Json data
+            m2m_value = form.cleaned_data.get(m2m_attr)
+            if m2m_attr[:-4] == 'geoname':
+                model = Geoname
+            elif m2m_attr[:-4] == 'politician':
+                model = Politician
+            elif m2m_attr[:-4] == 'media':
+                model = Media
+
+            if len(m2m_value) != 0:
+
+                m2m_values = self.get_m2m_values(
+                    m2m_attr,
+                    m2m_value,
+                    model,
+                    #ext_res_name='name',
+                    ext_res_type={
+                        'type' : 'location_type',
+                        'name' : 'name'
+                    }
+                )
+
+                getattr(action, m2m_attr).add(*m2m_values)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
+
 
 class ActionUpdateView(ActionView, SingleObjectMixin):
     """Update an action
@@ -417,9 +549,6 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 
         action = self.get_object()
         
-        #WAS: if action.status not in (action_const.ACTION_STATUS_DRAFT, ):
-        #WAS:     return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status))
-
         self.request.user.assert_can_edit_action(action)
 
         question = action.question 
@@ -439,41 +568,61 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             edit_anonymously = False,
         )   
 
+
         for m2m_attr in (
-            'geoname_set', 
             'category_set',
-            'politician_set',
-            'media_set'
         ):
             m2m_value = form.cleaned_data.get(m2m_attr)
 
-            #WAS: if m2m_value is not None:
             if len(m2m_value) != 0:
+                m2m_values_old = getattr(action, m2m_attr).all()
+                to_add, to_remove = self.update_values(m2m_values_old, 
+                    m2m_values_new
+                )
+
+                getattr(action, m2m_attr).add(*to_add)
+                getattr(action, m2m_attr).remove(*to_remove)
+
+        for m2m_attr in (
+            'geoname_set', 
+            'politician_set',
+            'media_set'
+        ):
+            #Theese attributes should contain Json data
+            m2m_value = form.cleaned_data.get(m2m_attr)
+            if m2m_attr[:-4] == 'geoname':
+                model = Geoname
+            elif m2m_attr[:-4] == 'politician':
+                model = Politician
+            elif m2m_attr[:-4] == 'media':
+                model = Media
+
+            if len(m2m_value) != 0:
+                """ Here we have to check if there are ExternalResource
+                objects with pk equal to the provided ids.
+                If there are ids that do not match with any ExternalResource
+                object pk, than create them. 
+                If the ExternalResource which pks match with some ids was
+                created too time ago, then check the openpolis Json to see
+                if there had been some changes.
+                
+                Finally check if there are Geoname objects linked to the found
+                ExternalResource objects. If not, create them.
+                
+                """
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
-                if m2m_attr == 'geoname_set':
-                    m2m_values_new = []
-                    lookup = get_lookup(settings.AJAX_LOOKUP_CHANNELS['geonamechannel'])
-                    external_objects = lookup.get_objects(m2m_value)
-                    if len(external_objects) != len(m2m_value):
-                        raise exceptions.ParanoidException()
-                    #2-
-                    for ext_obj in external_objects:
-                        try:
-                            location = Geoname.objects.get(external_resource=ext_obj)
-                            m2m_values_new.append(location)
-                            #3-
-                        except:
-                            #TODO: were do I get this info ?
-                            location = Geoname(
-                                name="",
-                                kind=ext_obj.ext_res_type,
-                                external_resource=ext_obj
-                            )
-                            location.save()
-                            m2m_values_new.append(location)
-                else:
-                    m2m_values_new = m2m_value
+
+                m2m_values_new = self.get_m2m_values(
+                    m2m_attr,
+                    m2m_value,
+                    model,
+                    #ext_res_name='name',
+                    ext_res_type={
+                        'type' : 'location_type',
+                        'name' : 'name'
+                    }
+                )
 
                 to_add, to_remove = self.update_values(m2m_values_old, 
                     m2m_values_new

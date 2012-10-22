@@ -181,7 +181,7 @@ EXTERNAL_API_BACKENDS_D = {
     "facebook" : "external_resource.backends.FBResourceBackend",
     #"twitter" : "external_resource.backends.TwitterResourceBackend",
     "politicians" : {
-        'ENGINE' : "external_resource.backends.OpenPolisPoliticiansBackend",
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisPoliticiansBackend",
         'HOST' : 'api.openpolis.it',
         'PORT' : 80,
         'PROTOCOL': 'http',
@@ -190,7 +190,7 @@ EXTERNAL_API_BACKENDS_D = {
         'PASSWORD' : 'your_password_here',
     },
     "locations" : {
-        'ENGINE' : "external_resource.backends.OpenPolisLocationsBackend",
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisLocationsBackend",
         'HOST' : 'api.openpolis.it',
         'PORT' : 80,
         'PROTOCOL': 'http',
@@ -204,6 +204,9 @@ EXTERNAL_API_BACKENDS_D = {
 SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP = {
     "facebook" : "facebook",
 }
+
+#Time after that an ExternalResource has to be updated
+MAX_TIME_ELAPSED = 10
 
 #---------------------------------------------------------------------------------
 # Redis cache server

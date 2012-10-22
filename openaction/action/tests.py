@@ -27,6 +27,7 @@ from oa_notification.handlers import register_status_update_activity
 from askbot_extensions import consts as ae_consts
 from oa_notification import models as oa_notification
 from external_resource.models import ExternalResource
+from ajax_select import get_lookup
 
 from askbot_extensions import models
 
@@ -243,41 +244,58 @@ class ActionViewTest(OpenActionViewTestCase):
     #        kind=kind 
     #    )
 
-    def _create_external_resource(self, pk, name, kind):
-
-        ExternalResource.objects.get_or_create(
-            backend_name = settings.EXTERNAL_API_BACKENDS_D['locations'],
-            ext_res_id = pk,
-            ext_res_type = "",
-            first_get_on = datetime.datetime.now(),
-            last_get_on = datetime.datetime.now()
-        )
-
     def _test_edit_set(self, geoname_set, updated_geoname_set, user=None, **kwargs):
+
+        old_ids = geoname_set[1:-1].split('|') 
+        updated_ids = [int(_id) for _id in  updated_geoname_set[1:-1].split('|')] 
+        
+        logged_in = self._login(user)
 
         title = "Aggiungo una nuova action"
         tagnames = None
-        text = "Blablablablablablabla",
+        text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
 
-        #geoname_set = geoname_set
-
-        #create action
-        r = self._do_POST_create_action(
+        response = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
             text=text,
-            geoname_set=geoname_set,
-            in_nomine=in_nomine
+            in_nomine=in_nomine,
+            geoname_set=geoname_set
         )
-        #print "-------------------response_create: %s" % r
+        print "-------------------response: %s" % response
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+
+            try:
+                #action_obj = Action.objects.get(pk=1)
+                action_obj = Action.objects.latest()
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+
+            #checck that the action is not in nomine of any association,
+            # since the user is not representative of any ot them
+            self.assertTrue(action_obj.in_nomine_org == None)
+            #TODO: check that Action has the desired locations
+            for _id in old_ids:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    geoname_obj = Geoname.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    geoname_obj = False
+
+                self.assertTrue(geoname_obj)
+        else:
+            self._check_for_redirect_response(response)
+
         action = Action.objects.latest()
 
-        logged_in = self._login(user)
         #update action
         updated_text = "Gluglugluglugluglugluglu"
-        #updated_geoname_set = updated_geoname_set
 
         response = self._do_POST_update_action( 
             action=action,
@@ -302,7 +320,8 @@ class ActionViewTest(OpenActionViewTestCase):
                 geoname_list.append(obj.pk)
             geoname_list.sort()
             #geoname_set = action.geoname_set.all()
-            self.assertEqual(updated_geoname_set, geoname_list)
+            #geoname_list_ids = "|" + "|".join( str(pk) for pk in geoname_list ) + "|"
+            self.assertEqual(updated_ids, geoname_list)
         else:
             self._check_for_redirect_response(response)
 
@@ -694,12 +713,58 @@ class ActionViewTest(OpenActionViewTestCase):
 
             self.assertTrue(action_obj)
 
-            #checck that the action is not in nomine of any association,
+            #check that the action is not in nomine of any association,
             # since the user is not representative of any ot them
             self.assertTrue(action_obj.in_nomine_org == None)
         else:
             self._check_for_redirect_response(response)
-        
+ 
+    def test_create_action_with_locations(self, user=None):
+
+        logged_in = self._login(user)
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+        in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
+        geoname_set = '|23|45|123|12|'
+
+        response = self._do_POST_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text,
+            in_nomine=in_nomine,
+            geoname_set=geoname_set
+        )
+        print "-------------------response: %s" % response
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+
+            try:
+                #action_obj = Action.objects.get(pk=1)
+                action_obj = Action.objects.latest()
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+
+            #checck that the action is not in nomine of any association,
+            # since the user is not representative of any ot them
+            self.assertTrue(action_obj.in_nomine_org == None)
+            #TODO: check that Action has the desired locations
+            for _id in [23,45,123,12]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    geoname_obj = Geoname.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    geoname_obj = False
+
+                self.assertTrue(geoname_obj)
+        else:
+            self._check_for_redirect_response(response)
+
     def test_create_unauthenticated_action(self):
         #print "unauthenticated"
         self.test_create_action(user=self.unloggable)
@@ -769,10 +834,10 @@ class ActionViewTest(OpenActionViewTestCase):
 
     #    self._login()
 
-#   #     title = "Aggiungo una nuova action"
-#   #     tagnames = None
-#   #     text = "Blablablablablablabla"
-#   #     #Create geonames
+    #     title = "Aggiungo una nuova action"
+    #     tagnames = None
+    #     text = "Blablablablablablabla"
+    #     #Create geonames
     #    self._create_geoname(pk=1, 
     #        name='Italia', 
     #        kind='Stato',
@@ -797,66 +862,33 @@ class ActionViewTest(OpenActionViewTestCase):
     #    for geo in Geoname.objects.all():
     #        print "geo: %s" % geo.id
 
-    def create_test_external_resources(self):
-
-        self._login()
-
-#        title = "Aggiungo una nuova action"
-#        tagnames = None
-#        text = "Blablablablablablabla"
-#        #Create geonames
-        self._create_geoname(pk=1, 
-            name='Italia', 
-            kind='Stato',
-        )
-        self._create_geoname(pk=2, 
-            name='Ancona', 
-            kind='Provincia'
-	    )
-        self._create_geoname(pk=3, 
-            name='Fabriano', 
-            kind='Comune'
-        )
-        self._create_geoname(pk=4, 
-            name='Macerata', 
-            kind='Provincia'
-	    )
-        self._create_geoname(pk=5, 
-            name='Camerino', 
-            kind='Comune'
-        )
-
-        for geo in Geoname.objects.all():
-            print "geo: %s" % geo.id
-
     def test_update_action_add_geonames(self, user=None):
 
         self._login()
-        self.create_test_geonames()
 
         #TEST #1
-        self._test_edit_set([1], [1,2], user) 
+        self._test_edit_set("|1|", "|1|2|", user) 
 
     def test_update_action_remove_geonames(self, user=None):
 
         self._login()
-        self.create_test_geonames()
+
         #TEST #2
-        self._test_edit_set([1,2,3], [1,2], user) 
+        self._test_edit_set("|1|2|3|", "|1|2|", user) 
 
     def test_update_action_same_geonames(self, user=None):
 
         self._login()
-        self.create_test_geonames()
+
         #TEST #3
-        self._test_edit_set([1,2], [1,2], user) 
+        self._test_edit_set("|1|2|", "|1|2|", user) 
 
     def test_update_action_not_overlapping_geonames(self, user=None):
 
         self._login()
-        self.create_test_geonames()
+
         #TEST #4
-        self._test_edit_set([1,3,5], [2,4], user) 
+        self._test_edit_set("|1|3|5|", "|2|4|", user) 
 
 #    def test_update_unauthenticated_action(self):
 #        #print "unauthenticated"

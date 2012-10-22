@@ -49,7 +49,6 @@ class ActionForm(askbot_forms.AskForm):
             self.hide_field('in_nomine')
 
 
-
 class EditActionForm(askbot_forms.EditQuestionForm):
     # TOASK: Ajaxification of fields autocomplete?
 

@@ -3,9 +3,10 @@ from django.utils.html import escape
 from ajax_select import LookupChannel
 
 from external_resource import utils
-from action.models import Geoname
+from action.models import Geoname, Politician
+from action import exceptions
 
-import json
+import json, datetime
 from cgi import escape
 
 class GeonameDict(dict):
@@ -19,7 +20,9 @@ class GeonameLookup(LookupChannel):
     model = Geoname
 
     def get_query(self,q,request):
-
+        # I will use this logic in the get_objects too:
+        # I will get a list of structures containing the Json data,
+        # that will be used into the Action view
         backend_name = "locations"
         backend = utils.load_backend(backend_name)
         full_url = backend.base_url + "locations/?namestartswith=%s" % q
@@ -28,14 +31,36 @@ class GeonameLookup(LookupChannel):
         for d in data:
             fake_qs.append(GeonameDict(d["id"], **d))
         return fake_qs
-        
+ 
+    def get_objects(self, ids):
+        """ Return a list of structures containing Json data """
 
-#    def get_result(self,obj):
-#        log.debug(obj,"BBBBBB")
-#        return unicode(obj)
-        
+        #was:  backend_name = "locations"
+        backend_name = self.get_backend_name()
+        backend = utils.load_backend(backend_name)
+
+        json_data = []
+        for _id in ids:
+            full_url = backend.base_url + "locations/%s" % _id
+            data = backend.get_data(full_url)
+            j_data = GeonameDict(data["id"], **data)
+            #'data' will surely contain a Json object
+            if len(j_data) == 0:
+                raise exceptions.ParanoidException()
+            else:
+                json_data.append(j_data)
+        return json_data
+
+    #def get_result(self,obj):
+    #    log.debug(obj,"BBBBBB")
+    #    return unicode(obj)
+
+    def get_backend_name(self):
+        """ Return the name of this LookupChannel backend """
+        return "locations"
+ 
     def format_match(self,obj):
-        return obj["name"]
+        #return obj["name"]
         return self.format_item_display(obj)
 
     def format_item_display(self,obj):
@@ -57,6 +82,14 @@ class GeonameLookup(LookupChannel):
             only those allowed to add will be offered a [+ add] popup link
             """
         return False
+
+    def check_auth(self, request):
+        """ The superclass implementation raises exception if the request
+        user is not a staff member """
+
+        if not request.user.is_authenticated():
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
 
 #class PersonLookup(LookupChannel):
 #
