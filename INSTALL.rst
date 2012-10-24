@@ -64,9 +64,9 @@ OpenAction installation guide
 
     pip install -r requirements.txt
 
-5.  Merge CLONEDIR/submodules/askbot-devel/urls.py.dist with WEBDIR/urls.py
+5.  Merge CLONEDIR/openaction/urls.py.dist with WEBDIR/urls.py
 
-6.  Merge CLONEDIR/submodules/askbot-devel/openaction_settings.py with WEBDIR/settings.py
+6.  Merge CLONEDIR/openaction/openaction_settings.py with WEBDIR/settings.py
 
 7. Integrate openaction project
 
@@ -86,12 +86,27 @@ OpenAction installation guide
      7.4 Link the 'askbot_extensions' app into the 
          Askbot installation root directory
      
-        ln -s CLONEDIR/openaction/askbot_extensions/ WEBDIR/askbot_extension
+        ln -s CLONEDIR/openaction/askbot_extensions/ WEBDIR/askbot_extensions
 
      7.5 Link the 'oa_social_auth' app into the 
          Askbot installation root directory
      
-        ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth 
+        ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth
+        
+     7.6  
+        ln -s CLONEDIR/openaction/users WEBDIR/open_action/users
+
+     7.7 
+        ln -s CLONEDIR/openaction/action_request WEBDIR/open_action/action_request
+     
+     7.8
+        ln -s CLONEDIR/openaction/oa_notification/ WEBDIR/open_action/oa_notification
+
+     7.9
+        ln -s CLONEDIR/openaction/external_resource WEBDIR/open_action/external_resource
+
+     7.10
+        ln -s CLONEDIR/openaction/organization WEBDIR/open_action/organization
 
 
 Now Open Action is installed correcty.
