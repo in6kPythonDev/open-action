@@ -180,8 +180,8 @@ NOTIFICATION_BACKENDS = (
 EXTERNAL_API_BACKENDS_D = {
     "facebook" : "external_resource.backends.FBResourceBackend",
     #"twitter" : "external_resource.backends.TwitterResourceBackend",
-    "politicians" : {
-        'ENGINE' : "external_resource.backends.openpolis.OpenPolisPoliticiansBackend",
+    "cityreps" : {
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisCityrepsBackend",
         'HOST' : 'api.openpolis.it',
         'PORT' : 80,
         'PROTOCOL': 'http',
@@ -197,7 +197,16 @@ EXTERNAL_API_BACKENDS_D = {
         'BASE_PATH' : '/op/1.0/',
         'USER' : 'your_user_here',
         'PASSWORD' : 'your_password_here',
-    }
+    },
+    "politicians" : {
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisPoliticiansBackend",
+        'HOST' : 'api.openpolis.it',
+        'PORT' : 80,
+        'PROTOCOL': 'http',
+        'BASE_PATH' : '/op/1.0/',
+        'USER' : 'your_user_here',
+        'PASSWORD' : 'your_password_here',
+    },
 }
 
 # Map correspondance of backend names from social_auth to external_resource

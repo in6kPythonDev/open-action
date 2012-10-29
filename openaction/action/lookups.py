@@ -91,6 +91,62 @@ class GeonameLookup(LookupChannel):
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
 
+class CityrepLookup(LookupChannel):
+
+    def get_objects(self, ids):
+        """ Return a list of structures containing Json data """
+
+        #was:  backend_name = "locations"
+        backend_name = self.get_backend_name()
+        backend = utils.load_backend(backend_name)
+
+        json_data = []
+        for _id in ids:
+            j_data = backend.get_info(_id)
+            json_data.append(j_data)
+
+        return json_data
+        
+    def get_backend_name(self):
+        """ Return the name of this LookupChannel backend """
+        return "cityreps"
+
+    def check_auth(self, request):
+        """ The superclass implementation raises exception if the request
+        user is not a staff member """
+
+        if not request.user.is_authenticated():
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+
+class PoliticianLookup(LookupChannel):
+
+    def get_objects(self, ids):
+        """ Return a list of structures containing Json data """
+
+        #was:  backend_name = "locations"
+        backend_name = self.get_backend_name()
+        backend = utils.load_backend(backend_name)
+
+        json_data = []
+        for _id in ids:
+            j_data = backend.get_info(_id)
+            json_data.append(j_data)
+
+        return json_data
+        
+    def get_backend_name(self):
+        """ Return the name of this LookupChannel backend """
+        return "politicians"
+
+    def check_auth(self, request):
+        """ The superclass implementation raises exception if the request
+        user is not a staff member """
+
+        if not request.user.is_authenticated():
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+
 #class PersonLookup(LookupChannel):
 #
 #    model = Person

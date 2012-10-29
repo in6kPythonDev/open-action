@@ -32,8 +32,25 @@ log = logging.getLogger(settings.PROJECT_NAME)
 
 MAP_MODEL_SET_TO_CHANNEL = {
     'geoname_set' : 'geonamechannel', 
-    'politician_set' : 'TODO',
+    'politician_set' : 'politicianchannel',
     'media_set' : 'TODO',
+}
+
+#NOTE: 'resource' here is meant as a pool of data. Are there better terms?
+MAP_RESOURCE_TO_CHANNEL = {
+    'cityrep' : 'cityrepchannel'
+}
+
+#geographical places
+GEO_LOCALIZATIONS = {
+    'comune' : ['consiglio','giunta',],
+    'provincia' : ['consiglio','giunta',],
+    'regione' : ['consiglio','giunta',],
+}
+INSTITUTIONS = {
+    'senato' : ['representatives',],
+    'europarl' : ['representatives',],
+    'camera' : ['representatives',],
 }
 
 class ActionDetailView(DetailView):
@@ -306,6 +323,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('post_author_username')
         form.hide_field('wiki')
         form.hide_field('ask_anonymously')
+        #using the askbot logic to hide our fields
+        form.hide_field('threshold')
         return form
         
     def get_m2m_values(self, 
@@ -337,7 +356,12 @@ class ActionView(FormView, views_support.LoginRequiredView):
         for json_datum in m2m_value:
             try:
                 #print("\ndatum: %s" % json_datum)
-                _id = json_datum['id']
+                _id = json_datum['%s%s%s' % (
+                    kwargs.get('id_prefix',''),
+                    'id',
+                    kwargs.get('id_suffix','')
+                    )
+                ]
                 e_r = ExternalResource.objects.get(pk=_id)
                 if (datetime.datetime.now() - e_r.last_get_on).days < settings.MAX_TIME_ELAPSED:
                     ext_res.append(e_r)
@@ -355,6 +379,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             #was: datum = lookup.get_objects([_id])
             datum = lookup.get_objects([_id])[0]
             #print("\ndatum: %s" % datum)
+            #TODO: check ex_res_tupe. It changes depending to model
             e_r = ExternalResource.objects.create(
                 backend_name = lookup.get_backend_name(),
                 ext_res_id = _id,
@@ -395,27 +420,33 @@ class ActionView(FormView, views_support.LoginRequiredView):
         if model == Geoname:
             #Here i should GET json data to create obj
             datum = lookup.get_objects([e_r.ext_res_id])[0]
-            instance = model(
-                #WAS: name=datum[kwargs['ext_res_name']],
-                name=datum['name'],
-                #WAS: kind=datum['location_type']['name'],
+            if kwargs['ext_res_type']:
                 kind=datum[
                     kwargs['ext_res_type']['type']][
-                    kwargs['ext_res_type']['name']],
+                    kwargs['ext_res_type']['name']]
+            elif kwargs['politician_data']:
+                #TODO: politician data
+                kind=""
+            else:
+                raise exceptions.ProgrammingError
+
+            instance = model(
+                #WAS: name=datum[kwargs['ext_res_name']],
+                name=datum[kwargs['name']],
+                #WAS: kind=datum['location_type']['name'],
+                kind=kind,
                 external_resource=e_r
             )
             instance.save()
         elif model == Politician:
-            #Here i should GET json data to create obj
-            datum = lookup.get_objects([e_r.ext_res_id])[0]
+            #GET json data to create politician
+            datum = [elem for elem in kwargs['politicians_ids'] 
+                if elem['politician_id'] == e_r.ext_res_id][0]
             instance = model(
                 first_name=datum['first_name'],
                 last_name=datum['last_name'],
                 birth_date=datum['birth_date'],
-                #WAS: kind=datum['location_type']['name'],
-                kind=datum[
-                    kwargs['ext_res_type']['type']][
-                    kwargs['ext_res_type']['name']],
+                # place cherge here, in the model too 
                 external_resource=e_r
             )
             instance.save()
@@ -427,6 +458,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
     def update_external_resource(self, e_r, json_datum):
         """ Update external resource with the data get from the json """
+        #TODO: change implementation? problably....
         if e_r.ext_res_id != json_datum['id']:
             e_r.ext_res_id = json_datum['id']
         if e_r.ext_res_type != json_datum['location_type']['name']:
@@ -437,6 +469,142 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
         return
 
+    def check_threshold(self, 
+        cityreps_ids,
+        politicians_ids,
+        lookup,
+        total_threshold,
+        **kwargs
+    ):
+        """ Get information needed to compute the chosen politicians 
+        threshold deltas.
+
+        Search politicians ids in each cityrep connected to the locations
+        until all the data needed is collected.
+
+        The json is strcutured like this:
+
+            "city_representatives" {
+                <geographic location>:{
+                    "consiglio":[]
+                    "giunta":[]
+                }
+                ...
+                <institution>:{
+                    "constituency":""
+                    "representatives":[]
+                }
+                ...
+            }
+                 
+        """
+        
+        politicians_data = []
+        computed_threshold = 0
+
+        for cityreps_id in cityreps_ids:
+            if len(politicians_ids) == 0:
+                break
+            cityrep = lookup.get_objects([cityreps_id])[0]['city_representatives']
+
+            for geo_loc in GEO_LOCALIZATIONS.keys():
+                if len(politicians_ids) == 0:
+                    break
+                politicians_ids_to_check = []
+                for elem in politicians_ids:
+                    politicians_ids_to_check.append(elem)
+                #iterating over geo localizations
+                for politician_id in politicians_ids_to_check:
+                    politician_data, threshold_delta = self.check_politician(
+                        cityrep[geo_loc], 
+                        politician_id,
+                        politicians_ids,
+                        geo_loc=geo_loc
+                    )
+                    if politicians_data:
+                        politicians_data.append(politician_data)
+                    computed_threshold = computed_threshold + threshold_delta
+
+            for institution in INSTITUTIONS.keys():
+                if len(politicians_ids) == 0:
+                    break
+                #iterating over inatitutions
+                politicians_ids_to_check = []
+                for elem in politicians_ids: 
+                    politicians_ids_to_check.append(elem)
+                for politician_id in politicians_ids_to_check:
+                    print("\ninstitution: %s" % institution)
+                    print("\nid: %s" % politician_id)
+                    print("\n\nids: %s" % politicians_ids)
+                    politician_data, threshold_delta = self.check_politician(
+                        cityrep[institution], 
+                        politician_id,
+                        politicians_ids,
+                        institution=institution
+                    )
+                    if politicians_data:
+                        politicians_data.append(politician_data)
+                    computed_threshold = computed_threshold + threshold_delta
+
+            if computed_threshold != total_threshold:
+                #TODO: define exception
+                raise Exception
+            
+            return politicians_data
+
+    def check_politician(self, 
+        politicians, 
+        politician_id, 
+        politicians_ids,
+        **kwargs
+        ):
+        """ Check whether a certain politician is contained into a given set 
+        of politicians 
+
+        * politicians: json data 
+        * politician_id: id of the politician to check
+        * politician_ids: set of politicians
+        """ 
+        
+        politician_data = []
+
+        if kwargs.get('geo_loc'):
+            geo_loc = kwargs['geo_loc']
+            #print("\n%s" % GEO_LOCALIZATIONS.get(geo_loc)[0])
+            #print("\n%s" % politicians)
+            #print("\n%s" % politicians[GEO_LOCALIZATIONS.get(geo_loc)[0]])
+            elements = politicians[GEO_LOCALIZATIONS.get(geo_loc)[0]].extend(
+                politicians[GEO_LOCALIZATIONS.get(geo_loc)[1]]
+            )
+            if elements is None:
+                elements = []
+
+            for elem in elements:
+                if elem['politician_id'] == politician_id:
+                    politician_data = elem
+                    break
+            
+            if politician_data:
+                politicians_ids.remove(politician_id)
+                #TODO: Computing threshold delta
+                threshold_delta = 0
+                return politician_data, threshold_delta
+
+        elif kwargs.get('institution'):
+            institution = kwargs['institution']
+            for elem in politicians[INSTITUTIONS.get(institution)[0]]:
+                if elem['politician_id'] == politician_id:
+                    politician_data = elem
+                    break
+
+            if politician_data:
+                politicians_ids.remove(politician_id)
+                #TODO: Computing threshold delta
+                threshold_delta = 0
+                return politician_data, threshold_delta
+
+        return politician_data,0
+                
 class ActionCreateView(ActionView):
     """Create a new Action.
 
@@ -465,6 +633,7 @@ class ActionCreateView(ActionView):
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
         in_nomine = form.cleaned_data['in_nomine']
+        total_threshold = int(form.cleaned_data['threshold'])
 
         question = self.request.user.post_question(
             title = title,
@@ -499,11 +668,39 @@ class ActionCreateView(ActionView):
         ):
             #Theese attributes should contain Json data
             m2m_value = form.cleaned_data.get(m2m_attr)
+            print "\n%s\n"% m2m_value
             if m2m_attr[:-4] == 'geoname':
                 model = Geoname
+                kwargs = {}
+                kwargs['ext_res_type'] = {
+                    'type' : 'location_type',
+                    'name' : 'name'
+                }
+                kwargs['name'] = 'name'
             elif m2m_attr[:-4] == 'politician':
                 model = Politician
+                kwargs = {}
+                #GET cityreps from locations ids
+                cityreps_ids = form.cleaned_data.get('geoname_set')
+                # here we check that the threshold arrived is equal to
+                # the the sum of the thrershold delta of all the politicians
+                # the metho dwill raise exceptions if necessary
+                #kwargs['charge_ids'] = self.get_politicians_charge_ids(
+                #    cityreps_ids,
+                #    m2m_value,
+                #    get_lookup(MAP_MODEL_SET_TO_CHANNEL['cityrep'])
+                #)
+                if type(m2m_value) != list:
+                    m2m_value = [int(elem) for elem in m2m_value.strip('|').split('|')]
+                kwargs['politicians_data'] = self.check_threshold(
+                    cityreps_ids,
+                    m2m_value,
+                    get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
+                    total_threshold
+                )
+                kwargs['id_prefix'] = 'content_'
             elif m2m_attr[:-4] == 'media':
+                kwargs = {}
                 model = Media
 
             if len(m2m_value) != 0:
@@ -512,11 +709,11 @@ class ActionCreateView(ActionView):
                     m2m_attr,
                     m2m_value,
                     model,
-                    #ext_res_name='name',
-                    ext_res_type={
-                        'type' : 'location_type',
-                        'name' : 'name'
-                    }
+                    #ext_res_type={
+                    #    'type' : 'location_type',
+                    #    'name' : 'name'
+                    #},
+                    **kwargs
                 )
 
                 getattr(action, m2m_attr).add(*m2m_values)
@@ -594,6 +791,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 model = Geoname
             elif m2m_attr[:-4] == 'politician':
                 model = Politician
+                kwargs['cityrep']
             elif m2m_attr[:-4] == 'media':
                 model = Media
 

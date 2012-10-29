@@ -15,17 +15,13 @@ DONE
 * nei test: sostituire add_for con add_to nei nomi dei metodi di test 
 * nei test: nei motodi che testano l'aggiunta di un voto, controllare anche che il conto dei voti nella Action/commento sia davvero aumentato di uno
 * nelle eccezioni: aggiungere eccezioni 'VoteUnauthorizedOnComment'e 'InvalidReferralError' 
-
-TODO
-^^^^
-
-* aggiungere campo created_by nella Action e settarlo nella creazione (nella Action.save())                     | OK testato
-* nei test, scrivere una funzione per la gestione di richieste ajax (migliorare la gestione già implementata)   | OK testato
-* nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action                     | OK testato 
-* NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica                       | OK testato
-* nelle view e nei test: solo l'owner della Action la puo modificare (text)                                     | OK testato
-* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione. | OK testato
-* nel modello Action aggiungere campo -- moderator_set --   | OK testato 
+* aggiungere campo created_by nella Action e settarlo nella creazione (nella Action.save())
+* nei test, scrivere una funzione per la gestione di richieste ajax (migliorare la gestione già implementata)
+* nelle views: reimplementare l'update dei campi xxxx_set nella view di update della Action 
+* NEW: FOLLOW an Action: vedere askbot come fa --> implementare test/vista/finta notifica
+* nelle view e nei test: solo l'owner della Action la puo modificare (text)
+* nel modello della Action property -- referrers -- restituisce un QS di utenti che sono l'owner e i moderators per l'azione.
+* nel modello Action aggiungere campo -- moderator_set -- 
 * solo owner e moderatori (che insieme compongono i -- referrers --) possono scrivere blogpost per una action. Implementare il controllo nelle assert nel modello User. | OK testato
 * tutti i referrers possono settare lo stato victory che però dovà essere verificato ed eventualmente accettato dallo staff: --> DA IMPLEMENTARE
     fare un modello "ActionRequest" con campi: | OK testato
@@ -99,9 +95,29 @@ NOTA: recipient --> recipient_set fare il refactoring
 * controllare che chi sta processando una richiesta per una action ne sia effettivamente il (o uno dei) recipient
 * ricontrollare la registrazione di un'activity in seguito ad una richiesta di cambio di status di una Action allo staff
 * NullBoooleanField --> controllare utilizzo sulla documentazione
-# COMMENTARE LE VISTE
+* meglio usare distinct o unordered_unique (lib/__init__.py)?
+* ajax_field:
+    * get json from openpolis API in Action form
+    * get geoname_set in view (with the locations ids)
+    * check that the location exists and that they did not changed (only if a certain time elapsed from their creation)
+    * get ExternalResource with pk equal to locations ids and create or get them (according to thei exostence in the db)
+    * get Geoname which have the ExternalResource found before as external resources, and create Geoname if there are 
+    ExternalResource which are not linked to any of them
+    * in the Action Update, check for changed Geoname objects
 
-* meglio usare distinct o unordered_unique (lib/__init__.py)? --> da testare
+TODO
+^^^^
+
+* Implementazione (lato client e lato server) della scelta dei politici e del calcolo del threshold della Action
+    Lato client:
+        1- nel js calcolare i threshold_delta dei politici collegati alla location prendendo i dati json tramite una GET http (da js). L'url della GET andrà calcolata tramite una vista che estende il proxy (in modo da modificare il myme_type in "json data"). Questo va fatto nel client perchè troppo dispendioso da fare nel server.
+        2- in base ai politici scelti (che vanno inviati nella POST http in un MultipleChoice modificato in modo da accetare qualsiasi scelta) calcolare il threshold della Action, che è dato dalla somma di tutti i threshold_delta, e inderirlo in un hidden_field da includere nella POST http
+
+    Lato server:
+        3- nella clean della form calcolare i threshold delta dei soli politici ricevuti, e controllare che il totale della loro somma sia uguale al valore threshold totale ricevuto tramite l'hidden field della form. Importante: la clean va sovrascritta per evitare il controllo sugli id rispetto a un'eventuale set di possibli scelte (che non è previsto nel nostro caso). Lasciare solo il GET_LIST per prendere i dati che arrivano dal widget. 
+
+Il backend (con il lookup per mantenere la compatibilità con il codice) per Cityrep è necessario, una volta arrivati gli id dei politici, per controllare che il calcolo fatto col js del threshold sia esatto (per inviare la richiesta, basta utilizzare gli id dei geonames arrivati ).
+È necessario comunque un backend anche per i politici, per prenderne i valori nel json. 
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

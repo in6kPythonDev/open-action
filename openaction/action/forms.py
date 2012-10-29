@@ -14,6 +14,8 @@ class ActionForm(askbot_forms.AskForm):
         choices=() #will be set in __init__
     )
 
+    threshold = forms.CharField()
+
     geoname_set = make_ajax_field(Action, 
         label = "Territori",
         model_fieldname='geoname_set',
@@ -26,10 +28,14 @@ class ActionForm(askbot_forms.AskForm):
         required=False,
         help_text=u"La scelta degli ambiti può aiutarti a definire meglio i prossimi passi"
     )
-    politician_set = forms.ModelMultipleChoiceField(
-        queryset=Politician.objects, label="Politici",
+    politician_set = forms.MultipleChoiceField(
+        label="Politici",
         required=False
     )
+    #politician_set = forms.ModelMultipleChoiceField(
+    #    queryset=Politician.objects, label="Politici",
+    #    required=False
+    #)
     media_set = forms.ModelMultipleChoiceField(
         queryset=Media.objects, label="Media",
         required=False
@@ -47,6 +53,17 @@ class ActionForm(askbot_forms.AskForm):
         self.fields['in_nomine'].choices = choices
         if not orgs:
             self.hide_field('in_nomine')
+
+    def clean(self):
+        """ overriding form clean """
+        #dummy implementation
+        cleaned_data = super(ActionForm, self).clean()
+        #print("\ncleaned data: %s\n" % cleaned_data)
+        #print("\nerrors: %s\n" % self._errors)
+        if 'politician_set' in self._errors.keys():
+            cleaned_data['politician_set'] = self.data['politician_set']
+            del self._errors['politician_set']
+        return cleaned_data
 
 
 class EditActionForm(askbot_forms.EditQuestionForm):

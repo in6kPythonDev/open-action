@@ -692,13 +692,15 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
+        threshold = 0
 
         response = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
             text=text,
-            in_nomine=in_nomine
+            in_nomine=in_nomine,
+            threshold=threshold
         )
         print "-------------------response: %s" % response
 
@@ -728,6 +730,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|23|45|123|12|'
+        threshold = 0
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -735,7 +738,8 @@ class ActionViewTest(OpenActionViewTestCase):
             tagnames=tagnames,
             text=text,
             in_nomine=in_nomine,
-            geoname_set=geoname_set
+            geoname_set=geoname_set,
+            threshold=threshold
         )
         print "-------------------response: %s" % response
 
@@ -765,6 +769,55 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
 
+    def test_create_action_with_politicians(self, user=None):
+
+        logged_in = self._login(user)
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+        in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
+        geoname_set = '|145|185|287|'
+        politician_set = '|332997|543662|626209|'
+        threshold = "0"
+
+        response = self._do_POST_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text,
+            in_nomine=in_nomine,
+            geoname_set=geoname_set,
+            politician_set=politician_set,
+            threshold=threshold
+        )
+        print "-------------------response: %s" % response
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+
+            try:
+                #action_obj = Action.objects.get(pk=1)
+                action_obj = Action.objects.latest()
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+
+            #checck that the action is not in nomine of any association,
+            # since the user is not representative of any ot them
+            self.assertTrue(action_obj.in_nomine_org == None)
+            #TODO: check that Action has the desired locations
+            for _id in [23,45,123,12]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    geoname_obj = Geoname.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    geoname_obj = False
+
+                self.assertTrue(geoname_obj)
+        else:
+            self._check_for_redirect_response(response)
     def test_create_unauthenticated_action(self):
         #print "unauthenticated"
         self.test_create_action(user=self.unloggable)
