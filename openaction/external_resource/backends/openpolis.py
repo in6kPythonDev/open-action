@@ -72,11 +72,11 @@ class OpenPolisPoliticiansBackend(OpenPolisResourceBackend):
 
         rel_url = 'politicians/' + str(resource)
         location_detail_url = urlparse.urljoin(self.base_url, rel_url)
-        print("\nlocation_detail_url: %s" %  location_detail_url)
+        #print("\nlocation_detail_url: %s" %  location_detail_url)
         location_data = self.get_data(location_detail_url)
 
         normalized_data = location_data
-        print("\nlocations_data: %s\n" % normalized_data)
+        #print("\nlocations_data: %s\n" % normalized_data)
 
         #normalized_data = {
         #    'id' : data.get('id'),

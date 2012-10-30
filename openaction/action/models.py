@@ -475,7 +475,7 @@ class Politician(models.Model):
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
     birth_date = models.DateTimeField() 
-
+    charge = models.CharField(max_length=128)
     external_resource = models.OneToOneField(ExternalResource)
 
     def __unicode__(self):

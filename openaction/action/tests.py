@@ -20,7 +20,7 @@ from askbot.models.repute import Vote
 from notification.models import Notice 
 from organization.models import Organization, UserOrgMap
 
-from action.models import Action, Geoname
+from action.models import Action, Geoname, Politician
 from action import const, exceptions
 from action.signals import post_action_status_update
 from oa_notification.handlers import register_status_update_activity
@@ -808,7 +808,7 @@ class ActionViewTest(OpenActionViewTestCase):
             # since the user is not representative of any ot them
             self.assertTrue(action_obj.in_nomine_org == None)
             #TODO: check that Action has the desired locations
-            for _id in [23,45,123,12]:
+            for _id in [145,185,287]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     geoname_obj = Geoname.objects.get(external_resource=e_r)
@@ -816,8 +816,19 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
+            #check that the politicians have been created
+            for _id in [332997,543662,626209]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    politician_obj = Politician.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    politician_obj = False
+
+                self.assertTrue(politician_obj)
+ 
         else:
             self._check_for_redirect_response(response)
+
     def test_create_unauthenticated_action(self):
         #print "unauthenticated"
         self.test_create_action(user=self.unloggable)
