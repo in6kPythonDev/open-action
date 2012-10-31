@@ -1,113 +1,99 @@
-
 OpenAction installation guide
 =============================
 
-0. Clone open-action repository in a no web-accessible folder
+* Clone open-action repository in a no web-accessible folder::
     
     git clone https://github.com/openpolis/open-action /usr/local/open-action-work
 
-1. Create a dedicated virtualenv
+* Create a dedicated virtualenv::
 
     mkvirtualenv open-action
 
-2. Update required submodules
+* Update required submodules::
 
     git submodule update --init 
 
-3. Install Askbot following the official guide http://askbot.org/doc/install.html
+* Install Askbot following the official guide http://askbot.org/doc/install.html
 
-    3.1 Install askbot by the provided script
+  - Install askbot by the provided script::
 
         cd CLONEDIR/submodules/askbot-devel
-
         python setup.py develop
 
-        (If you get HTTP error, run this command twice)
+    (If you get HTTP error, run this command twice)
 
-    3.2 Create the database (PostgreSQL)
+  - Create the database (PostgreSQL)
 
-        You can use the script placed in extras/wipe_postgres_sb.sh
-        or run:
+    You can use the script placed in ``extras/wipe_postgres_sb.sh`` or run::
 
-         su psql
-         psql
-         create role USERNAME with createdb login encrypted password 'PASSWORD'; 
-         create database DBNAME with owner=USERNAME;
-         grant all privileges on database DBNAME to USERNAME;
-         \q  
+        su POSTGRES_USER
+        psql
+        create role USERNAME with createdb login encrypted password 'PASSWORD'; 
+        create database DBNAME with owner=USERNAME;
+        grant all privileges on database DBNAME to USERNAME;
+        \q  
 
-    3.3 Configure ASKBOT. Run:
+    The ``POSTGRES_USER`` variable can take different values according to the postgresql installation.
+    Under debian-squeeze, ``POSTGRES_USER`` is 'postgres'
+
+  - Configure ASKBOT. Run::
         
-        askbot-setup    
+        askbot-setup
 
-        The wizard will ask you some information.
+    The wizard will ask you some information.
         
-        Project folder: insert the path where you will deploy openaction (eg. /var/www/openaction)
-
+    Project folder 
+        insert the path where you will deploy openaction (eg. /var/www/openaction)
         THIS IS NOT THE PATH WHERE YOU CLONED OPENACTION
 
-        DB name, user name and password.
+    DB name, user name and password
+        insert the db name, the user and the password, as defined durin DB creation
 
-        DB domain: specify 'localhost', if you don't open-action will not connect to PostgreSQL
+    DB domain
+        specify ``'localhost'`` o ``'127.0.0.1'``, if you want open-action connect to PostgreSQL
 
-    3.4 Initialize the database
 
-         python manage.py syncdb 
-         python manage.py migrate askbot 
-         python manage.py migrate django_authopenid
-    
-        At this point you can test the installation by:
-
-         python manage.py runserver (check no error)  
-
-4.  Install requirements
-
-    pip install -r requirements.txt
-
-5.  Merge CLONEDIR/openaction/urls.py.dist with WEBDIR/urls.py
-
-6.  Merge CLONEDIR/openaction/openaction_settings.py with WEBDIR/settings.py
-
-7. Integrate openaction project
-
-     7.1 Link (ln command) the 'action' app into the 
-         Askbot installation root directory
-     
-        ln -s CLONEDIR/openaction/action/ WEBDIR/action
-
-     7.2 Link the 'base' app into the Askbot installation root directory
-     
-        ln -s CLONEDIR/openaction/base/ WEBDIR/base
-
-     7.3 Link the 'lib' app into the Askbot installation root directory
-     
-        ln -s CLONEDIR/openaction/lib/ WEBDIR/lib
-
-     7.4 Link the 'askbot_extensions' app into the 
-         Askbot installation root directory
-     
-        ln -s CLONEDIR/openaction/askbot_extensions/ WEBDIR/askbot_extensions
-
-     7.5 Link the 'oa_social_auth' app into the 
-         Askbot installation root directory
-     
-        ln -s CLONEDIR/openaction/oa_social_auth/ WEBDIR/oa_social_auth
+  - Install ``psycopg2`` python module, to talk to postgres::
         
-     7.6  
-        ln -s CLONEDIR/openaction/users WEBDIR/open_action/users
+        pip install psycopg2
 
-     7.7 
-        ln -s CLONEDIR/openaction/action_request WEBDIR/open_action/action_request
-     
-     7.8
-        ln -s CLONEDIR/openaction/oa_notification/ WEBDIR/open_action/oa_notification
+  - Initialize the database::
 
-     7.9
-        ln -s CLONEDIR/openaction/external_resource WEBDIR/open_action/external_resource
+        python manage.py syncdb 
+        python manage.py migrate askbot 
+        python manage.py migrate django_authopenid
 
-     7.10
-        ln -s CLONEDIR/openaction/organization WEBDIR/open_action/organization
+    Don't mind errors appearing during the migrations, if they're something like::
 
+        ... already exist ...
+    They shouldn't be a problem.
+
+    At this point you can test the installation by::
+
+        python manage.py runserver
+
+    Check that no errors are thrown
+
+* Install openaction requirements::
+
+    pip install -r CLONEDIR/openaction/requirements.txt
+
+* Merge ``CLONEDIR/openaction/urls.py.dist`` with ``WEBDIR/urls.py``::
+
+    cat CLONEDIR/openaction/urls.py.dist >> WEBDIR/urls.py
+
+* Merge CLONEDIR/openaction/openaction_settings.py with WEBDIR/settings.py
+
+* Integrate openaction project, by creating symlinks::
+
+    for l in action base lib askbot_extensions oa_social_auth users action_request oa_notification external_resource organization 
+    do 
+        ln -s CLONEDIR/openaction/$i WEBDIR/$i
+    done
+
+* Resync the DB::
+
+    python manage.py syncdb
 
 Now Open Action is installed correcty.
 
