@@ -1,7 +1,7 @@
 OpenAction installation guide
 =============================
 
-* Clone open-action repository in a no web-accessible folder::
+* Clone open-action repository in a web-unaccessible folder::
     
     git clone https://github.com/openpolis/open-action /usr/local/open-action-work
 
