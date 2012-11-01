@@ -237,17 +237,19 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         return response
 
-    #def _create_geoname(self, pk, name, kind):
+    def _test_edit_set(self, model, user=None, **kwargs):
 
-    #    Geoname.objects.get_or_create(pk=pk,
-    #        name=name,
-    #        kind=kind 
-    #    )
-
-    def _test_edit_set(self, geoname_set, updated_geoname_set, user=None, **kwargs):
-
-        old_ids = geoname_set[1:-1].split('|') 
-        updated_ids = [int(_id) for _id in  updated_geoname_set[1:-1].split('|')] 
+        if model == Geoname:
+            old_ids = kwargs['geoname_set'][1:-1].split('|')
+            geoname_set = kwargs['geoname_set']
+            updated_set = kwargs['updated_geoname_set']
+        elif model == Politician:
+            old_ids = kwargs['politician_set'][1:-1].split('|')
+            geoname_set = kwargs['geoname_set']
+            politician_set = kwargs['politician_set']
+            updated_set = kwargs['updated_politician_set']
+            
+        updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
         
         logged_in = self._login(user)
 
@@ -255,15 +257,29 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
+        threshold = 0
 
-        response = self._do_POST_create_action(
-            ajax=True,
-            title=title,
-            tagnames=tagnames,
-            text=text,
-            in_nomine=in_nomine,
-            geoname_set=geoname_set
-        )
+        if model == Geoname:
+            response = self._do_POST_create_action(
+                ajax=True,
+                title=title,
+                tagnames=tagnames,
+                text=text,
+                in_nomine=in_nomine,
+                geoname_set=geoname_set,
+                threshold=threshold
+            )
+        elif model == Politician:
+            response = self._do_POST_create_action(
+                ajax=True,
+                title=title,
+                tagnames=tagnames,
+                text=text,
+                in_nomine=in_nomine,
+                geoname_set=geoname_set,
+                politician_set=politician_set,
+                threshold=threshold
+            )
         print "-------------------response: %s" % response
 
         if logged_in:
@@ -284,11 +300,11 @@ class ActionViewTest(OpenActionViewTestCase):
             for _id in old_ids:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
-                    geoname_obj = Geoname.objects.get(external_resource=e_r)
+                    _obj = model.objects.get(external_resource=e_r)
                 except Action.DoesNotExist as e:
-                    geoname_obj = False
+                    _obj = False
 
-                self.assertTrue(geoname_obj)
+                self.assertTrue(_obj)
         else:
             self._check_for_redirect_response(response)
 
@@ -297,31 +313,47 @@ class ActionViewTest(OpenActionViewTestCase):
         #update action
         updated_text = "Gluglugluglugluglugluglu"
 
-        response = self._do_POST_update_action( 
-            action=action,
-            ajax=True,
-            title=title,
-            tags=tagnames,
-            summary=None,
-            text=updated_text,
-            geoname_set=updated_geoname_set,
-            in_nomine=in_nomine
-        ) 
-        #print "\n\n\nTest with old geo_names: %s and new geo_names: %s . Response: %s" % (geoname_set, updated_geoname_set, response)
+        if model == Geoname:
+            response = self._do_POST_update_action( 
+                action=action,
+                ajax=True,
+                title=title,
+                tags=tagnames,
+                text=updated_text,
+                in_nomine=in_nomine,
+                geoname_set=updated_set,
+                threshold=threshold
+            )
+        elif model == Politician:
+            response = self._do_POST_update_action( 
+                action=action,
+                ajax=True,
+                title=title,
+                tags=tagnames,
+                text=updated_text,
+                in_nomine=in_nomine,
+                politician_set=updated_set,
+                threshold=threshold
+            ) 
+        print "-------------------response: %s" % response
 
         if logged_in:
             self._check_for_redirect_response(response, is_ajax=True)
     
-            geoname_list = []
+            _list = []
             question_obj = action.question
 
             self.assertEqual(question_obj.text, updated_text)
-            for obj in action.geoname_set.all():
-                geoname_list.append(obj.pk)
-            geoname_list.sort()
+            if model == Geoname:
+                for obj in action.geoname_set.all():
+                    _list.append(int(obj.external_resource.ext_res_id))
+            if model == Politician:
+                for obj in action.politician_set.all():
+                    _list.append(int(obj.external_resource.ext_res_id))
+            _list.sort()
             #geoname_set = action.geoname_set.all()
             #geoname_list_ids = "|" + "|".join( str(pk) for pk in geoname_list ) + "|"
-            self.assertEqual(updated_ids, geoname_list)
+            self.assertEqual(updated_ids, _list)
         else:
             self._check_for_redirect_response(response)
 
@@ -931,28 +963,92 @@ class ActionViewTest(OpenActionViewTestCase):
         self._login()
 
         #TEST #1
-        self._test_edit_set("|1|", "|1|2|", user) 
+        self._test_edit_set(Geoname, 
+            user, 
+            geoname_set = '|145|185|',
+            updated_geoname_set = '|145|185|287|'
+        ) 
+
+    def test_update_action_add_politicians(self, user=None):
+
+        self._login()
+
+        #TEST #1
+        self._test_edit_set(Politician, 
+            user, 
+            geoname_set = '|145|185|287|', 
+            politician_set = '|332997|543662|',
+            updated_politician_set = '|332997|543662|626209|'
+        ) 
 
     def test_update_action_remove_geonames(self, user=None):
 
         self._login()
 
         #TEST #2
-        self._test_edit_set("|1|2|3|", "|1|2|", user) 
+        self._test_edit_set(Geoname, 
+            user, 
+            geoname_set = '|145|185|287|',
+            updated_geoname_set = '|145|185|'
+        ) 
+
+    def test_update_action_remove_politicians(self, user=None):
+
+        self._login()
+
+        #TEST #2
+        self._test_edit_set(Politician, 
+            user, 
+            geoname_set = '|145|185|287|', 
+            politician_set = '|332997|543662|626209|',
+            updated_politician_set = '|332997|543662|'
+        ) 
 
     def test_update_action_same_geonames(self, user=None):
 
         self._login()
 
         #TEST #3
-        self._test_edit_set("|1|2|", "|1|2|", user) 
+        self._test_edit_set(Geoname, 
+            user, 
+            geoname_set = '|145|185|287|',
+            updated_geoname_set = '|145|185|287|'
+        ) 
+
+    def test_update_action_same_politicians(self, user=None):
+
+        self._login()
+
+        #TEST #3
+        self._test_edit_set(Politician, 
+            user, 
+            geoname_set = '|145|185|287|', 
+            politician_set = '|332997|543662|626209|',
+            updated_politician_set = '|332997|543662|626209|'
+        ) 
 
     def test_update_action_not_overlapping_geonames(self, user=None):
 
         self._login()
 
         #TEST #4
-        self._test_edit_set("|1|3|5|", "|2|4|", user) 
+        self._test_edit_set(Geoname, 
+            user, 
+            geoname_set = '|145|287|',
+            updated_geoname_set = '|185|'
+        ) 
+
+    def test_update_action_not_overlapping_politicians(self, user=None):
+
+        self._login()
+
+        #TEST #4
+        self._test_edit_set(Politician, 
+            user, 
+            geoname_set = '|145|185|287|', 
+            politician_set = '|332997|543662|626209|',
+            updated_politician_set = '|543662|'
+        ) 
 
 #    def test_update_unauthenticated_action(self):
 #        #print "unauthenticated"
@@ -989,8 +1085,8 @@ class ActionViewTest(OpenActionViewTestCase):
             title=title,
             tags=tagnames,
             summary=None,
-            text=updated_text,
-            in_nomine=in_nomine
+            text=updated_text
+            #in_nomine=in_nomine
         ) 
         #print "-------------------response: %s" % response
 
@@ -1032,8 +1128,8 @@ class ActionViewTest(OpenActionViewTestCase):
             title=title,
             tags=tagnames,
             summary=None,
-            text=updated_text,
-            in_nomine=in_nomine
+            text=updated_text
+            #in_nomine=in_nomine
         ) 
         #print "-------------------response: %s" % response
 

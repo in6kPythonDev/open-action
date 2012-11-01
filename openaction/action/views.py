@@ -349,7 +349,6 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
         lookup = get_lookup(MAP_MODEL_SET_TO_CHANNEL[m2m_attr])
         m2m_value = lookup.get_objects(m2m_value)
-        print("\nJSON_DATA: %s\n" % m2m_value)
         for json_datum in m2m_value:
             try:
                 #print("\ndatum: %s" % json_datum)
@@ -376,11 +375,9 @@ class ActionView(FormView, views_support.LoginRequiredView):
             #was: datum = lookup.get_objects([_id])
             datum = lookup.get_objects([_id])[0]
             #print("\ndatum: %s" % datum)
-            #TODO: check ex_res_tupe. It changes depending to model
             e_r = ExternalResource.objects.create(
                 backend_name = lookup.get_backend_name(),
                 ext_res_id = _id,
-                #WAS: ext_res_type = datum['location_type']['name'],
                 #the resource tyope will be decided after
                 ext_res_type = "", 
                     #datum[
@@ -392,20 +389,25 @@ class ActionView(FormView, views_support.LoginRequiredView):
             e_r.save()
             ext_res.append(e_r)
 
-        print("\next_res: %s\n" % ext_res)
         for e_r in ext_res:
-            try:
-                instance = model.objects.get(external_resource=e_r)
-                #WAS: m2m_values.append(instance.pk)
+            instance = None
+            #TODO: for some reason the obj_res_id is unicode, while
+            # the e_r type is int !!
+            #WAS: instance = model.objects.get(external_resource=e_r)
+            for obj in model.objects.all():
+                if int(obj.external_resource.ext_res_id) == int(e_r.ext_res_id):
+                    instance = obj
+                    break
+            if instance:
                 m2m_values.append(instance)
-            except model.DoesNotExist as e:
+            #WAS: except model.DoesNotExist as e:
+            else:
 
                 instance = self.create_object(model,
                     e_r,
                     lookup,
                     **kwargs
                 )
-                #WAS: m2m_values.append(instance.pk)
                 m2m_values.append(instance)
 
         return m2m_values
@@ -443,24 +445,21 @@ class ActionView(FormView, views_support.LoginRequiredView):
         elif model == Politician:
             #GET json data to create politician
             #for elem in kwargs['politicians_jsons']:
-            print("\npoliticians_jsons: %s\n" % kwargs['politicians_jsons'])
-            print("\next_res_id: %s\n" % e_r.ext_res_id)
-            print("\ndatum: %s\n" % [elem for elem in kwargs['politicians_jsons'] if elem['politician_id'] == e_r.ext_res_id] )
+
+            #print("\nPOLITICIAN_JSONS: %s\n" % kwargs['politicians_jsons'])
+            #print("\nEXT_RES_ID: %s\n" % e_r.ext_res_id)
             datum = [elem for elem in kwargs['politicians_jsons'] 
-                if elem['politician_id'] == e_r.ext_res_id][0]
+                if int(elem['politician_id']) == int(e_r.ext_res_id)][0]
             first_name=datum['first_name']
             last_name=datum['last_name']
-            birth_date=datum['birth_date']
             charge = datum['charge']
             #saving e_r type
             e_r.ext_res_type = charge
             e_r.save()
 
-            print("\n\n%s\n\n: " % e_r.ext_res_id)
             instance = model(
                 first_name=first_name,
                 last_name=last_name,
-                birth_date=birth_date,
                 # place charge here, in the model too
                 charge=charge,  
                 external_resource=e_r
@@ -533,7 +532,10 @@ class ActionView(FormView, views_support.LoginRequiredView):
             }
                  
         """
- 
+        #print("\ncityreps_ids: %s\n" % cityreps_ids) 
+        #print("\npoliticians_ids: %s\n" % politicians_ids) 
+        #print("\nlookup: %s\n" % lookup) 
+
         politicians_data = []
         computed_threshold = 0
 
@@ -563,7 +565,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             for institution in INSTITUTIONS.keys():
                 if len(politicians_ids) == 0:
                     break
-                #iterating over inatitutions
+                #iterating over institutions
                 politicians_ids_to_check = []
                 for elem in politicians_ids: 
                     politicians_ids_to_check.append(elem)
@@ -735,7 +737,6 @@ class ActionCreateView(ActionView):
 
             if len(m2m_value) != 0:
 
-                print("\nATTR: %s\n" % m2m_attr)
                 m2m_values = self.get_m2m_values(
                     m2m_attr,
                     m2m_value,
@@ -785,6 +786,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         #theese tags will be replaced to the old ones
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
+        total_threshold = int(form.cleaned_data['threshold'])
 
         self.request.user.edit_question(
             question = question,
@@ -830,7 +832,12 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 model = Politician
                 kwargs = {}
                 #GET cityreps from locations ids
-                cityreps_ids = form.cleaned_data.get('geoname_set')
+                if form.cleaned_data['geoname_set']:
+                    cityreps_ids = form.cleaned_data.get('geoname_set')
+                else:
+                    cityreps_ids = [long(obj.external_resource.ext_res_id) 
+                        for obj in action.geonames]
+
                 # here we check that the threshold arrived is equal to
                 # the the sum of the thrershold delta of all the politicians
                 # the metho dwill raise exceptions if necessary
@@ -841,9 +848,11 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 #)
                 if type(m2m_value) != list:
                     m2m_value = [int(elem) for elem in m2m_value.strip('|').split('|')]
+
+                m2m_value_copy = [elem for elem in m2m_value]
                 kwargs['politicians_jsons'] = self.check_threshold(
                     cityreps_ids,
-                    m2m_value,
+                    m2m_value_copy,
                     get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
                     total_threshold
                 )
@@ -865,7 +874,6 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 ExternalResource objects. If not, create them.
                 
                 """
-                print("\nATTR: %s\n" % m2m_attr)
                 # Values can be overlapping or non overlapping
                 m2m_values_old = getattr(action, m2m_attr).all()
 

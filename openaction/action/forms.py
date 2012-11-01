@@ -69,16 +69,22 @@ class ActionForm(askbot_forms.AskForm):
 class EditActionForm(askbot_forms.EditQuestionForm):
     # TOASK: Ajaxification of fields autocomplete?
 
-    geoname_set = forms.ModelMultipleChoiceField(
-        queryset=Geoname.objects, label="Territori",
-        required=False
+    threshold = forms.CharField()
+
+    geoname_set = make_ajax_field(Action, 
+        label = "Territori",
+        model_fieldname='geoname_set',
+        channel='geonamechannel', 
+        help_text="Search for place by name or by city",
+        required=False,
     )
     category_set = forms.ModelMultipleChoiceField(
-        queryset=ActionCategory.objects, label="Categorie",
-        required=False
+        queryset=ActionCategory.objects, label=u"Ambiti",
+        required=False,
+        help_text=u"La scelta degli ambiti può aiutarti a definire meglio i prossimi passi"
     )
-    politician_set = forms.ModelMultipleChoiceField(
-        queryset=Politician.objects, label="Politici",
+    politician_set = forms.MultipleChoiceField(
+        label="Politici",
         required=False
     )
     media_set = forms.ModelMultipleChoiceField(

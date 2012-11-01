@@ -474,15 +474,14 @@ class Politician(models.Model):
 
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
-    birth_date = models.DateTimeField() 
     charge = models.CharField(max_length=128)
     external_resource = models.OneToOneField(ExternalResource)
 
     def __unicode__(self):
-        return u"%s (%s)" % (self.name, self.kind)
+        return u"%s (%s)" % (self.name, self.charge)
 
     class Meta:
-        unique_together = (('first_name','last_name','birth_date'),)
+        unique_together = (('first_name','last_name','charge'),)
 
 #--------------------------------------------------------------------------------
 

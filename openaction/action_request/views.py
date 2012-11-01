@@ -129,7 +129,7 @@ class ActionModerationRequestView(ActionRequestView):
         request_type = consts.REQUEST_TYPE_MODERATION
 
         sender.assert_can_request_moderation_for_action(sender, recipient, action)
-        print("RECIPIENT: %s", recipient)
+        #print("RECIPIENT: %s", recipient)
         action_request = ActionRequest(
             action=action,
             sender=sender,
@@ -207,13 +207,13 @@ class ActionRequestModerationProcessView(ActionRequestProcessView):
         action_request.is_processed = True
         #NOTE: weird behaivour. Cleaned data for accepted return a string 
         action_request.is_accepted = [False, True][accepted=='1']
-        print("action_request is accepted: %s" % action_request.is_accepted)
+        #print("action_request is accepted: %s" % action_request.is_accepted)
         action_request.answer_notes = answer_notes
         action_request.save()
 
 
         if action_request.is_accepted:
-            print("action.moderator_set.add(user)")
+            #print("action.moderator_set.add(user)")
             action.moderator_set.add(user)
 
         # For all same request_types ActionRequest --> 
