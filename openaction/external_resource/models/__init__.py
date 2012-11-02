@@ -23,8 +23,8 @@ class ExternalResource(models.Model, Resource):
 
     ext_res_id = models.CharField(max_length=1024, verbose_name="id della risorsa nel backend")
     ext_res_type = models.CharField(max_length=128, verbose_name="tipo della risorsa nel backend")
-    first_get_on = models.DateTimeField()
-    last_get_on = models.DateTimeField()
+    first_get_on = models.DateTimeField(auto_now_add=True)
+    last_get_on = models.DateTimeField(auto_now=True)
 
     # is_valid is used to force cache reload
     is_valid = models.BooleanField(default=True)
@@ -107,6 +107,12 @@ class ExternalResource(models.Model, Resource):
         
         return self.__backend
 
+
+    def update_external_data(self, json_datum):
+        #TODO Matteo
+        # invalidate redis (where it is?)
+        # get new data and make Redis cache it
+        # update data
 
 #-------------------------------------------------------------------------------------
 

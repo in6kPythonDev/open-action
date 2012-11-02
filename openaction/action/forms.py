@@ -6,6 +6,13 @@ from action.models import Action, Geoname, ActionCategory, Politician, Media
 from askbot.models import User
 
 from ajax_select import make_ajax_field
+from ajax_select import get_lookup
+
+MAP_FIELD_NAME_TO_CHANNEL = {
+    'geoname_set' : 'geonamechannel', 
+    'politician_set' : 'politicianchannel',
+    'media_set' : 'TODO',
+}
 
 class ActionForm(askbot_forms.AskForm):
     # TOASK: Ajaxification of fields autocomplete?
@@ -54,15 +61,42 @@ class ActionForm(askbot_forms.AskForm):
         if not orgs:
             self.hide_field('in_nomine')
 
+    def clean_geoname_set(self):
+
+        geoname_ids = self.cleaned_data['geoname_ids']
+
+        if geoname_ids:
+            field_name = 'geoname_set'
+            lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL[field_name])
+            json_values = lookup.get_objects(geoname_ids)
+
+            if len(json_values) != len(geoname_ids):
+                raise ValidationError("non tutti i geoname sono stati recuperati. Sono rimasti fuori...") #TODO: Matteo
+            
+        else:
+            json_values = []
+        
+        return json_values
+        
+
     def clean(self):
         """ overriding form clean """
         #dummy implementation
         cleaned_data = super(ActionForm, self).clean()
+
+        # set defaults
+        for field_name in ('geoname_set', 'category_set', 
+            'politician_set', 'media_set'):
+            if not cleaned_data.get(field_name):
+                cleaned_data[field_name] = []
+
         #print("\ncleaned data: %s\n" % cleaned_data)
         #print("\nerrors: %s\n" % self._errors)
+        #KLUDGE
         if 'politician_set' in self._errors.keys():
             cleaned_data['politician_set'] = self.data['politician_set']
             del self._errors['politician_set']
+
         return cleaned_data
 
 

@@ -19,7 +19,6 @@ from askbot_extensions import utils as askbot_extensions_utils
 from organization.models import Organization
 from external_resource.models import ExternalResource
 from external_resource import utils
-from ajax_select import get_lookup
 from action.lookups import GeonameDict
 
 from lib import views_support
@@ -30,24 +29,15 @@ import logging, datetime
 log = logging.getLogger(settings.PROJECT_NAME)
 
 
-MAP_MODEL_SET_TO_CHANNEL = {
-    'geoname_set' : 'geonamechannel', 
-    'politician_set' : 'politicianchannel',
-    'media_set' : 'TODO',
-}
-
 #NOTE: 'resource' here is meant as a pool of data. Are there better terms?
 MAP_RESOURCE_TO_CHANNEL = {
     'cityrep' : 'cityrepchannel'
 }
 
-#geographical places
-GEO_LOCALIZATIONS = {
+INSTITUTIONS = {
     'comune' : ['consiglio','giunta',],
     'provincia' : ['consiglio','giunta',],
     'regione' : ['consiglio','giunta',],
-}
-INSTITUTIONS = {
     'senato' : ['representatives',],
     'europarl' : ['representatives',],
     'camera' : ['representatives',],
@@ -498,25 +488,21 @@ class ActionView(FormView, views_support.LoginRequiredView):
         if e_r.ext_res_type != json_datum['location_type']['name']:
             e_r.ext_res_id = json_datum['location_type']['name']
         e_r.last_get_on = datetime.datetime.now()
-        
+            
         e_r.save()
 
         return
 
-    def check_threshold(self, 
-        cityreps_ids,
-        politicians_ids,
-        lookup,
-        total_threshold,
-        **kwargs
-    ):
+    def check_threshold(self, cityreps_ids, politicians_ids, 
+        total_threshold, **kwargs):
+
         """ Get information needed to compute the chosen politicians 
         threshold deltas.
 
         Search politicians ids in each cityrep connected to the locations
         until all the data needed is collected.
 
-        The json is strcutured like this:
+        The json is structured like this:
 
             "city_representatives" {
                 <geographic location>:{
@@ -536,6 +522,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
         #print("\npoliticians_ids: %s\n" % politicians_ids) 
         #print("\nlookup: %s\n" % lookup) 
 
+        lookup = get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
+
         politicians_data = []
         computed_threshold = 0
 
@@ -544,31 +532,13 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 break
             cityrep = lookup.get_objects([cityreps_id])[0]['city_representatives']
 
-            for geo_loc in GEO_LOCALIZATIONS.keys():
-                if len(politicians_ids) == 0:
-                    break
-                politicians_ids_to_check = []
-                for elem in politicians_ids:
-                    politicians_ids_to_check.append(elem)
-                #iterating over geo localizations
-                for politician_id in politicians_ids_to_check:
-                    politician_data, threshold_delta = self.check_politician(
-                        cityrep[geo_loc], 
-                        politician_id,
-                        politicians_ids,
-                        geo_loc=geo_loc
-                    )
-                    if politician_data and politician_data != []:
-                        politicians_data.append(politician_data)
-                    computed_threshold = computed_threshold + threshold_delta
-
             for institution in INSTITUTIONS.keys():
                 if len(politicians_ids) == 0:
                     break
-                #iterating over institutions
                 politicians_ids_to_check = []
                 for elem in politicians_ids: 
                     politicians_ids_to_check.append(elem)
+                #iterating over institutions
                 for politician_id in politicians_ids_to_check:
                     politician_data, threshold_delta = self.check_politician(
                         cityrep[institution], 
@@ -586,12 +556,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
             
         return politicians_data
 
-    def check_politician(self, 
-        politicians, 
-        politician_id, 
-        politicians_ids,
-        **kwargs
-        ):
+    def check_politician(self, politicians, politician_id, politicians_ids, institution):
+
         """ Check whether a certain politician is contained into a given set 
         of politicians 
 
@@ -600,41 +566,27 @@ class ActionView(FormView, views_support.LoginRequiredView):
         * politician_ids: set of politicians
         """ 
         
-        politician_data = []
+        # retrieve charge kind list: "consiglio", "giunta", "representatives", ...
+        institution_charge_kind_list = INSTITUTIONS.get(institution)
+        politician_data = None
+        for institution_charge_kind in institution_charge_kind_list:
 
-        if kwargs.get('geo_loc'):
-            geo_loc = kwargs['geo_loc']
-            elements = politicians[GEO_LOCALIZATIONS.get(geo_loc)[0]]
-            elements.extend(politicians[GEO_LOCALIZATIONS.get(geo_loc)[1]])
+            if politician_data is not None:
+                break
 
-            if elements is None:
-                elements = []
-
-            for elem in elements:
-                if elem['politician_id'] == politician_id:
-                    politician_data = elem
-                    break
-            
-            if politician_data:
-                politicians_ids.remove(politician_id)
-                #TODO: Computing threshold delta
-                threshold_delta = 0
-                return politician_data, threshold_delta
-
-        elif kwargs.get('institution'):
-            institution = kwargs['institution']
-            for elem in politicians[INSTITUTIONS.get(institution)[0]]:
+            for elem in politicians[institution_charge_kind]:
                 if elem['politician_id'] == politician_id:
                     politician_data = elem
                     break
 
-            if politician_data:
-                politicians_ids.remove(politician_id)
-                #TODO: Computing threshold delta
-                threshold_delta = 0
-                return politician_data, threshold_delta
+        if politician_data:
+            politicians_ids.remove(politician_id)
+            #TODO: Computing threshold delta
+            threshold_delta = 0
+            return politician_data, threshold_delta
 
-        return politician_data,0
+        #TODO: else??!?!
+
                 
 class ActionCreateView(ActionView):
     """Create a new Action.
@@ -682,15 +634,78 @@ class ActionCreateView(ActionView):
             in_nomine_pk = int(in_nomine[4:])
             log.debug("IN_NOMINE %s _PK %s" % (in_nomine[:3], in_nomine[4:]))
             action.in_nomine_org = Organization.objects.get(pk=in_nomine_pk)
+            # We update "in_nomine_org" and no other action parameters below,
+            # so it is safe and good to "save" here.
             action.save()
 
-        for m2m_attr in (
-            'category_set',
-        ):
-            m2m_value = form.cleaned_data.get(m2m_attr)
+        categories = form.cleaned_data['category_set']
+        action.category_set.add(*categories)
 
-            if len(m2m_value) != 0:
-                getattr(action, m2m_attr).add(*m2m_value)
+        geoname_ids = form.cleaned_data['geoname_set']
+        #COMMENT WARNING TODO: we should have a specific GeonameField
+        # which has a clean() method that does the following kludge
+        # The same is valid for other m2m fields below
+        geonames = self.get_or_create_geonames(geoname_ids)
+        action.geoname_set.add(*geonames)
+        
+        politicians = form.cleaned_data['politician_set']
+        #TODO: Matteo 
+        action.politician_set.add(*politicians)
+        
+        medias = form.cleaned_data['media_set']
+        #TODO: Matteo 
+        action.media_set.add(*medias)
+        
+    def get_or_create_geonames(self, geoname_list):
+
+        """ Here we have to check if there are ExternalResource
+        objects with pk equal to the provided ids.
+        If there are ids that do not match with any ExternalResource
+        object pk, than create them. 
+        If the ExternalResource which pks match with some ids was
+        created too time ago, then check the openpolis Json to see
+        if there had been some changes.
+        """
+
+        geonames = []
+
+        for json_datum in geoname_list:
+
+            #print("\ndatum: %s" % json_datum)
+            ext_res_id = json_datum['id']
+            ext_res_type = json_datum['location_type']['name']
+
+            try:
+                geoname = Geoname.objects.get(
+                    external_resource.ext_res_id=ext_res_id,
+                    external_resource.ext_res_type=ext_res_type
+                )
+            except Geoname.DoesNotExist as e:
+
+                e_r = ExternalResource.objects.create(
+                    ext_res_id = ext_res_id, 
+                    ext_res_type = ext_res_type,
+                    backend_name = lookup.get_backend_name(),
+                    # MANCA IL DATA! TODO Matteo: valutare
+                )
+                geoname = Geoname.objects.create(
+                    external_resource = e_r
+                    #TODO: Matteo: altricampi? mi pare di no
+                )
+
+            else:
+                last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
+                if last_get_delta.minutes > Geoname.MAX_CACHE_VALID_MINUTES:
+                    #TODO Matteo: not a priority
+                    geoname.external_resource.update_external_data(json_datum)
+
+            geonames.append(geoname)
+
+        return geonames
+
+
+
+    #--------------------------------------------------------------------------------
 
         for m2m_attr in (
             'geoname_set', 
@@ -727,7 +742,6 @@ class ActionCreateView(ActionView):
                 kwargs['politicians_jsons'] = self.check_threshold(
                     cityreps_ids,
                     m2m_value_copy,
-                    get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
                     total_threshold
                 )
                 kwargs['id_prefix'] = 'content_'
@@ -735,6 +749,7 @@ class ActionCreateView(ActionView):
                 kwargs = {}
                 model = Media
 
+            #TODO geoname
             if len(m2m_value) != 0:
 
                 m2m_values = self.get_m2m_values(
@@ -853,7 +868,6 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 kwargs['politicians_jsons'] = self.check_threshold(
                     cityreps_ids,
                     m2m_value_copy,
-                    get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
                     total_threshold
                 )
                 kwargs['id_prefix'] = 'content_'
