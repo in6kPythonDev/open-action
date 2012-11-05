@@ -15,9 +15,7 @@ MAP_FIELD_NAME_TO_CHANNEL = {
     'media_set' : 'TODO',
 }
 
-MAP_DATA_SOURCE_TO_CHANNEL = {
-    'cityrep' : 'cityrepchannel'
-}
+CITYREP_CHANNEL_NAME = 'cityrepchannel'
 
 INSTITUTIONS = {
     'comune' : ['consiglio','giunta',],
@@ -107,8 +105,7 @@ class ActionForm(askbot_forms.AskForm):
         politician_ids_copy = list(politician_ids)
 
         if politician_ids:
-            data_source = 'cityrep'
-            cityrep_lookup = get_lookup(MAP_DATA_SOURCE_TO_CHANNEL[data_source])
+            cityrep_lookup = get_lookup(CITYREP_CHANNEL_NAME)
 
             for cityrep_id in geoname_ids:
                 if not len(politician_ids_copy):
@@ -118,7 +115,7 @@ class ActionForm(askbot_forms.AskForm):
                     cityrep_id,
                     cityrep_lookup
                 )
-                print("\n\nfound_ids: %s\n" % found_ids)
+                #print("\n\nfound_ids: %s\n" % found_ids)
                 for politician_id in found_ids:
                     politician_ids_copy.remove(politician_id)
                 
@@ -142,12 +139,12 @@ class ActionForm(askbot_forms.AskForm):
 
         cityrep_data = lookup.get_objects([cityrep_id])[0]['city_representatives']
 
-        for institution in INSTITUTIONS.keys():
-            institution_kinds = INSTITUTIONS.get(institution)
+        for institution, institution_kinds in INSTITUTIONS.items():
+
             for inst_kind in institution_kinds:
-                if not len(cityrep_data[institution][inst_kind]):
-                    continue
-                for politician in cityrep_data[institution][inst_kind]:
+                cityreps_of_kind = cityrep_data[institution][inst_kind]
+
+                for politician in cityreps_of_kind:
                     if politician['politician_id'] in politician_ids:
                         politicians.append(politician['politician_id'])
 
@@ -162,9 +159,9 @@ class ActionForm(askbot_forms.AskForm):
         total_threshold = int(cleaned_data['threshold'])
 
         for datum in politician_data:
-            threshold_delta = 0
+
             #compute politician threshold
-            self.compute_threshold_delta(datum)
+            threshold_delta = self.compute_threshold_delta(datum)
             computed_threshold = computed_threshold + threshold_delta
 
         if computed_threshold != total_threshold:
