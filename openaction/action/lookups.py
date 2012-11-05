@@ -91,6 +91,12 @@ class GeonameLookup(LookupChannel):
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
 
+    def get_url(self, _id=None):
+
+        if _id:
+            return "locations/%s/" % _id
+        return "locations/"
+
 class CityrepLookup(LookupChannel):
 
     def get_objects(self, ids):

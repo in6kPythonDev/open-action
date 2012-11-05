@@ -107,12 +107,14 @@ class ExternalResource(models.Model, Resource):
         
         return self.__backend
 
+    def update_external_data(self, lookup, _id, datum):
+        """ Invalidate redis cache and update it with new data """
 
-    def update_external_data(self, json_datum):
-        #TODO Matteo
-        # invalidate redis (where it is?)
-        # get new data and make Redis cache it
-        # update data
+        url = "%s%s" % (self.backend.base_url,lookup.get_url(_id))
+        self.backend.save_in_cache(
+            url,
+            datum
+        )
 
 #-------------------------------------------------------------------------------------
 

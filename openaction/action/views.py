@@ -20,6 +20,7 @@ from organization.models import Organization
 from external_resource.models import ExternalResource
 from external_resource import utils
 from action.lookups import GeonameDict
+from ajax_select import get_lookup
 
 from lib import views_support
 
@@ -34,13 +35,10 @@ MAP_RESOURCE_TO_CHANNEL = {
     'cityrep' : 'cityrepchannel'
 }
 
-INSTITUTIONS = {
-    'comune' : ['consiglio','giunta',],
-    'provincia' : ['consiglio','giunta',],
-    'regione' : ['consiglio','giunta',],
-    'senato' : ['representatives',],
-    'europarl' : ['representatives',],
-    'camera' : ['representatives',],
+MAP_FIELD_NAME_TO_CHANNEL = {
+    'geoname_set' : 'geonamechannel', 
+    'politician_set' : 'politicianchannel',
+    'media_set' : 'TODO',
 }
 
 class ActionDetailView(DetailView):
@@ -289,9 +287,9 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
     form_class = forms.ActionForm
     
-    #@method_decorator(askbot_decorators.check_spam('text'))
-    #def dispatch(self, request, *args, **kwargs):
-    #    return super(ActionView, self).dispatch(request, *args, **kwargs)
+    #KO: @method_decorator(askbot_decorators.check_spam('text'))
+    #KO: def dispatch(self, request, *args, **kwargs):
+    #KO: return super(ActionView, self).dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         return {
@@ -317,149 +315,256 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('threshold')
         return form
  
-    @transaction.commit_on_success
-    def get_m2m_values(self, 
-            m2m_attr, 
-            m2m_value, 
-            model,
-            **kwargs
-    ):
-        """ Here we have to check if there are ExternalResource
-        objects with pk equal to the provided ids.
-        If there are ids that do not match with any ExternalResource
-        object pk, than create them. 
-        If the ExternalResource which pks match with some ids was
-        created too time ago, then check the openpolis Json to see
-        if there had been some changes.
+    def get_or_create_geonames(self, geoname_list):
+        """ Here we have to check if there exist Geonames with pk into
+        the provided ids.
+
+        If there are ids that do not match with any of the existing Geoname
+        pk, than create new Geonames togheter with their ExternalResource. 
+        If there are some existing ExternalResource which was created too time 
+        ago, then check the openpolis API to see if there had been some changes.
         """
 
-        m2m_values = []
-        ext_res = []
-        new_ext_res = []
+        geonames = []
+        lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL['geoname_set'])
 
-        lookup = get_lookup(MAP_MODEL_SET_TO_CHANNEL[m2m_attr])
-        m2m_value = lookup.get_objects(m2m_value)
-        for json_datum in m2m_value:
+        for datum in geoname_list:
+
+            #print("\ndatum: %s" % json_datum)
+            ext_res_id = datum['id']
+            ext_res_type = datum['location_type']['name']
+
             try:
-                #print("\ndatum: %s" % json_datum)
-                _id = json_datum['%s%s%s' % (
-                    kwargs.get('id_prefix',''),
-                    'id',
-                    kwargs.get('id_suffix','')
-                    )
-                ]
-                e_r = ExternalResource.objects.get(pk=_id)
-                if (datetime.datetime.now() - e_r.last_get_on).days < settings.MAX_TIME_ELAPSED:
-                    ext_res.append(e_r)
-                else:
-                    #WAS: datum = lookup.get_objects([_id])
-                    datum = lookup.get_objects([_id])[0]
-                    self.update_external_resource(e_r, datum)
-                    ext_res.append(e_r)
-            except ExternalResource.DoesNotExist as e:
-                #array of ExternalResource objects to create
-                new_ext_res.append(_id)
-
-        for _id in new_ext_res:
-            #Here i should GET json data and create object
-            #was: datum = lookup.get_objects([_id])
-            datum = lookup.get_objects([_id])[0]
-            #print("\ndatum: %s" % datum)
-            e_r = ExternalResource.objects.create(
-                backend_name = lookup.get_backend_name(),
-                ext_res_id = _id,
-                #the resource tyope will be decided after
-                ext_res_type = "", 
-                    #datum[
-                    #kwargs['ext_res_type']['type']][
-                    #kwargs['ext_res_type']['name']],
-                first_get_on = datetime.datetime.now(),
-                last_get_on = datetime.datetime.now()
-            )
-            e_r.save()
-            ext_res.append(e_r)
-
-        for e_r in ext_res:
-            instance = None
-            #TODO: for some reason the obj_res_id is unicode, while
-            # the e_r type is int !!
-            #WAS: instance = model.objects.get(external_resource=e_r)
-            for obj in model.objects.all():
-                if int(obj.external_resource.ext_res_id) == int(e_r.ext_res_id):
-                    instance = obj
-                    break
-            if instance:
-                m2m_values.append(instance)
-            #WAS: except model.DoesNotExist as e:
-            else:
-
-                instance = self.create_object(model,
-                    e_r,
-                    lookup,
-                    **kwargs
+                geoname = Geoname.objects.get(
+                    external_resource__ext_res_id=ext_res_id,
+                    external_resource__ext_res_type=ext_res_type
                 )
-                m2m_values.append(instance)
+            except Geoname.DoesNotExist as e:
+                name = datum['name']
+                kind = ext_res_type
 
-        return m2m_values
+                e_r = ExternalResource.objects.create(
+                    ext_res_id = ext_res_id, 
+                    ext_res_type = ext_res_type,
+                    backend_name = lookup.get_backend_name(),
+                )
+                geoname = Geoname.objects.create(
+                    name = name,
+                    kind = kind,
+                    external_resource = e_r
+                )
+                #TO REMOVE: just for testing purposes
+                #geoname.external_resource.update_external_data(
+                #    lookup,
+                #    ext_res_id,
+                #    datum
+                #)
 
-    @transaction.commit_on_success
-    def create_object(self,
-        model,
-        e_r,
-        lookup,
-        **kwargs
-    ):
-        """ Create object starting from json data """
-        if model == Geoname:
-            """ Check if there are Geoname objects linked to the found
-            ExternalResource objects. If not, create them. """
-        
-            #Here i should GET json data to create obj
-            datum = lookup.get_objects([e_r.ext_res_id])[0]
-            kind=datum[
-                kwargs['ext_res_type']['type']][
-                kwargs['ext_res_type']['name']]
+            else:
+                last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
+                if last_get_delta.minutes > Geoname.MAX_CACHE_VALID_MINUTES:
+                    #TODO Matteo:
+                    geoname.external_resource.update_external_data(datum)
 
-            #saving e_r type
-            e_r.ext_res_type = kind
-            e_r.save()
+            geonames.append(geoname)
 
-            instance = model(
-                #WAS: name=datum[kwargs['ext_res_name']],
-                name=datum[kwargs['name']],
-                #WAS: kind=datum['location_type']['name'],
-                kind=kind,
-                external_resource=e_r
-            )
-            instance.save()
-        elif model == Politician:
-            #GET json data to create politician
-            #for elem in kwargs['politicians_jsons']:
+        return geonames
 
-            #print("\nPOLITICIAN_JSONS: %s\n" % kwargs['politicians_jsons'])
-            #print("\nEXT_RES_ID: %s\n" % e_r.ext_res_id)
-            datum = [elem for elem in kwargs['politicians_jsons'] 
-                if int(elem['politician_id']) == int(e_r.ext_res_id)][0]
-            first_name=datum['first_name']
-            last_name=datum['last_name']
-            charge = datum['charge']
-            #saving e_r type
-            e_r.ext_res_type = charge
-            e_r.save()
+    def get_or_create_politicians(self, politician_list):
+        """ Here we have to check if there exist Politician objects with pk into
+        the provided ids.
 
-            instance = model(
-                first_name=first_name,
-                last_name=last_name,
-                # place charge here, in the model too
-                charge=charge,  
-                external_resource=e_r
-            )
-            instance.save()
-        elif model == Media:
-            #TODO
-            instance = None
+        If there are ids that do not match with any of the existing Politician
+        pks, than create new Geonames togheter with their ExternalResource. 
+        If there are some existing ExternalResource which was created too time 
+        ago, then check the openpolis API to see if there had been some changes.
+        """
 
-        return instance
+        politicians = []
+        lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL['politician_set'])
+
+        for datum in politician_list:
+
+            #print("\ndatum: %s" % json_datum)
+            ext_res_id = datum['content_id']
+            ext_res_type = datum['institution_charges']['current'][0]['charge_type']
+
+            try:
+                politician = Politician.objects.get(
+                    external_resource__ext_res_id=ext_res_id,
+                    external_resource__ext_res_type=ext_res_type
+                )
+            except Politician.DoesNotExist as e:
+
+                first_name = datum['first_name']
+                last_name = datum['last_name']
+                charge = ext_res_type
+
+                e_r = ExternalResource.objects.create(
+                    ext_res_id = ext_res_id, 
+                    ext_res_type = ext_res_type,
+                    backend_name = lookup.get_backend_name(),
+                    # MANCA IL DATA! TODO Matteo: valutare
+                )
+                politician = Politician.objects.create(
+                    first_name=first_name,
+                    last_name=last_name,
+                    external_resource = e_r
+                )
+
+            else:
+                last_get_delta = datetime.datetime.now() - politician.external_resource.last_get_on
+                if last_get_delta.minutes > Politician.MAX_CACHE_VALID_MINUTES:
+                    #TODO Matteo: not a priority
+                    politician.external_resource.update_external_data(datum)
+
+            politicians.append(politician)
+
+        return politicians
+    
+    #@transaction.commit_on_success
+    #def get_m2m_values(self, 
+    #        m2m_attr, 
+    #        m2m_value, 
+    #        model,
+    #        **kwargs
+    #):
+    #    """ Here we have to check if there are ExternalResource
+    #    objects with pk equal to the provided ids.
+    #    If there are ids that do not match with any ExternalResource
+    #    object pk, than create them. 
+    #    If the ExternalResource which pks match with some ids was
+    #    created too time ago, then check the openpolis Json to see
+    #    if there had been some changes.
+    #    """
+
+    #    m2m_values = []
+    #    ext_res = []
+    #    new_ext_res = []
+
+    #    lookup = get_lookup(MAP_MODEL_SET_TO_CHANNEL[m2m_attr])
+    #    m2m_value = lookup.get_objects(m2m_value)
+    #    for json_datum in m2m_value:
+    #        try:
+    #            #print("\ndatum: %s" % json_datum)
+    #            _id = json_datum['%s%s%s' % (
+    #                kwargs.get('id_prefix',''),
+    #                'id',
+    #                kwargs.get('id_suffix','')
+    #                )
+    #            ]
+    #            e_r = ExternalResource.objects.get(pk=_id)
+    #            if (datetime.datetime.now() - e_r.last_get_on).days < settings.MAX_TIME_ELAPSED:
+    #                ext_res.append(e_r)
+    #            else:
+    #                #WAS: datum = lookup.get_objects([_id])
+    #                datum = lookup.get_objects([_id])[0]
+    #                self.update_external_resource(e_r, datum)
+    #                ext_res.append(e_r)
+    #        except ExternalResource.DoesNotExist as e:
+    #            #array of ExternalResource objects to create
+    #            new_ext_res.append(_id)
+
+    #    for _id in new_ext_res:
+    #        #Here i should GET json data and create object
+    #        #was: datum = lookup.get_objects([_id])
+    #        datum = lookup.get_objects([_id])[0]
+    #        #print("\ndatum: %s" % datum)
+    #        e_r = ExternalResource.objects.create(
+    #            backend_name = lookup.get_backend_name(),
+    #            ext_res_id = _id,
+    #            #the resource tyope will be decided after
+    #            ext_res_type = "", 
+    #                #datum[
+    #                #kwargs['ext_res_type']['type']][
+    #                #kwargs['ext_res_type']['name']],
+    #            first_get_on = datetime.datetime.now(),
+    #            last_get_on = datetime.datetime.now()
+    #        )
+    #        e_r.save()
+    #        ext_res.append(e_r)
+
+    #    for e_r in ext_res:
+    #        instance = None
+    #        #TODO: for some reason the obj_res_id is unicode, while
+    #        # the e_r type is int !!
+    #        #WAS: instance = model.objects.get(external_resource=e_r)
+    #        for obj in model.objects.all():
+    #            if int(obj.external_resource.ext_res_id) == int(e_r.ext_res_id):
+    #                instance = obj
+    #                break
+    #        if instance:
+    #            m2m_values.append(instance)
+    #        #WAS: except model.DoesNotExist as e:
+    #        else:
+
+    #            instance = self.create_object(model,
+    #                e_r,
+    #                lookup,
+    #                **kwargs
+    #            )
+    #            m2m_values.append(instance)
+
+    #    return m2m_values
+
+    #@transaction.commit_on_success
+    #def create_object(self,
+    #    model,
+    #    e_r,
+    #    lookup,
+    #    **kwargs
+    #):
+    #    """ Create object starting from json data """
+    #    if model == Geoname:
+    #        """ Check if there are Geoname objects linked to the found
+    #        ExternalResource objects. If not, create them. """
+    #    
+    #        #Here i should GET json data to create obj
+    #        datum = lookup.get_objects([e_r.ext_res_id])[0]
+    #        kind=datum[
+    #            kwargs['ext_res_type']['type']][
+    #            kwargs['ext_res_type']['name']]
+
+    #        #saving e_r type
+    #        e_r.ext_res_type = kind
+    #        e_r.save()
+
+    #        instance = model(
+    #            #WAS: name=datum[kwargs['ext_res_name']],
+    #            name=datum[kwargs['name']],
+    #            #WAS: kind=datum['location_type']['name'],
+    #            kind=kind,
+    #            external_resource=e_r
+    #        )
+    #        instance.save()
+    #    elif model == Politician:
+    #        #GET json data to create politician
+    #        #for elem in kwargs['politicians_jsons']:
+
+    #        #print("\nPOLITICIAN_JSONS: %s\n" % kwargs['politicians_jsons'])
+    #        #print("\nEXT_RES_ID: %s\n" % e_r.ext_res_id)
+    #        datum = [elem for elem in kwargs['politicians_jsons'] 
+    #            if int(elem['politician_id']) == int(e_r.ext_res_id)][0]
+    #        first_name=datum['first_name']
+    #        last_name=datum['last_name']
+    #        charge = datum['charge']
+    #        #saving e_r type
+    #        e_r.ext_res_type = charge
+    #        e_r.save()
+
+    #        instance = model(
+    #            first_name=first_name,
+    #            last_name=last_name,
+    #            # place charge here, in the model too
+    #            charge=charge,  
+    #            external_resource=e_r
+    #        )
+    #        instance.save()
+    #    elif model == Media:
+    #        #TODO
+    #        instance = None
+
+    #    return instance
 
     #def get_politician_data(self, 
     #    politicians_jsons, 
@@ -479,113 +584,113 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
     #    return None
 
-    @transaction.commit_on_success
-    def update_external_resource(self, e_r, json_datum):
-        """ Update external resource with the data get from the json """
-        #TODO: change implementation? problably....
-        if e_r.ext_res_id != json_datum['id']:
-            e_r.ext_res_id = json_datum['id']
-        if e_r.ext_res_type != json_datum['location_type']['name']:
-            e_r.ext_res_id = json_datum['location_type']['name']
-        e_r.last_get_on = datetime.datetime.now()
-            
-        e_r.save()
+    #@transaction.commit_on_success
+    #def update_external_resource(self, e_r, json_datum):
+    #    """ Update external resource with the data get from the json """
+    #    #TODO: change implementation? problably....
+    #    if e_r.ext_res_id != json_datum['id']:
+    #        e_r.ext_res_id = json_datum['id']
+    #    if e_r.ext_res_type != json_datum['location_type']['name']:
+    #        e_r.ext_res_id = json_datum['location_type']['name']
+    #    e_r.last_get_on = datetime.datetime.now()
+    #        
+    #    e_r.save()
 
-        return
+    #    return
 
-    def check_threshold(self, cityreps_ids, politicians_ids, 
-        total_threshold, **kwargs):
+    #def check_threshold(self, cityreps_ids, politicians_ids, 
+    #    total_threshold, **kwargs):
 
-        """ Get information needed to compute the chosen politicians 
-        threshold deltas.
+    #    """ Get information needed to compute the chosen politicians 
+    #    threshold deltas.
 
-        Search politicians ids in each cityrep connected to the locations
-        until all the data needed is collected.
+    #    Search politicians ids in each cityrep connected to the locations
+    #    until all the data needed is collected.
 
-        The json is structured like this:
+    #    The json is structured like this:
 
-            "city_representatives" {
-                <geographic location>:{
-                    "consiglio":[]
-                    "giunta":[]
-                }
-                ...
-                <institution>:{
-                    "constituency":""
-                    "representatives":[]
-                }
-                ...
-            }
-                 
-        """
-        #print("\ncityreps_ids: %s\n" % cityreps_ids) 
-        #print("\npoliticians_ids: %s\n" % politicians_ids) 
-        #print("\nlookup: %s\n" % lookup) 
+    #        "city_representatives" {
+    #            <geographic location>:{
+    #                "consiglio":[]
+    #                "giunta":[]
+    #            }
+    #            ...
+    #            <institution>:{
+    #                "constituency":""
+    #                "representatives":[]
+    #            }
+    #            ...
+    #        }
+    #             
+    #    """
+    #    #print("\ncityreps_ids: %s\n" % cityreps_ids) 
+    #    #print("\npoliticians_ids: %s\n" % politicians_ids) 
+    #    #print("\nlookup: %s\n" % lookup) 
 
-        lookup = get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
+    #    lookup = get_lookup(MAP_RESOURCE_TO_CHANNEL['cityrep']),
 
-        politicians_data = []
-        computed_threshold = 0
+    #    politicians_data = []
+    #    computed_threshold = 0
 
-        for cityreps_id in cityreps_ids:
-            if len(politicians_ids) == 0:
-                break
-            cityrep = lookup.get_objects([cityreps_id])[0]['city_representatives']
+    #    for cityreps_id in cityreps_ids:
+    #        if len(politicians_ids) == 0:
+    #            break
+    #        cityrep = lookup.get_objects([cityreps_id])[0]['city_representatives']
 
-            for institution in INSTITUTIONS.keys():
-                if len(politicians_ids) == 0:
-                    break
-                politicians_ids_to_check = []
-                for elem in politicians_ids: 
-                    politicians_ids_to_check.append(elem)
-                #iterating over institutions
-                for politician_id in politicians_ids_to_check:
-                    politician_data, threshold_delta = self.check_politician(
-                        cityrep[institution], 
-                        politician_id,
-                        politicians_ids,
-                        institution=institution
-                    )
-                    if politician_data and politician_data != []:
-                        politicians_data.append(politician_data)
-                    computed_threshold = computed_threshold + threshold_delta
+    #        for institution in INSTITUTIONS.keys():
+    #            if len(politicians_ids) == 0:
+    #                break
+    #            politicians_ids_to_check = []
+    #            for elem in politicians_ids: 
+    #                politicians_ids_to_check.append(elem)
+    #            #iterating over institutions
+    #            for politician_id in politicians_ids_to_check:
+    #                politician_data, threshold_delta = self.check_politician(
+    #                    cityrep[institution], 
+    #                    politician_id,
+    #                    politicians_ids,
+    #                    institution=institution
+    #                )
+    #                if politician_data and politician_data != []:
+    #                    politicians_data.append(politician_data)
+    #                computed_threshold = computed_threshold + threshold_delta
 
-        if computed_threshold != total_threshold:
-            #TODO: define exception
-            raise Exception
-            
-        return politicians_data
+    #    if computed_threshold != total_threshold:
+    #        #TODO: define exception
+    #        raise Exception
+    #        
+    #    return politicians_data
 
-    def check_politician(self, politicians, politician_id, politicians_ids, institution):
+    #def check_politician(self, politicians, politician_id, politicians_ids, institution):
 
-        """ Check whether a certain politician is contained into a given set 
-        of politicians 
+    #    """ Check whether a certain politician is contained into a given set 
+    #    of politicians 
 
-        * politicians: json data 
-        * politician_id: id of the politician to check
-        * politician_ids: set of politicians
-        """ 
-        
-        # retrieve charge kind list: "consiglio", "giunta", "representatives", ...
-        institution_charge_kind_list = INSTITUTIONS.get(institution)
-        politician_data = None
-        for institution_charge_kind in institution_charge_kind_list:
+    #    * politicians: json data 
+    #    * politician_id: id of the politician to check
+    #    * politician_ids: set of politicians
+    #    """ 
+    #    
+    #    # retrieve charge kind list: "consiglio", "giunta", "representatives", ...
+    #    institution_charge_kind_list = INSTITUTIONS.get(institution)
+    #    politician_data = None
+    #    for institution_charge_kind in institution_charge_kind_list:
 
-            if politician_data is not None:
-                break
+    #        if politician_data is not None:
+    #            break
 
-            for elem in politicians[institution_charge_kind]:
-                if elem['politician_id'] == politician_id:
-                    politician_data = elem
-                    break
+    #        for elem in politicians[institution_charge_kind]:
+    #            if elem['politician_id'] == politician_id:
+    #                politician_data = elem
+    #                break
 
-        if politician_data:
-            politicians_ids.remove(politician_id)
-            #TODO: Computing threshold delta
-            threshold_delta = 0
-            return politician_data, threshold_delta
+    #    if politician_data:
+    #        politicians_ids.remove(politician_id)
+    #        #TODO: Computing threshold delta
+    #        threshold_delta = 0
+    #        return politician_data, threshold_delta
 
-        #TODO: else??!?!
+    #    #TODO: else??!?!
 
                 
 class ActionCreateView(ActionView):
@@ -641,135 +746,90 @@ class ActionCreateView(ActionView):
         categories = form.cleaned_data['category_set']
         action.category_set.add(*categories)
 
-        geoname_ids = form.cleaned_data['geoname_set']
+        geoname_data = form.cleaned_data['geoname_set']
         #COMMENT WARNING TODO: we should have a specific GeonameField
         # which has a clean() method that does the following kludge
         # The same is valid for other m2m fields below
-        geonames = self.get_or_create_geonames(geoname_ids)
+        geonames = self.get_or_create_geonames(geoname_data)
         action.geoname_set.add(*geonames)
         
-        politicians = form.cleaned_data['politician_set']
-        #TODO: Matteo 
+        politician_data = form.cleaned_data['politician_set']
+        politicians = self.get_or_create_politicians(politician_data)
         action.politician_set.add(*politicians)
         
         medias = form.cleaned_data['media_set']
         #TODO: Matteo 
         action.media_set.add(*medias)
-        
-    def get_or_create_geonames(self, geoname_list):
-
-        """ Here we have to check if there are ExternalResource
-        objects with pk equal to the provided ids.
-        If there are ids that do not match with any ExternalResource
-        object pk, than create them. 
-        If the ExternalResource which pks match with some ids was
-        created too time ago, then check the openpolis Json to see
-        if there had been some changes.
-        """
-
-        geonames = []
-
-        for json_datum in geoname_list:
-
-            #print("\ndatum: %s" % json_datum)
-            ext_res_id = json_datum['id']
-            ext_res_type = json_datum['location_type']['name']
-
-            try:
-                geoname = Geoname.objects.get(
-                    external_resource.ext_res_id=ext_res_id,
-                    external_resource.ext_res_type=ext_res_type
-                )
-            except Geoname.DoesNotExist as e:
-
-                e_r = ExternalResource.objects.create(
-                    ext_res_id = ext_res_id, 
-                    ext_res_type = ext_res_type,
-                    backend_name = lookup.get_backend_name(),
-                    # MANCA IL DATA! TODO Matteo: valutare
-                )
-                geoname = Geoname.objects.create(
-                    external_resource = e_r
-                    #TODO: Matteo: altricampi? mi pare di no
-                )
-
-            else:
-                last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
-                if last_get_delta.minutes > Geoname.MAX_CACHE_VALID_MINUTES:
-                    #TODO Matteo: not a priority
-                    geoname.external_resource.update_external_data(json_datum)
-
-            geonames.append(geoname)
-
-        return geonames
-
-
-
-    #--------------------------------------------------------------------------------
-
-        for m2m_attr in (
-            'geoname_set', 
-            'politician_set',
-            'media_set'
-        ):
-            #Theese attributes should contain Json data
-            m2m_value = form.cleaned_data.get(m2m_attr)
-            #print "\n%s\n"% m2m_value
-            if m2m_attr[:-4] == 'geoname':
-                model = Geoname
-                kwargs = {}
-                kwargs['ext_res_type'] = {
-                    'type' : 'location_type',
-                    'name' : 'name'
-                }
-                kwargs['name'] = 'name'
-            elif m2m_attr[:-4] == 'politician':
-                model = Politician
-                kwargs = {}
-                #GET cityreps from locations ids
-                cityreps_ids = form.cleaned_data.get('geoname_set')
-                # here we check that the threshold arrived is equal to
-                # the the sum of the thrershold delta of all the politicians
-                # the metho dwill raise exceptions if necessary
-                #kwargs['charge_ids'] = self.get_politicians_charge_ids(
-                #    cityreps_ids,
-                #    m2m_value,
-                #    get_lookup(MAP_MODEL_SET_TO_CHANNEL['cityrep'])
-                #)
-                if type(m2m_value) != list:
-                    m2m_value = [int(elem) for elem in m2m_value.strip('|').split('|')]
-                m2m_value_copy = [elem for elem in m2m_value]
-                kwargs['politicians_jsons'] = self.check_threshold(
-                    cityreps_ids,
-                    m2m_value_copy,
-                    total_threshold
-                )
-                kwargs['id_prefix'] = 'content_'
-            elif m2m_attr[:-4] == 'media':
-                kwargs = {}
-                model = Media
-
-            #TODO geoname
-            if len(m2m_value) != 0:
-
-                m2m_values = self.get_m2m_values(
-                    m2m_attr,
-                    m2m_value,
-                    model,
-                    #ext_res_type={
-                    #    'type' : 'location_type',
-                    #    'name' : 'name'
-                    #},
-                    **kwargs
-                )
-
-                getattr(action, m2m_attr).add(*m2m_values)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
+        
+    #--------------------------------------------------------------------------------
+    # 
+    #    for m2m_attr in (
+    #        'geoname_set', 
+    #        'politician_set',
+    #        'media_set'
+    #    ):
+    #        #Theese attributes should contain Json data
+    #        m2m_value = form.cleaned_data.get(m2m_attr)
+    #        #print "\n%s\n"% m2m_value
+    #        if m2m_attr[:-4] == 'geoname':
+    #            model = Geoname
+    #            kwargs = {}
+    #            kwargs['ext_res_type'] = {
+    #                'type' : 'location_type',
+    #                'name' : 'name'
+    #            }
+    #            kwargs['name'] = 'name'
+    #        elif m2m_attr[:-4] == 'politician':
+    #            model = Politician
+    #            kwargs = {}
+    #            #GET cityreps from locations ids
+    #            cityreps_ids = form.cleaned_data.get('geoname_set')
+    #            # here we check that the threshold arrived is equal to
+    #            # the the sum of the thrershold delta of all the politicians
+    #            # the metho dwill raise exceptions if necessary
+    #            #kwargs['charge_ids'] = self.get_politicians_charge_ids(
+    #            #    cityreps_ids,
+    #            #    m2m_value,
+    #            #    get_lookup(MAP_MODEL_SET_TO_CHANNEL['cityrep'])
+    #            #)
+    #            if type(m2m_value) != list:
+    #                m2m_value = [int(elem) for elem in m2m_value.strip('|').split('|')]
+    #            m2m_value_copy = [elem for elem in m2m_value]
+    #            kwargs['politicians_jsons'] = self.check_threshold(
+    #                cityreps_ids,
+    #                m2m_value_copy,
+    #                total_threshold
+    #            )
+    #            kwargs['id_prefix'] = 'content_'
+    #        elif m2m_attr[:-4] == 'media':
+    #            kwargs = {}
+    #            model = Media
+
+    #        #TODO geoname
+    #        if len(m2m_value) != 0:
+
+    #            m2m_values = self.get_m2m_values(
+    #                m2m_attr,
+    #                m2m_value,
+    #                model,
+    #                #ext_res_type={
+    #                #    'type' : 'location_type',
+    #                #    'name' : 'name'
+    #                #},
+    #                **kwargs
+    #            )
+
+    #            getattr(action, m2m_attr).add(*m2m_values)
+
+    #    success_url = action.get_absolute_url()
+    #    return views_support.response_redirect(self.request, success_url)
 
 
 class ActionUpdateView(ActionView, SingleObjectMixin):
+    #TODO: change according to the Create method
     """Update an action
 
     Firstly, the question of the Thread related to the Action to update is

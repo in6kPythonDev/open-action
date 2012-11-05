@@ -810,7 +810,8 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|185|287|'
-        politician_set = '|332997|543662|626209|'
+        #politician_set = '|332997|543662|626209|'
+        politician_set = '|332997|543662|626222|'
         threshold = "0"
 
         response = self._do_POST_create_action(
@@ -849,7 +850,8 @@ class ActionViewTest(OpenActionViewTestCase):
 
                 self.assertTrue(geoname_obj)
             #check that the politicians have been created
-            for _id in [332997,543662,626209]:
+            #for _id in [332997,543662,626209]:
+            for _id in [332997,543662,626222]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -978,7 +980,8 @@ class ActionViewTest(OpenActionViewTestCase):
             user, 
             geoname_set = '|145|185|287|', 
             politician_set = '|332997|543662|',
-            updated_politician_set = '|332997|543662|626209|'
+            #updated_politician_set = '|332997|543662|626209|'
+            updated_politician_set = '|332997|543662|626222|'
         ) 
 
     def test_update_action_remove_geonames(self, user=None):
@@ -1000,7 +1003,8 @@ class ActionViewTest(OpenActionViewTestCase):
         self._test_edit_set(Politician, 
             user, 
             geoname_set = '|145|185|287|', 
-            politician_set = '|332997|543662|626209|',
+            #politician_set = '|332997|543662|626209|',
+            politician_set = '|332997|543662|62622|',
             updated_politician_set = '|332997|543662|'
         ) 
 
@@ -1023,8 +1027,10 @@ class ActionViewTest(OpenActionViewTestCase):
         self._test_edit_set(Politician, 
             user, 
             geoname_set = '|145|185|287|', 
-            politician_set = '|332997|543662|626209|',
-            updated_politician_set = '|332997|543662|626209|'
+            #politician_set = '|332997|543662|626209|',
+            politician_set = '|332997|543662|626222|',
+            #updated_politician_set = '|332997|543662|626209|'
+            updated_politician_set = '|332997|543662|626222|',
         ) 
 
     def test_update_action_not_overlapping_geonames(self, user=None):
@@ -1046,7 +1052,8 @@ class ActionViewTest(OpenActionViewTestCase):
         self._test_edit_set(Politician, 
             user, 
             geoname_set = '|145|185|287|', 
-            politician_set = '|332997|543662|626209|',
+            #politician_set = '|332997|543662|626209|',
+            politician_set = '|332997|543662|626222|',
             updated_politician_set = '|543662|'
         ) 
 

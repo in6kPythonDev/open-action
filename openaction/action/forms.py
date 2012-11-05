@@ -4,6 +4,7 @@ from django import forms
 import askbot.forms as askbot_forms
 from action.models import Action, Geoname, ActionCategory, Politician, Media
 from askbot.models import User
+from django.core import exceptions
 
 from ajax_select import make_ajax_field
 from ajax_select import get_lookup
@@ -12,6 +13,19 @@ MAP_FIELD_NAME_TO_CHANNEL = {
     'geoname_set' : 'geonamechannel', 
     'politician_set' : 'politicianchannel',
     'media_set' : 'TODO',
+}
+
+MAP_DATA_SOURCE_TO_CHANNEL = {
+    'cityrep' : 'cityrepchannel'
+}
+
+INSTITUTIONS = {
+    'comune' : ['consiglio','giunta',],
+    'provincia' : ['consiglio','giunta',],
+    'regione' : ['consiglio','giunta',],
+    'senato' : ['representatives',],
+    'europarl' : ['representatives',],
+    'camera' : ['representatives',],
 }
 
 class ActionForm(askbot_forms.AskForm):
@@ -39,10 +53,6 @@ class ActionForm(askbot_forms.AskForm):
         label="Politici",
         required=False
     )
-    #politician_set = forms.ModelMultipleChoiceField(
-    #    queryset=Politician.objects, label="Politici",
-    #    required=False
-    #)
     media_set = forms.ModelMultipleChoiceField(
         queryset=Media.objects, label="Media",
         required=False
@@ -61,70 +71,155 @@ class ActionForm(askbot_forms.AskForm):
         if not orgs:
             self.hide_field('in_nomine')
 
-    def clean_geoname_set(self):
+    def _clean_geoname_set(self, cleaned_data):
+        """Return a representation of Geoname objects based on 
+        the data contained into an external API"""
+        #This is _clean method because it has to be called BEFORE _clean_politician_set
 
-        geoname_ids = self.cleaned_data['geoname_ids']
+        geoname_ids = cleaned_data.get('geoname_set')
 
         if geoname_ids:
             field_name = 'geoname_set'
             lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL[field_name])
-            json_values = lookup.get_objects(geoname_ids)
+            values = lookup.get_objects(geoname_ids)
 
-            if len(json_values) != len(geoname_ids):
-                raise ValidationError("non tutti i geoname sono stati recuperati. Sono rimasti fuori...") #TODO: Matteo
+            if len(values) != len(geoname_ids):
+                for value in values:
+                    if value in geoname_ids:
+                        values.remove(value)
+                #raise exceptions.InvalidGeonameListError(values)
+                raise exceptions.ValidationError(u"Non tutti i luoghi sono stati recuperati. Sono rimasti fuori i luoghi con id: %s" % values)
             
         else:
-            json_values = []
+            values = []
         
-        return json_values
+        return values
         
+    def _clean_politician_set(self, cleaned_data, geoname_ids):
+        """Return a representation of Politician objects based on 
+        the data contained into an external API
 
+        Check that the Total threshold come with the form is equal
+        to the sum of politicians threshold deltas  """
+
+        field_name = 'politician_set'
+        politician_ids = [int(elem) for elem in cleaned_data[field_name].strip('|').split('|')]
+        politician_ids_copy = list(politician_ids)
+
+        if politician_ids:
+            data_source = 'cityrep'
+            cityrep_lookup = get_lookup(MAP_DATA_SOURCE_TO_CHANNEL[data_source])
+
+            for cityrep_id in geoname_ids:
+                if not len(politician_ids_copy):
+                    break
+                found_ids = self.get_politicians_from_cityrep(
+                    politician_ids_copy,
+                    cityrep_id,
+                    cityrep_lookup
+                )
+                print("\n\nfound_ids: %s\n" % found_ids)
+                for politician_id in found_ids:
+                    politician_ids_copy.remove(politician_id)
+                
+            if len(politician_ids_copy):
+                #raise exceptions.InvalidPoliticianListError(politician_ids_copy)
+                raise exceptions.ValidationError(u"Non tutti i politici sono stati recuperati. Sono rimasti fuori i politici con id: %s" % politician_ids_copy)
+
+            lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL[field_name])
+            values = lookup.get_objects(politician_ids)
+
+        else:
+            values = []
+
+        return values
+
+    def get_politicians_from_cityrep(self, politician_ids, cityrep_id, lookup):
+        """ Return a list of politicians from a list of city
+        representatives """
+
+        politicians = []
+
+        cityrep_data = lookup.get_objects([cityrep_id])[0]['city_representatives']
+
+        for institution in INSTITUTIONS.keys():
+            institution_kinds = INSTITUTIONS.get(institution)
+            for inst_kind in institution_kinds:
+                if not len(cityrep_data[institution][inst_kind]):
+                    continue
+                for politician in cityrep_data[institution][inst_kind]:
+                    if politician['politician_id'] in politician_ids:
+                        politicians.append(politician['politician_id'])
+
+        return politicians
+
+    def check_threshold(self, cleaned_data):
+        """ Check that the threshold deltas sum is equal to the given total
+        threshold. """
+
+        computed_threshold = 0
+        politician_data = cleaned_data['politician_set']
+        total_threshold = int(cleaned_data['threshold'])
+
+        for datum in politician_data:
+            threshold_delta = 0
+            #compute politician threshold
+            self.compute_threshold_delta(datum)
+            computed_threshold = computed_threshold + threshold_delta
+
+        if computed_threshold != total_threshold:
+            raise exceptions.ValidationError("La soglia indicata non corrisponde a quella ricavata dai politici scelti")
+
+    def compute_threshold_delta(self, politician_datum):
+        pass
+ 
     def clean(self):
         """ overriding form clean """
-        #dummy implementation
         cleaned_data = super(ActionForm, self).clean()
+        cleaned_data['politician_set'] = self.data['politician_set']
+        del self._errors['politician_set']
 
+        geoname_ids = cleaned_data['geoname_set']
+
+        cleaned_data['geoname_set'] = self._clean_geoname_set(cleaned_data)
+        cleaned_data['politician_set'] = self._clean_politician_set(
+            cleaned_data,
+            geoname_ids
+        )
+        self.check_threshold(cleaned_data)
         # set defaults
-        for field_name in ('geoname_set', 'category_set', 
-            'politician_set', 'media_set'):
+        for field_name in ('category_set', 'media_set'):
             if not cleaned_data.get(field_name):
                 cleaned_data[field_name] = []
-
-        #print("\ncleaned data: %s\n" % cleaned_data)
-        #print("\nerrors: %s\n" % self._errors)
-        #KLUDGE
-        if 'politician_set' in self._errors.keys():
-            cleaned_data['politician_set'] = self.data['politician_set']
-            del self._errors['politician_set']
 
         return cleaned_data
 
 
-class EditActionForm(askbot_forms.EditQuestionForm):
-    # TOASK: Ajaxification of fields autocomplete?
-
-    threshold = forms.CharField()
-
-    geoname_set = make_ajax_field(Action, 
-        label = "Territori",
-        model_fieldname='geoname_set',
-        channel='geonamechannel', 
-        help_text="Search for place by name or by city",
-        required=False,
-    )
-    category_set = forms.ModelMultipleChoiceField(
-        queryset=ActionCategory.objects, label=u"Ambiti",
-        required=False,
-        help_text=u"La scelta degli ambiti può aiutarti a definire meglio i prossimi passi"
-    )
-    politician_set = forms.MultipleChoiceField(
-        label="Politici",
-        required=False
-    )
-    media_set = forms.ModelMultipleChoiceField(
-        queryset=Media.objects, label="Media",
-        required=False
-    ) 
+#class EditActionForm(askbot_forms.EditQuestionForm):
+#    # TOASK: Ajaxification of fields autocomplete?
+#
+#    threshold = forms.CharField()
+#
+#    geoname_set = make_ajax_field(Action, 
+#        label = "Territori",
+#        model_fieldname='geoname_set',
+#        channel='geonamechannel', 
+#        help_text="Search for place by name or by city",
+#        required=False,
+#    )
+#    category_set = forms.ModelMultipleChoiceField(
+#        queryset=ActionCategory.objects, label=u"Ambiti",
+#        required=False,
+#        help_text=u"La scelta degli ambiti può aiutarti a definire meglio i prossimi passi"
+#    )
+#    politician_set = forms.MultipleChoiceField(
+#        label="Politici",
+#        required=False
+#    )
+#    media_set = forms.ModelMultipleChoiceField(
+#        queryset=Media.objects, label="Media",
+#        required=False
+#    ) 
 
 #----------------------------------------------------------------------------------
 

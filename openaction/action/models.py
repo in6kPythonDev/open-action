@@ -421,6 +421,8 @@ class Action(models.Model, Resource):
 
 class Geoname(models.Model):
 
+    MAX_CACHE_VALID_MINUTES = 0 #1360 #1 day
+
     #COMMENT LF: we do not restrict CharField choices
     # in order to support versatile API
     # GEO_CHOICES = (
@@ -471,6 +473,8 @@ class ActionCategory(models.Model, Resource):
 #--------------------------------------------------------------------------------
 
 class Politician(models.Model):
+
+    MAX_CACHE_VALID_MINUTES = 0 #1360 #1 day
 
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
