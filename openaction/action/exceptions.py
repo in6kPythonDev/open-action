@@ -114,3 +114,19 @@ class ThresholdNotComputableException(exceptions.PermissionDenied):
 
     def __unicode__(self):
         return u"Non è possibile calcolare la soglia di adesioni oltre la quale l'azione %s diviene attiva" % self.action
+
+#class InvalidPoliticianListError(exceptions.ValidationError):
+#
+#    def __init__(self, politicians):
+#        self.politicians = politicians
+#
+#    def __unicode__(self):
+#        return u"Non tutti i politici sono stati recuperati. Sono rimasti fuori i politici con id: %s" % self.politicians
+#
+#class InvalidGeonameListError(exceptions.ValidationError):
+#
+#    def __init__(self, geonames):
+#        self.geonames = geonames
+#
+#    def __unicode__(self):
+#        return u"Non tutti i luoghi sono stati recuperati. Sono rimasti fuori i luoghi con id: %s" % self.geonames
