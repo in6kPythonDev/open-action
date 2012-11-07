@@ -482,7 +482,7 @@ class Politician(models.Model):
     external_resource = models.OneToOneField(ExternalResource)
 
     def __unicode__(self):
-        return u"%s (%s)" % (self.name, self.charge)
+        return u"%s %s (%s)" % (self.first_name, self.last_name, self.charge)
 
     class Meta:
         unique_together = (('first_name','last_name','charge'),)
