@@ -35,6 +35,15 @@ def html_action_item(action):
     }
     return html
 
+@register.inclusion_tag('tags/action_overview.html')
+def html_action_overview(action):
+    """Return html for an action item """
+    return {
+        "action": html_render_resource(action),
+        "geonames" : [html_render_resource(geoname) for geoname in action.geonames],
+        "categories" :  [html_render_resource(category) for category in action.categories],
+    }
+
 @register.simple_tag
 def html_blogpost_item(blogpost):
     """Return html snippet for a blog post item."""

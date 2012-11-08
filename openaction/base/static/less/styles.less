@@ -1,0 +1,152 @@
+// CSS Reset
+@import "bootstrap.less";
+
+#site_header {
+  padding-top: 40px;
+}
+
+#site_menu {
+  .brand { padding: 0; margin-left: 0; }
+  #action-button {
+    border-left: 1px solid @white;
+    border-right: 1px solid @white;
+    text-transform: uppercase;
+    margin-right: 10px;
+    margin-left: 10px;
+    font-weight: bold;
+  }
+  .caret {
+    border-top: 4px solid @white;
+  }
+  .nav .navbar-text {
+    margin-right: 10px;
+  }
+  .nav .dropdown {
+    width: 110px;
+    a { text-align: center; padding-left: 0; padding-right: 0; text-align: center }
+  }
+  .navbar-form {
+    margin-top: 5px;
+  }
+}
+
+#site_body, #content, #sidebar { min-height: 200px; }
+#sidebar { background-color: @grayLighter; }
+
+#site_footer {
+  color: @white;
+  a { color: @white; }
+
+  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+}
+
+#sidebar {
+  padding: 10px 20px;
+}
+
+#homepage_banner {
+  background: url('../img/homepage.png') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  padding-top:300px;
+  color: @black;
+
+  & > div {
+    padding-bottom: 30px;
+//    & > * { color: @black; }
+
+    background:transparent;
+    zoom: 1;
+  /* RGBa with 0.4 opacity */
+    background: rgba(235, 234, 228, 0.6);
+  /* IE6 & 7 */
+    filter: 'progid:DXImageTransform.Microsoft.gradient(startColorstr=#99EBEAE4, endColorstr=#99EBEAE4)';
+  /* IE8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#99EBEAE4,endColorstr=#99EBEAE4)";
+  }
+}
+
+body.homepage #site_body {
+  h2 { font-size: 22px; line-height: 26px; }
+  h3 { font-size: 14px; line-height: 18px; text-transform: uppercase; }
+}
+
+#content {
+//  .media { padding-bottom: 5px; border-bottom: 1px dotted @grayLight; margin-bottom: 5px; }
+  .media-heading a { color: @red; }
+  p.text-success { font-weight: bold; }
+}
+
+.action-form {
+  text-align: center;
+  margin-top: -40px;
+  background-color: transparent;
+}
+.action-button {
+  z-index: 9999;
+  .btn;
+  .btn-large;
+  .buttonBackground(@green, @greenDark);
+  padding: 20px 40px;
+}
+
+.action-info {
+  margin-top:5px;
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: bold;
+
+  .clearfix;
+
+  & > div {
+
+    background-color: @grayLighter;
+    padding: 3px;
+    height: 60px;
+    font-size: 12px;
+    line-height: 12px;
+
+    strong {
+      display: block;
+      height: 50%;
+      text-align: center;
+    }
+  }
+
+  p { margin-bottom: 3px; }
+
+  .followers strong { color: @red; }
+  .answers strong { color: @black; }
+  .adhesions strong { color: @greenLight; }
+
+  .adhesions {
+
+    .target {
+
+      .pull-left;
+
+      width: 52%;
+      background-color: @white;
+      padding-top: 3px;
+
+      .progress {
+        margin: 10px 3px;
+        height: 5px;
+      }
+    }
+    .target-value {
+
+      .pull-right;
+
+      width: 48%;
+      height: 100%;
+      text-align: center;
+
+    }
+  }
+
+}
+
+.ui-helper-hidden-accessible { display: none; }

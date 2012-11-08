@@ -54,6 +54,7 @@ OpenAction installation guide
          python manage.py syncdb 
          python manage.py migrate askbot 
          python manage.py migrate django_authopenid
+         python manage.py migrate askbot_extensions
     
         At this point you can test the installation by:
 

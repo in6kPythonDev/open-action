@@ -1,7 +1,6 @@
-<html>
-<head><title>Apri L'AZIONE!</title></head>
+{% extends 'base.html' %}
 
-<body>
+{% block content %}
 
 Score: {{action.score}}
 
@@ -34,6 +33,5 @@ Score: {{action.score}}
 {% endfor %}
 </ul>
 
-</body>
-</html>
+{% endblock %}
 
