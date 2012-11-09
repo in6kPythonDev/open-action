@@ -81,6 +81,7 @@ TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
 
 INSTALLED_APPS = list(settings.INSTALLED_APPS)
 INSTALLED_APPS.append('base')
+INSTALLED_APPS.append('django.contrib.humanize')
 INSTALLED_APPS.append('askbot_extensions')
 INSTALLED_APPS.append('organization')
 INSTALLED_APPS.append('action')

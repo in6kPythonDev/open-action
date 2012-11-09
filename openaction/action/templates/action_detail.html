@@ -1,37 +1,261 @@
 {% extends 'base.html' %}
+{% load action_tags %}
+
+{% block head_scripts %}
+  {{ block.super }}
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
+{% endblock head_scripts %}
 
 {% block content %}
 
-Score: {{action.score}}
+  <div class="row-fluid">
+    <div class="span6">
+      <ul class="breadcrumb">
+        <li><a href="#">Home</a> <span class="divider">/</span></li>
+        <li><a href="#">Actions</a> <span class="divider">/</span></li>
+        <li class="active">You are here</li>
+      </ul>
+    </div>
+    <div class="span6">
+      {% html_action_status action %}
+    </div>
+  </div>
 
-<p>Question: {{action.title}}</p>
+  <article>
+    <h1>{{ action.title }}</h1>
 
-<p>Description: {{action.description}}</p>
+    {% html_action_tags action %}
 
-<p>Text: {{action.content}}</p>
+    <div class="media">
+      <a class="pull-left"><img src="http://placehold.it/160x160" alt=""></a>
+      <div class="media-body">
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="http://placehold.it/64x64">
+          </a>
+          <div class="media-body">
+            Creata il {{ action.created_on }} <br>
+            da <a href="#">{{ action.owner }}</a> <br>
+            <a href="#">Barano d'Ischia</a>
+          </div>
+        </div>
 
-<p>Author: {{action.owner}}</p>
+        <div>
+          Indirizzata a:
+          <ul>
+            <li>Sindaco di Barano d'Ischia (NA)</li>
+            <li>Presidente della provincia di Napoli</li>
+          </ul>
+          + <a href="#">altri 10 politici <i class="icon-sort-down"></i></a>
+        </div>
 
-<p>VOTERS:</p>
-<ul>
-{% for voter in action.voters %}
-<li>{{ voter.user__username }}</li>
-{% endfor %}
-</ul>
+        <div>
+          <ul>
+            <li>Repubblica Napoli</li>
+            <li>Corriere del Mezzogiorno</li>
+          </ul>
+          + <a href="#">altri 10 media <i class="icon-sort-down"></i></a>
+        </div>
+      </div>
 
-<p>COMMENTS: </p>
-<ul>
-{% for comment in action.comments %}
-<li>{{ comment }}</li>
-{% endfor %}
-</ul>
+    </div>
 
-<p>ANSWERS: </p>
-<ul>
-{% for answer in action.blog_posts %}
-<li>{{ answer.text }}</li>
-{% endfor %}
-</ul>
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#action-overview" data-toggle="tab">Azione</a></li>
+      <li><a href="#action-blog" data-toggle="tab">Blog</a></li>
+      <li><a href="#action-voters" data-toggle="tab">Aderenti</a></li>
+    </ul>
 
-{% endblock %}
+    <div class="tab-content">
+      <div class="tab-pane active" id="action-overview">
+        <p>Text: {{ action.content|safe }}</p>
+      </div>
+      <div class="tab-pane" id="action-blog">
+        {% for blog_post in action.blog_posts %}
+        {% html_blogpost_item blog_post %}
+        {% endfor %}
+      </div>
+      <div class="tab-pane" id="action-voters">
+        <ul>
+          {% for voter in action.voters %}
+          <li>{{ voter.user__username}}</li>
+          {% empty %}
+          <li><i>Nessuna persona ha aderito a questa Action</i></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </article>
+
+  <hr>
+
+  <h3>Azioni correlate</h3>
+
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+    <div class="media-body">
+      <i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a>
+      <h4 class="media-header">Fermiamo l'inquinamento della spiaggia dei Maronti</h4>
+      {% html_action_tags action %}
+    </div>
+  </div>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+    <div class="media-body">
+      <i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a>
+      <h4 class="media-header">Fermiamo l'inquinamento della spiaggia dei Maronti</h4>
+      {% html_action_tags action %}
+    </div>
+  </div>
+
+  <a href="#">Altre azioni correlate <i class="icon-sort-down"></i></a>
+
+{% endblock content %}
+
+
+{% block sidebar %}
+
+  {% for voter in action.voters %}
+  {% html_render_resource voter %}
+  {% if forloop.last %}
+    hanno già aderito. <br>Fallo anche tu, cambia le cose.
+    {% else %},{% endif %}
+  {% empty %}
+  <strong>Nessuno ha ancora aderito a questa Action</strong>
+  {% endfor %}
+
+  <form action="#" class="action-form">
+    <fieldset>
+    <button class="action-button">Aderisci</button>
+
+    <label class="checkbox">
+      <input type="checkbox" name="anonymous"> Mostra pubblicamente la mia firma
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="accept_terms"> Autorizza OpenAction al trattamento dei miei dati personali
+    </label>
+    </fieldset>
+  </form>
+
+  <hr>
+
+  <h3>A che punto siamo</h3>
+
+  <ul>
+    <li>Invii massivi di email: <strong>0</strong></li>
+    <li>Risposte dei politici: <strong>{{ action.answers.count }}</strong></li>
+  </ul>
+
+  <p class="well">
+    Gentili signori,
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla pulvinar adipiscing lorem, aliquet tristique nisi pretium at. Aliquam sed tristique elit. Maecenas ultricies condimentum urna.
+    <a href="#">Continua a leggere...</a>
+  </p>
+
+  <hr>
+
+  <p>
+    <strong>Mancano 200 adesioni per il prossimo obiettivo</strong>.
+    Aiutaci a coinvolgere più persone possibili
+  </p>
+
+  ### SHARING ###
+
+  <hr>
+
+  <h3>Sostenitori più attivi</h3>
+
+  {% for referral in action.referrers %}
+    <div class="media">
+      <a class="pull-left" href="#">
+        <img class="media-object" src="http://placehold.it/64x64">
+      </a>
+      <div class="media-body">
+        {% html_render_resource referral %}
+        <br> Roma
+        <br> 200 persone coinvolte
+      </div>
+    </div>
+  {% empty %}
+    <div class="media">
+      <a class="pull-left" href="#">
+        <img class="media-object" src="http://placehold.it/64x64">
+      </a>
+      <div class="media-body">
+        <a href="#">Mario rossi</a>
+        <br> Roma
+        <br> 200 persone coinvolte
+      </div>
+    </div>
+    <div class="media">
+      <a class="pull-left" href="#">
+        <img class="media-object" src="http://placehold.it/64x64">
+      </a>
+      <div class="media-body">
+        <a href="#">Mario rossi</a>
+        <br> Roma
+        <br> 200 persone coinvolte
+      </div>
+    </div>
+  {% endfor %}
+  <a href="#">Tutti i sostenitori</a>
+
+  <hr>
+
+  <h3>Ultime adesioni</h3>
+  <a href="#">Tutti le adesioni</a>
+
+  <hr>
+
+  <h3>Perchè aderisco</h3>
+  <div class="media">
+    <a class="pull-left" href="#">
+      <img class="media-object" src="http://placehold.it/64x64">
+    </a>
+    <div class="media-body">
+      <a href="#">Mario rossi</a>
+      <br> Roma
+      <br> oggi
+    </div>
+  </div>
+  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+  Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+  Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+  <form action="#">
+  145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
+  </form>
+
+  <a href="#">Leggi tutte le altre</a>
+
+  <hr>
+
+  <h3>Se ne parla in rete</h3>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <div class="media-body">
+      25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
+      - <a href="#">ItaliaLavoroTv</a>
+    </div>
+  </div>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <div class="media-body">
+      25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
+      - <a href="#">ItaliaLavoroTv</a>
+    </div>
+  </div>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <div class="media-body">
+      25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
+      - <a href="#">ItaliaLavoroTv</a>
+    </div>
+  </div>
+
+
+
+
+{% endblock sidebar %}
 

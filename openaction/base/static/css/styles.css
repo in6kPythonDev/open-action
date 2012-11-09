@@ -5352,8 +5352,10 @@ body.homepage #site_body h3 {
 }
 .action-form {
   text-align: center;
-  margin-top: -40px;
   background-color: transparent;
+}
+.homepage .action-form {
+  margin-top: -40px;
 }
 .action-button {
   z-index: 9999;

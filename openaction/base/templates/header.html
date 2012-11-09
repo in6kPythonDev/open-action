@@ -1,5 +1,8 @@
 <header id="site_header" class="container">
   <div class="row">
+    {% if organization %}
+    <h1>{{ organization.name }}</h1>
+    {% endif %}
     <div class="pull-right">
 
       <div class="btn-group">

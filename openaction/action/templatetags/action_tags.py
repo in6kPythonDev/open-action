@@ -35,14 +35,38 @@ def html_action_item(action):
     }
     return html
 
+@register.simple_tag
+def html_action_tags(action):
+    """ Return html for action category and locations """
+
+    html = """
+<i class="icon-map-marker"></i> %(locations)s
+<br>
+<i class="icon-tag"></i> %(categories)s
+""" % {
+        "locations" : ",".join([html_render_resource(geoname) for geoname in action.geonames]),
+        "categories" : ",".join([html_render_resource(category) for category in action.categories])
+    }
+    return html
+
+@register.inclusion_tag('tags/action_status.html')
+def html_action_status(action):
+    """ Return html for an action status """
+    return {
+        "voters": action.votes.count(),
+        "answers": action.comments.count(),
+        "target": action.threshold # TODO FIXME
+    }
+
 @register.inclusion_tag('tags/action_overview.html')
 def html_action_overview(action):
     """Return html for an action item """
-    return {
+    d = {
         "action": html_render_resource(action),
-        "geonames" : [html_render_resource(geoname) for geoname in action.geonames],
-        "categories" :  [html_render_resource(category) for category in action.categories],
+        "tags" : html_action_tags(action),
     }
+    d.update( html_action_status(action) )
+    return d
 
 @register.simple_tag
 def html_blogpost_item(blogpost):

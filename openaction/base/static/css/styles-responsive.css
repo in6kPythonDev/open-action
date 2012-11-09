@@ -1020,3 +1020,15 @@
     overflow: visible !important;
   }
 }
+@media (max-width: 767px) {
+  #site_footer,
+  #homepage_banner {
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+  #site_footer  > div,
+  #homepage_banner  > div {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
