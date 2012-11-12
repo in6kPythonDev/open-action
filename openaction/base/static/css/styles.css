@@ -5529,6 +5529,8 @@ body.homepage #site_body h3 {
   display: block;
   height: 50%;
   text-align: center;
+  font-size: 14px;
+  line-height: 14px;
 }
 .action-info p {
   margin-bottom: 3px;
@@ -5557,6 +5559,65 @@ body.homepage #site_body h3 {
   width: 48%;
   height: 100%;
   text-align: center;
+}
+.action-status a {
+  font-weight: bold;
+}
+#content article h1 {
+  color: #c6242a;
+}
+.news-list {
+  margin-left: 0;
+}
+.news-list .organization-link i {
+  color: #c6242a;
+}
+.news-list .media-header {
+  margin: 0;
+}
+.news-list .media-header a {
+  color: #c6242a;
+}
+.news-list li {
+  margin: 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #999999;
+}
+.news-list li form {
+  margin-bottom: 0;
+}
+.breadcrumb {
+  background: transparent;
+}
+#sidebar fieldset {
+  margin-top: 10px;
+}
+#sidebar label.checkbox {
+  font-size: 11px;
+  color: #999999;
+}
+#sidebar h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  line-height: 15px;
+}
+#sidebar h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  line-height: 14px;
+}
+#sidebar ul.news-list li:last-child {
+  border-bottom: 0;
+}
+.highlights {
+  margin: 15px 0;
+}
+.highlights ul {
+  margin: 0;
+}
+.highlights ul li {
+  list-style: none;
+  font-weight: bold;
 }
 .ui-helper-hidden-accessible {
   display: none;

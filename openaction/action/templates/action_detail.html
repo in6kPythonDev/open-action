@@ -26,7 +26,7 @@
 
     {% html_action_tags action %}
 
-    <div class="media">
+    <div class="media action-status">
       <a class="pull-left"><img src="http://placehold.it/160x160" alt=""></a>
       <div class="media-body">
         <div class="media">
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="highlights">
           Indirizzata a:
           <ul>
             <li>Sindaco di Barano d'Ischia (NA)</li>
@@ -49,7 +49,7 @@
           + <a href="#">altri 10 politici <i class="icon-sort-down"></i></a>
         </div>
 
-        <div>
+        <div class="highlights">
           <ul>
             <li>Repubblica Napoli</li>
             <li>Corriere del Mezzogiorno</li>
@@ -68,7 +68,7 @@
 
     <div class="tab-content">
       <div class="tab-pane active" id="action-overview">
-        <p>Text: {{ action.content|safe }}</p>
+        {{ action.content|safe }}
       </div>
       <div class="tab-pane" id="action-blog">
         {% for blog_post in action.blog_posts %}
@@ -92,24 +92,32 @@
 
   <h3>Azioni correlate</h3>
 
-  <div class="media">
-    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
-    <div class="media-body">
-      <i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a>
-      <h4 class="media-header">Fermiamo l'inquinamento della spiaggia dei Maronti</h4>
-      {% html_action_tags action %}
-    </div>
-  </div>
-  <div class="media">
-    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
-    <div class="media-body">
-      <i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a>
-      <h4 class="media-header">Fermiamo l'inquinamento della spiaggia dei Maronti</h4>
-      {% html_action_tags action %}
-    </div>
-  </div>
+  <section id="related-actions">
+    <ul class="news-list">
+      <li>
+        <div class="media">
+          <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+          <div class="media-body">
+            <div class="organization-link"><i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a></div>
+            <h4 class="media-header"><a href="#">Fermiamo l'inquinamento della spiaggia dei Maronti</a></h4>
+            {% html_action_tags action %}
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="media">
+          <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+          <div class="media-body">
+            <div class="organization-link"><i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a></div>
+            <h4 class="media-header"><a href="#">Fermiamo l'inquinamento della spiaggia dei Maronti</a></h4>
+            {% html_action_tags action %}
+          </div>
+        </div>
+      </li>
+    </ul>
 
-  <a href="#">Altre azioni correlate <i class="icon-sort-down"></i></a>
+    <a href="#">Altre azioni correlate <i class="icon-sort-down"></i></a>
+  </section>
 
 {% endblock content %}
 
@@ -125,10 +133,11 @@
   <strong>Nessuno ha ancora aderito a questa Action</strong>
   {% endfor %}
 
-  <form action="#" class="action-form">
+  <form action="#">
+    <fieldset class="action-form">
+      <button class="action-button">Aderisci</button>
+    </fieldset>
     <fieldset>
-    <button class="action-button">Aderisci</button>
-
     <label class="checkbox">
       <input type="checkbox" name="anonymous"> Mostra pubblicamente la mia firma
     </label>
@@ -161,45 +170,69 @@
     Aiutaci a coinvolgere più persone possibili
   </p>
 
-  ### SHARING ###
+  <p>
+    <button class="btn btn-info">
+      <i class="icon-twitter"></i> Condividi su Twitter
+    </button>
+  </p>
+  <p>
+    <button class="btn btn-info">
+      <i class="icon-facebook"></i> Condividi su Facebook
+    </button>
+  </p>
+
+  <h4>Copia e condividi sul tuo sito</h4>
+  <div class="input-append">
+    <input type="text" value="http://google.com">
+    <button class="btn btn-info">Copia</button>
+  </div>
+
 
   <hr>
 
   <h3>Sostenitori più attivi</h3>
 
+  <ul class="news-list">
   {% for referral in action.referrers %}
-    <div class="media">
-      <a class="pull-left" href="#">
-        <img class="media-object" src="http://placehold.it/64x64">
-      </a>
-      <div class="media-body">
-        {% html_render_resource referral %}
-        <br> Roma
-        <br> 200 persone coinvolte
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          {% html_render_resource referral %}
+          <br> Roma
+          <br> 200 persone coinvolte
+        </div>
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="media">
-      <a class="pull-left" href="#">
-        <img class="media-object" src="http://placehold.it/64x64">
-      </a>
-      <div class="media-body">
-        <a href="#">Mario rossi</a>
-        <br> Roma
-        <br> 200 persone coinvolte
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> 200 persone coinvolte
+        </div>
       </div>
-    </div>
-    <div class="media">
-      <a class="pull-left" href="#">
-        <img class="media-object" src="http://placehold.it/64x64">
-      </a>
-      <div class="media-body">
-        <a href="#">Mario rossi</a>
-        <br> Roma
-        <br> 200 persone coinvolte
+    </li>
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> 200 persone coinvolte
+        </div>
       </div>
-    </div>
+    </li>
   {% endfor %}
+  </ul>
   <a href="#">Tutti i sostenitori</a>
 
   <hr>
@@ -210,22 +243,44 @@
   <hr>
 
   <h3>Perchè aderisco</h3>
-  <div class="media">
-    <a class="pull-left" href="#">
-      <img class="media-object" src="http://placehold.it/64x64">
-    </a>
-    <div class="media-body">
-      <a href="#">Mario rossi</a>
-      <br> Roma
-      <br> oggi
-    </div>
-  </div>
-  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-  Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
-  Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
-  <form action="#">
-  145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
-  </form>
+  <ul class="news-list">
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> oggi
+        </div>
+      </div>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+        Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+      <form action="#">
+        145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
+      </form>
+    </li>
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> oggi
+        </div>
+      </div>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+        Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+      <form action="#">
+        145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
+      </form>
+    </li>
+  </ul>
 
   <a href="#">Leggi tutte le altre</a>
 
