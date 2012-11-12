@@ -206,4 +206,27 @@ body.homepage #site_body {
   }
 }
 
+.action-step {
+  .pull-right;
+  background: transparent url("../img/action-steps.png") no-repeat center;
+  height: 85px; width: 85px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+}
+.action-step-1 { .action-step; background-position: 0 0; }
+.action-step-2 { .action-step; background-position: -84px 0; }
+.action-step-3 { .action-step; background-position: -168px 0; }
+.action-step-4 { .action-step; background-position: -252px 0; }
+
+.action-create-form {
+  input[type="text"], textarea { .input-xxlarge; }
+  h2 label {
+    font-size: 18px;
+    line-height: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .help a { color: @grayLight; font-size: 12px; text-decoration: underline; }
+}
+
 .ui-helper-hidden-accessible { display: none; }

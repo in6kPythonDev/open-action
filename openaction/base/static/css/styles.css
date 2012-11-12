@@ -1,3 +1,4 @@
+@import url("http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700,800,600,300");
 /*!
  * Bootstrap v2.2.1
  *
@@ -144,7 +145,7 @@ textarea {
 }
 body {
   margin: 0;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 20px;
   color: #333333;
@@ -795,7 +796,7 @@ input,
 button,
 select,
 textarea {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 label {
   display: block;
@@ -3888,7 +3889,7 @@ input[type="submit"].btn.btn-mini {
 .navbar-search .search-query {
   margin-bottom: 0;
   padding: 4px 14px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 13px;
   font-weight: normal;
   line-height: 1;
@@ -5618,6 +5619,65 @@ body.homepage #site_body h3 {
 .highlights ul li {
   list-style: none;
   font-weight: bold;
+}
+.action-step {
+  float: right;
+  background: transparent url("../img/action-steps.png") no-repeat center;
+  height: 85px;
+  width: 85px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+}
+.action-step-1 {
+  float: right;
+  background: transparent url("../img/action-steps.png") no-repeat center;
+  height: 85px;
+  width: 85px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+  background-position: 0 0;
+}
+.action-step-2 {
+  float: right;
+  background: transparent url("../img/action-steps.png") no-repeat center;
+  height: 85px;
+  width: 85px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+  background-position: -84px 0;
+}
+.action-step-3 {
+  float: right;
+  background: transparent url("../img/action-steps.png") no-repeat center;
+  height: 85px;
+  width: 85px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+  background-position: -168px 0;
+}
+.action-step-4 {
+  float: right;
+  background: transparent url("../img/action-steps.png") no-repeat center;
+  height: 85px;
+  width: 85px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+  background-position: -252px 0;
+}
+.action-create-form input[type="text"],
+.action-create-form textarea {
+  width: 530px;
+}
+.action-create-form h2 label {
+  font-size: 18px;
+  line-height: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.action-create-form .help a {
+  color: #999999;
+  font-size: 12px;
+  text-decoration: underline;
 }
 .ui-helper-hidden-accessible {
   display: none;
