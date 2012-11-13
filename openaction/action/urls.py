@@ -69,5 +69,10 @@ urlpatterns = patterns('',
         name='action-status-change-request'
     ),
 
+    #categories navigation
+    url(r'^argument/(?P<pk>\d+)/$', action_views.ActionList.as_view(),
+        name='action-argument'
+    )
+
 )
 

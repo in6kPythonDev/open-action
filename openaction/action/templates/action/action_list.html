@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load action_tags %}
+
+{% block head_scripts %}
+  {{ block.super }}
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
+{% endblock head_scripts %}
+
+{% block content %}
+
+  <article class="action-list">
+    <h1>Ambiente</h1>
+
+    <div id="action-slideshow"></div>
+
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#action-hot" data-toggle="tab">Hot</a></li>
+      <li><a href="#action-pop" data-toggle="tab">Popolari</a></li>
+      <li><a href="#action-latest" data-toggle="tab">Recenti</a></li>
+      <li><a href="#action-all" data-toggle="tab">Tutte</a></li>
+    </ul>
+
+
+    <div class="navbar navbar-inverse" id="action-sorting">
+      <div class="navbar-inner">
+        <ul class="nav">
+          <li><p class="navbar-text">Ordina per:</p></li>
+          <li><a href="#">Adesioni <i class="icon-sort-down"></i></a></li>
+          <li><a href="#">Argomento <i class="icon-sort-down"></i></a></li>
+          <li><a href="#">Territorio <i class="icon-sort-down"></i></a></li>
+          <li><a href="#">Risposte <i class="icon-sort-down"></i></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="tab-content">
+      <div class="tab-pane active" id="action-hot">
+        {% for action in action_list %}
+          {% html_action_overview action %}
+        {% endfor %}
+      </div>
+      <div class="tab-pane" id="action-pop">
+        {% for action in action_list %}
+          {% html_action_overview action %}
+        {% endfor %}
+      </div>
+      <div class="tab-pane" id="action-latest">
+        {% for action in action_list %}
+          {% html_action_overview action %}
+        {% endfor %}
+      </div>
+      <div class="tab-pane" id="action-all">
+        {% for action in action_list %}
+          {% html_action_overview action %}
+        {% endfor %}
+      </div>
+    </div>
+
+  </article>
+
+{% endblock content %}

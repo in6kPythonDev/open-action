@@ -229,4 +229,35 @@ body.homepage #site_body {
   .help a { color: @grayLight; font-size: 12px; text-decoration: underline; }
 }
 
+.action-list {
+
+  .action-info {
+    width: 50%;
+    float:right;
+  }
+
+  #action-sorting {
+
+    float:right;
+    .navbar-inner {
+      min-height: 31px;
+    }
+    .navbar-text {
+      line-height: 31px;
+      padding-right: 4px;
+    }
+    .nav > li {
+      border-right: 1px solid @navbarInverseBorder;
+      &:last-child, &:first-child {
+        border-right: 0;
+      }
+      & > a {
+        text-shadow: 0 0 0;
+        color: @greenDark;
+        padding: 5px 15px;
+      }
+    }
+  }
+}
+
 .ui-helper-hidden-accessible { display: none; }

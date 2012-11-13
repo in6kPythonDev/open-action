@@ -55,7 +55,7 @@ def html_action_status(action):
     return {
         "voters": action.votes.count(),
         "answers": action.comments.count(),
-        "target": action.threshold # TODO FIXME
+        "target": action.threshold
     }
 
 @register.inclusion_tag('tags/action_overview.html')

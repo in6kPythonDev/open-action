@@ -1,6 +1,6 @@
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
-from django.views.generic import View
+from django.views.generic import View, ListView
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.db import transaction
@@ -1099,3 +1099,8 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
+
+
+class ActionList(ListView):
+
+    model = Action

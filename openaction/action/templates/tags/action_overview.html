@@ -4,28 +4,10 @@
   </a>
   <div class="media-body">
     <h4 class="media-heading">{{ action|safe }}</h4>
+
     {{ tags|safe }}
-{#    <i class="icon-map-marker"></i>#}
-{#    {% for location in geonames %}{{ location|safe }}{% if not forloop.last %},{% endif %} {% endfor %}#}
-{#    <br>#}
-{#    <i class="icon-tag"></i>#}
-{#    {% for category in categories %}{{ category|safe }}{% if not forloop.last %},{% endif %} {% endfor %}#}
 
   </div>
 </div>
 
 {% include 'tags/action_status.html' %}
-
-{#<div class="action-info row-fluid">#}
-{#  <div class="followers span3"><strong>150 MILA</strong> <p>Adesioni utenti</p></div>#}
-{#  <div class="answers span3"><strong>0</strong> <p>Risposte politici</p></div>#}
-{#  <div class="adhesions span6">#}
-{#    <div class="target">#}
-{#      <p>Prossimo obiettivo</p>#}
-{#      <div class="progress progress-success"><div class="bar" style="width: 60%;"></div></div>#}
-{#    </div>#}
-{#    <div class="target-value">#}
-{#      <strong>300 MILA</strong> <p>Adesioni</p>#}
-{#    </div>#}
-{#  </div>#}
-{#</div>#}
