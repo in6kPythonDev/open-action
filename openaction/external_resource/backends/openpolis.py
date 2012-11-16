@@ -42,15 +42,16 @@ class OpenPolisLocationsBackend(OpenPolisResourceBackend):
     def get_info(self, resource):
         """Call OpenPolis API and return normalized data."""
 
-        rel_url = 'locations/' + resource.id + '/'
+        rel_url = 'locations/' + str(resource) + '/'
         location_detail_url = urlparse.urljoin(self.base_url, rel_url)
         location_data = self.get_data(location_detail_url)
 
-        rel_url = 'cityreps/op_id/' + resource.id + '/'
+        rel_url = 'cityreps/op_id/' + str(resource) + '/'
         city_reps_url = urlparse.urljoin(self.base_url, rel_url)
         city_reps_data = self.get_data(city_reps_url)
 
-        normalized_data = location_data.update(city_reps_data)
+        #normalized_data = location_data.update(city_reps_data)
+        location_data.update(city_reps_data)
 
         #normalized_data = {
         #    'id' : data.get('id'),
@@ -59,7 +60,8 @@ class OpenPolisLocationsBackend(OpenPolisResourceBackend):
         #    'username' : data.get('username'),
         #}
 
-        return normalized_data
+        #return normalized_data
+        return location_data
 
 class OpenPolisPoliticiansBackend(OpenPolisResourceBackend):
 

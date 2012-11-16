@@ -6,7 +6,7 @@ from external_resource import utils
 from action.models import Geoname, Politician
 from action import exceptions
 
-import json, datetime
+import json, datetime, urlparse
 from cgi import escape
 
 class GeonameDict(dict):
@@ -23,32 +23,51 @@ class GeonameLookup(LookupChannel):
         # I will use this logic in the get_objects too:
         # I will get a list of structures containing the Json data,
         # that will be used into the Action view
-        backend_name = "locations"
+        backend_name = self.get_backend_name()
         backend = utils.load_backend(backend_name)
         full_url = backend.base_url + "locations/?namestartswith=%s" % q
         data = backend.get_data(full_url)
         fake_qs = []
         for d in data:
+            backend_name = "cityreps"
+            backend = utils.load_backend(backend_name)
+            rel_url = 'cityreps/op_id/' + str(d["id"]) + '/'
+            city_reps_url = urlparse.urljoin(backend.base_url, rel_url)
+            city_reps_data = backend.get_data(city_reps_url)
+            d.update(city_reps_data)
             fake_qs.append(GeonameDict(d["id"], **d))
         return fake_qs
  
+    #WAS: def get_objects(self, ids):
+    #WAS:     """ Return a list of structures containing Json data """
+
+    #WAS:     #was:  backend_name = "locations"
+    #WAS:     backend_name = self.get_backend_name()
+    #WAS:     backend = utils.load_backend(backend_name)
+
+    #WAS:     json_data = []
+    #WAS:     for _id in ids:
+    #WAS:         full_url = backend.base_url + "locations/%s" % _id
+    #WAS:         data = backend.get_data(full_url)
+    #WAS:         j_data = GeonameDict(data["id"], **data)
+    #WAS:         #'data' will surely contain a Json object
+    #WAS:         if len(j_data) == 0:
+    #WAS:             raise exceptions.ParanoidException()
+    #WAS:         else:
+    #WAS:             json_data.append(j_data)
+    #WAS:     return json_data
     def get_objects(self, ids):
         """ Return a list of structures containing Json data """
 
-        #was:  backend_name = "locations"
         backend_name = self.get_backend_name()
         backend = utils.load_backend(backend_name)
 
         json_data = []
         for _id in ids:
-            full_url = backend.base_url + "locations/%s" % _id
-            data = backend.get_data(full_url)
+            data = backend.get_info(_id)
             j_data = GeonameDict(data["id"], **data)
-            #'data' will surely contain a Json object
-            if len(j_data) == 0:
-                raise exceptions.ParanoidException()
-            else:
-                json_data.append(j_data)
+            json_data.append(j_data)
+
         return json_data
 
     #def get_result(self,obj):
