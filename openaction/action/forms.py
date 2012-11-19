@@ -5,6 +5,7 @@ import askbot.forms as askbot_forms
 from action.models import Action, Geoname, ActionCategory, Politician, Media
 from askbot.models import User
 from django.core import exceptions
+from external_resource.models import ExternalResource
 
 from ajax_select import make_ajax_field
 from ajax_select import get_lookup
@@ -57,6 +58,8 @@ class ActionForm(askbot_forms.AskForm):
     ) 
 
     def __init__(self, request, *args, **kw):
+        if kw.get('action'):
+            self.action = kw.pop('action')
         user = request.user
         choices = [("user-%s" % user.pk, user),]
         orgs = user.represented_orgs
@@ -105,22 +108,19 @@ class ActionForm(askbot_forms.AskForm):
         politician_ids_copy = list(politician_ids)
 
         if politician_ids:
-            cityrep_lookup = get_lookup(CITYREP_CHANNEL_NAME)
 
             for cityrep_id in geoname_ids:
                 if not len(politician_ids_copy):
                     break
                 found_ids = self.get_politicians_from_cityrep(
                     politician_ids_copy,
-                    cityrep_id,
-                    cityrep_lookup
+                    cityrep_id
                 )
                 #print("\n\nfound_ids: %s\n" % found_ids)
                 for politician_id in found_ids:
                     politician_ids_copy.remove(politician_id)
                 
             if len(politician_ids_copy):
-                #raise exceptions.InvalidPoliticianListError(politician_ids_copy)
                 raise exceptions.ValidationError(u"Non tutti i politici sono stati recuperati. Sono rimasti fuori i politici con id: %s" % politician_ids_copy)
 
             lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL[field_name])
@@ -131,10 +131,11 @@ class ActionForm(askbot_forms.AskForm):
 
         return values
 
-    def get_politicians_from_cityrep(self, politician_ids, cityrep_id, lookup):
+    def get_politicians_from_cityrep(self, politician_ids, cityrep_id):
         """ Return a list of politicians from a list of city
         representatives """
 
+        lookup = get_lookup(CITYREP_CHANNEL_NAME)
         politicians = []
 
         cityrep_data = lookup.get_objects([cityrep_id])[0]['city_representatives']
@@ -168,27 +169,33 @@ class ActionForm(askbot_forms.AskForm):
             raise exceptions.ValidationError("La soglia indicata non corrisponde a quella ricavata dai politici scelti")
 
     def compute_threshold_delta(self, politician_datum):
-        pass
+        return 0
  
     def clean(self):
         """ overriding form clean """
         cleaned_data = super(ActionForm, self).clean()
-        cleaned_data['politician_set'] = self.data['politician_set']
-        del self._errors['politician_set']
 
-        geoname_ids = cleaned_data['geoname_set']
+        cleaned_data['politician_set'] = self.data.get('politician_set',[])
+        if self._errors.get('politician_set'):
+            del self._errors['politician_set']
 
-        cleaned_data['geoname_set'] = self._clean_geoname_set(cleaned_data)
-        cleaned_data['politician_set'] = self._clean_politician_set(
-            cleaned_data,
-            geoname_ids
-        )
+        geoname_ids = cleaned_data.get('geoname_set')
+        if geoname_ids:
+            cleaned_data['geoname_set'] = self._clean_geoname_set(cleaned_data)
+        else:
+            external_resource_ids = self.action.geonames.values_list('external_resource', flat=True)
+            geoname_ids = [external_resource.ext_res_id for external_resource in ExternalResource.objects.filter(pk__in=external_resource_ids)]
+ 
+        if cleaned_data['politician_set']:
+            cleaned_data['politician_set'] = self._clean_politician_set(
+                cleaned_data,
+                geoname_ids
+            )
         self.check_threshold(cleaned_data)
         # set defaults
         for field_name in ('category_set', 'media_set'):
             if not cleaned_data.get(field_name):
                 cleaned_data[field_name] = []
-
         return cleaned_data
 
 

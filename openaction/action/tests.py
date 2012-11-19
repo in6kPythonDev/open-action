@@ -280,7 +280,7 @@ class ActionViewTest(OpenActionViewTestCase):
                 politician_set=politician_set,
                 threshold=threshold
             )
-        print "-------------------response: %s" % response
+        print "________________________response_create: %s" % response
 
         if logged_in:
             self._check_for_redirect_response(response, is_ajax=True)
@@ -332,6 +332,7 @@ class ActionViewTest(OpenActionViewTestCase):
                 tags=tagnames,
                 text=updated_text,
                 in_nomine=in_nomine,
+                geoname_set=geoname_set,
                 politician_set=updated_set,
                 threshold=threshold
             ) 
@@ -1004,7 +1005,7 @@ class ActionViewTest(OpenActionViewTestCase):
             user, 
             geoname_set = '|145|185|287|', 
             #politician_set = '|332997|543662|626209|',
-            politician_set = '|332997|543662|62622|',
+            politician_set = '|332997|543662|626222|',
             updated_politician_set = '|332997|543662|'
         ) 
 
