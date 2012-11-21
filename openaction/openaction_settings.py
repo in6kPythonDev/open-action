@@ -75,6 +75,7 @@ TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'social_auth.context_processors.social_auth_backends',
     'social_auth.context_processors.social_auth_by_type_backends',
     'social_auth.context_processors.social_auth_login_redirect',
+    'django.core.context_processors.static',
 )
 
 #--------------------------------------------------------------------------------
@@ -234,6 +235,8 @@ REDIS_DATABASE    = None
 
 AJAX_LOOKUP_CHANNELS = {
     'geonamechannel' : ( 'action.lookups' , 'GeonameLookup'),
+    'politicianchannel' : ( 'action.lookups', 'PoliticianLookup'),
+    'cityrepchannel' : ( 'action.lookups', 'CityrepLookup'),
 }
 # magically include jqueryUI/js/css
 AJAX_SELECT_BOOTSTRAP = True

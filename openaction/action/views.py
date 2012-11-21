@@ -296,7 +296,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
-            'in_nomine': self.request.REQUEST.get('in_nomine', ''),
+            'in_nomine': self.request.REQUEST.get('in_nomine', "user-%s" % self.request.user.pk),
+            'threshold': '0',
             'wiki': False,
             'is_anonymous': False,
         }
@@ -793,7 +794,16 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
+from django.utils.decorators import classonlymethod
 
 class ActionList(ListView):
 
     model = Action
+    filter = None
+
+    @classonlymethod
+    def as_view(cls, **initkwargs):
+
+        cls.filter_by = initkwargs.pop('filter','')
+        return super(cls, ActionList).as_view(**initkwargs)
+
