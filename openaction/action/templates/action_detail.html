@@ -6,6 +6,33 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
 {% endblock head_scripts %}
 
+{# START BITLY SUPPORT : ADD BITLY INPUT FORMFIELD #}
+{% block footer_scripts %}
+    <script type="text/javascript">
+    {% if settings.BITLY %}
+    $(document).ready(function(){
+        $('input.bitly').each(function() {
+            var $input = $(this);
+            $.getJSON(
+                "http://api.bitly.com/v3/shorten?callback=?",
+                {
+                    "format": "json",
+                    "apiKey": '{{ settings.BITLY.API_KEY }}',
+                    "login": '{{ settings.BITLY.API_KEY }}',
+                    "longUrl": $input.val()
+                },
+                function(response) {
+                    $input.val(response.data.url)
+                }
+            );
+        });
+    });
+    {% endif %}
+
+    </script>
+{% endblock %}
+{# END BITLY SUPPORT #}
+
 {% block content %}
 
   <div class="row-fluid">
@@ -78,7 +105,7 @@
       <div class="tab-pane" id="action-voters">
         <ul>
           {% for voter in action.voters %}
-          <li>{{ voter.user__username}}</li>
+          <li><span class="action-vote-number">{{ forloop.revcounter }}</span> {{ voter.username}}</li>
           {% empty %}
           <li><i>Nessuna persona ha aderito a questa Action</i></li>
           {% endfor %}
@@ -127,13 +154,14 @@
   {% for voter in action.voters %}
   {% html_render_resource voter %}
   {% if forloop.last %}
-    hanno già aderito. <br>Fallo anche tu, cambia le cose.
+      ha{% if not forloop.first %}nno{% endif %} già aderito.
     {% else %},{% endif %}
   {% empty %}
   <strong>Nessuno ha ancora aderito a questa Action</strong>
   {% endfor %}
-
-  <form action="#">
+  {% if user_can_vote %}
+  <br>Fallo anche tu, cambia le cose.
+  <form action="{% url action-vote-add pk=action.pk %}" method="post">{% csrf_token %}
     <fieldset class="action-form">
       <button class="action-button">Aderisci</button>
     </fieldset>
@@ -147,6 +175,9 @@
     </label>
     </fieldset>
   </form>
+  {% else %}
+     <div class="text-success">Hai già aderito a questa Action</div>
+  {% endif %}
 
   <hr>
 
@@ -183,7 +214,7 @@
 
   <h4>Copia e condividi sul tuo sito</h4>
   <div class="input-append">
-    <input type="text" class="span2" value="http://google.com">
+    <input type="text" class="span2 bitly" value="{{ action_absolute_uri }}">
     <button class="btn btn-info">Copia</button>
   </div>
 

@@ -44,18 +44,21 @@ def html_action_tags(action):
 <br>
 <i class="icon-tag"></i> %(categories)s
 """ % {
-        "locations" : ",".join([html_render_resource(geoname) for geoname in action.geonames]),
-        "categories" : ",".join([html_render_resource(category) for category in action.categories])
+        "locations" : ", ".join([html_render_resource(geoname) for geoname in action.geonames]),
+        "categories" : ", ".join([html_render_resource(category) for category in action.categories])
     }
     return html
 
 @register.inclusion_tag('tags/action_status.html')
 def html_action_status(action):
     """ Return html for an action status """
+    vote_count = action.votes.count()
+    threshold = action.threshold if action.threshold else 0
     return {
-        "voters": action.votes.count(),
+        "votes": vote_count,
         "answers": action.comments.count(),
-        "target": action.threshold
+        "target": threshold,
+        "progress": ((vote_count * 100.0) / threshold) if threshold else 0.0,
     }
 
 @register.inclusion_tag('tags/action_overview.html')

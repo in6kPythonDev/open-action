@@ -161,6 +161,8 @@ body.homepage #site_body {
 
 .news-list {
 
+  list-style: none;
+
   .organization-link i {
     color: @red;
   }
@@ -206,20 +208,9 @@ body.homepage #site_body {
   }
 }
 
-.action-step {
-  .pull-right;
-  background: transparent url("../img/action-steps.png") no-repeat center;
-  height: 85px; width: 85px;
-  margin-left: 15px;
-  margin-bottom: 15px;
-}
-.action-step-1 { .action-step; background-position: 0 0; }
-.action-step-2 { .action-step; background-position: -84px 0; }
-.action-step-3 { .action-step; background-position: -168px 0; }
-.action-step-4 { .action-step; background-position: -252px 0; }
-
 .action-create-form {
-  input[type="text"], textarea { .input-xxlarge; }
+  input[type="text"] { .input-xlarge; }
+  textarea { width: 90%; }
   h2 label {
     font-size: 18px;
     line-height: 20px;
@@ -227,9 +218,20 @@ body.homepage #site_body {
     margin-bottom: 10px;
   }
   .help a { color: @grayLight; font-size: 12px; text-decoration: underline; }
+
+  fieldset.action-create-step {
+    background: transparent no-repeat top right;
+
+    &#step1 { background-image: url('../img/action-step-1.png') }
+    &#step2 { background-image: url('../img/action-step-2.png') }
+    &#step3 { background-image: url('../img/action-step-3.png') }
+    &#step4 { background-image: url('../img/action-step-4.png') }
+  }
 }
 
 .action-list {
+
+  h1 a { color: @red; }
 
   .action-info {
     width: 50%;
@@ -262,7 +264,7 @@ body.homepage #site_body {
 
 .btn-social {
   .btn-info;
-  padding: 4px 12px 4px 4px;
+  padding: 4px 6px 4px 4px;
   text-transform: uppercase;
   font-size: 12px; line-height: 24px;
 }

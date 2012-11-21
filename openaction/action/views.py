@@ -11,7 +11,7 @@ from django.conf import settings
 from askbot.models import Post
 from askbot.models.repute import Vote
 import askbot.utils.decorators as askbot_decorators
-from action.models import Action, Geoname, Politician, Media
+from action.models import Action, Geoname, Politician, Media, ActionCategory
 from action import const as action_const
 from action import forms
 from action.signals import action_moderator_removed
@@ -57,6 +57,13 @@ class ActionDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
+        from django.contrib.sites.models import get_current_site
+        protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
+        context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
+        context['user_can_vote'] = self.request.user.assert_can_vote_action(self.instance) and (
+            # TODO: remove this if assert_can_vote_action checks if user already voted
+            self.instance not in self.request.user.actions.all()
+        )
         return context
 
 #---------------------------------------------------------------------------------
@@ -794,16 +801,32 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
-from django.utils.decorators import classonlymethod
 
-class ActionList(ListView):
+
+class ActionListView(ListView):
 
     model = Action
-    filter = None
+    filter_class = None
 
-    @classonlymethod
-    def as_view(cls, **initkwargs):
+    def get_context_data(self, **kwargs):
+        context = super(ActionListView, self).get_context_data(**kwargs)
 
-        cls.filter_by = initkwargs.pop('filter','')
-        return super(cls, ActionList).as_view(**initkwargs)
+        context['filter_object'] = self.filter_class.objects.get(pk=self.kwargs['pk'])
 
+        return context
+
+
+class CategoryActionListView(ActionListView):
+
+    filter_class = ActionCategory
+
+    def get_queryset(self):
+        return super(ActionListView, self).get_queryset().filter(category_set=self.kwargs['pk'] )
+
+
+class GeonameListView(ActionListView):
+
+    filter_class = Geoname
+
+    def get_queryset(self):
+        return super(ActionListView, self).get_queryset().filter(geoname_set=self.kwargs['pk'] )

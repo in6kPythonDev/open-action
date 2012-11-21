@@ -2629,7 +2629,7 @@ ul.icons li .icon-large:before {
 .open {
   *z-index: 1000;
 }
-.open  > .dropdown-menu {
+.open > .dropdown-menu {
   display: block;
 }
 .pull-right > .dropdown-menu {
@@ -5280,7 +5280,6 @@ a.badge:hover {
   width: 110px;
 }
 #site_menu .nav .dropdown a {
-  text-align: center;
   padding-left: 0;
   padding-right: 0;
   text-align: center;
@@ -5322,7 +5321,7 @@ a.badge:hover {
   padding-top: 300px;
   color: #000000;
 }
-#homepage_banner  > div {
+#homepage_banner > div {
   padding-bottom: 30px;
   background: transparent;
   zoom: 1;
@@ -5381,14 +5380,9 @@ body.homepage #site_body h3 {
   background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
   background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
   background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
-  background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
   border-color: #e6e6e6 #e6e6e6 #bfbfbf;
-  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #e6e6e6;
-  /* Darken IE7 buttons by default so they stand out more given they won't have borders */
-
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   border: 1px solid #bbbbbb;
   *border: 0;
   border-bottom-color: #a2a2a2;
@@ -5519,14 +5513,14 @@ body.homepage #site_body h3 {
 .action-info:after {
   clear: both;
 }
-.action-info  > div {
+.action-info > div {
   background-color: #eeeeee;
   padding: 3px;
   height: 60px;
   font-size: 12px;
   line-height: 12px;
 }
-.action-info  > div strong {
+.action-info > div strong {
   display: block;
   height: 50%;
   text-align: center;
@@ -5568,6 +5562,7 @@ body.homepage #site_body h3 {
   color: #c6242a;
 }
 .news-list {
+  list-style: none;
   margin-left: 0;
 }
 .news-list .organization-link i {
@@ -5620,53 +5615,11 @@ body.homepage #site_body h3 {
   list-style: none;
   font-weight: bold;
 }
-.action-step {
-  float: right;
-  background: transparent url("../img/action-steps.png") no-repeat center;
-  height: 85px;
-  width: 85px;
-  margin-left: 15px;
-  margin-bottom: 15px;
+.action-create-form input[type="text"] {
+  width: 270px;
 }
-.action-step-1 {
-  float: right;
-  background: transparent url("../img/action-steps.png") no-repeat center;
-  height: 85px;
-  width: 85px;
-  margin-left: 15px;
-  margin-bottom: 15px;
-  background-position: 0 0;
-}
-.action-step-2 {
-  float: right;
-  background: transparent url("../img/action-steps.png") no-repeat center;
-  height: 85px;
-  width: 85px;
-  margin-left: 15px;
-  margin-bottom: 15px;
-  background-position: -84px 0;
-}
-.action-step-3 {
-  float: right;
-  background: transparent url("../img/action-steps.png") no-repeat center;
-  height: 85px;
-  width: 85px;
-  margin-left: 15px;
-  margin-bottom: 15px;
-  background-position: -168px 0;
-}
-.action-step-4 {
-  float: right;
-  background: transparent url("../img/action-steps.png") no-repeat center;
-  height: 85px;
-  width: 85px;
-  margin-left: 15px;
-  margin-bottom: 15px;
-  background-position: -252px 0;
-}
-.action-create-form input[type="text"],
 .action-create-form textarea {
-  width: 530px;
+  width: 90%;
 }
 .action-create-form h2 label {
   font-size: 18px;
@@ -5678,6 +5631,24 @@ body.homepage #site_body h3 {
   color: #999999;
   font-size: 12px;
   text-decoration: underline;
+}
+.action-create-form fieldset.action-create-step {
+  background: transparent no-repeat top right;
+}
+.action-create-form fieldset.action-create-step#step1 {
+  background-image: url('../img/action-step-1.png');
+}
+.action-create-form fieldset.action-create-step#step2 {
+  background-image: url('../img/action-step-2.png');
+}
+.action-create-form fieldset.action-create-step#step3 {
+  background-image: url('../img/action-step-3.png');
+}
+.action-create-form fieldset.action-create-step#step4 {
+  background-image: url('../img/action-step-4.png');
+}
+.action-list h1 a {
+  color: #c6242a;
 }
 .action-list .action-info {
   width: 50%;
@@ -5700,7 +5671,7 @@ body.homepage #site_body h3 {
 .action-list #action-sorting .nav > li:first-child {
   border-right: 0;
 }
-.action-list #action-sorting .nav > li  > a {
+.action-list #action-sorting .nav > li > a {
   text-shadow: 0 0 0;
   color: #397267;
   padding: 5px 15px;
@@ -5722,7 +5693,7 @@ body.homepage #site_body h3 {
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
 
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
-  padding: 4px 12px 4px 4px;
+  padding: 4px 6px 4px 4px;
   text-transform: uppercase;
   font-size: 12px;
   line-height: 24px;

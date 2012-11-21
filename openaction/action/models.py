@@ -460,9 +460,12 @@ class ActionCategory(models.Model, Resource):
     #image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
     is_deleted = models.BooleanField(default=False)
 
+    def get_absolute_url(self):
+        return reverse("category-action-list", args=(self.pk,))
+
     class Meta:
-        verbose_name=_('Product category')
-        verbose_name_plural = _("Product categories")
+        verbose_name=_('Action category')
+        verbose_name_plural = _("Action categories")
         ordering = ('name',)
 
     def __unicode__(self):
