@@ -419,7 +419,7 @@ class Action(models.Model, Resource):
 
 #--------------------------------------------------------------------------------
 
-class Geoname(models.Model):
+class Geoname(models.Model, Resource):
 
     MAX_CACHE_VALID_MINUTES = 0 #1360 #1 day
 
@@ -441,6 +441,9 @@ class Geoname(models.Model):
 
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.kind)
+
+    def get_absolute_url(self):
+        return reverse("geoname-action-list", args=(self.pk,))
 
     class Meta:
         unique_together = (('name','kind'),)
