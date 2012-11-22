@@ -62,7 +62,7 @@
           </a>
           <div class="media-body">
             Creata il {{ action.created_on }} <br>
-            da <a href="#">{{ action.owner }}</a> <br>
+            da <a href="{{ action.owner.get_absolute_url }}">{{ action.owner }}</a> <br>
             <a href="#">Barano d'Ischia</a>
           </div>
         </div>
@@ -185,7 +185,7 @@
 
   <ul>
     <li>Invii massivi di email: <strong>0</strong></li>
-    <li>Risposte dei politici: <strong>{{ action.answers.count }}</strong></li>
+    <li>Risposte dei politici: <strong>{{ action.comments.count }}</strong></li>
   </ul>
 
   <p class="well">

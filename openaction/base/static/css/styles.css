@@ -2629,7 +2629,7 @@ ul.icons li .icon-large:before {
 .open {
   *z-index: 1000;
 }
-.open > .dropdown-menu {
+.open  > .dropdown-menu {
   display: block;
 }
 .pull-right > .dropdown-menu {
@@ -5280,6 +5280,7 @@ a.badge:hover {
   width: 110px;
 }
 #site_menu .nav .dropdown a {
+  text-align: center;
   padding-left: 0;
   padding-right: 0;
   text-align: center;
@@ -5321,7 +5322,7 @@ a.badge:hover {
   padding-top: 300px;
   color: #000000;
 }
-#homepage_banner > div {
+#homepage_banner  > div {
   padding-bottom: 30px;
   background: transparent;
   zoom: 1;
@@ -5380,9 +5381,14 @@ body.homepage #site_body h3 {
   background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
   background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
   background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+  background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
   border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #e6e6e6;
+  /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   border: 1px solid #bbbbbb;
   *border: 0;
   border-bottom-color: #a2a2a2;
@@ -5513,14 +5519,14 @@ body.homepage #site_body h3 {
 .action-info:after {
   clear: both;
 }
-.action-info > div {
+.action-info  > div {
   background-color: #eeeeee;
   padding: 3px;
   height: 60px;
   font-size: 12px;
   line-height: 12px;
 }
-.action-info > div strong {
+.action-info  > div strong {
   display: block;
   height: 50%;
   text-align: center;
@@ -5647,6 +5653,10 @@ body.homepage #site_body h3 {
 .action-create-form fieldset.action-create-step#step4 {
   background-image: url('../img/action-step-4.png');
 }
+.homepage .action-list .action-info {
+  width: 100%;
+  float: right;
+}
 .action-list h1 a {
   color: #c6242a;
 }
@@ -5671,7 +5681,7 @@ body.homepage #site_body h3 {
 .action-list #action-sorting .nav > li:first-child {
   border-right: 0;
 }
-.action-list #action-sorting .nav > li > a {
+.action-list #action-sorting .nav > li  > a {
   text-shadow: 0 0 0;
   color: #397267;
   padding: 5px 15px;

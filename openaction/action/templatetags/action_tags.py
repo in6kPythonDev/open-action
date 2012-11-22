@@ -67,6 +67,7 @@ def html_action_overview(action):
     d = {
         "action": html_render_resource(action),
         "tags" : html_action_tags(action),
+        "action_url": action.get_absolute_url(),
     }
     d.update( html_action_status(action) )
     return d
