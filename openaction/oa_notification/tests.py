@@ -49,8 +49,7 @@ class OaNotificationTest(ActionViewTest):
 
         #sending action status update signal
         post_action_status_update.send(sender=self._action, 
-            old_status=const.ACTION_STATUS_READY,
-            user=None
+            old_status=const.ACTION_STATUS_READY
         )
 
         notice_type = NoticeType.objects.get(label="joined_action_get_level_step")

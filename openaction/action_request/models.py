@@ -32,10 +32,10 @@ class ActionRequest(models.Model, Resource):
     #TODOFUTURE: Every action that use this application should be able to define its
     # REQUEST_TYPE_CHOICES
     REQUEST_CHOICES = (
-        (consts.REQUEST_TYPE['mod'],'Moderazione'),
-        (consts.REQUEST_TYPE['msg'],'Messaggio'),
-        (consts.REQUEST_TYPE['vict'],'Vittoria Azione'),
-        (consts.REQUEST_TYPE['clos'],'Chiusura Azione'),
+        (consts.REQUEST_TYPE_MODERATION,'Moderazione'),
+        (consts.REQUEST_TYPE_MESSAGE,'Messaggio'),
+        (consts.REQUEST_TYPE_SET_VICTORY,'Vittoria Azione'),
+        (consts.REQUEST_TYPE_SET_CLOSURE,'Chiusura Azione'),
     ) 
     
     action = models.ForeignKey(Action)
@@ -69,14 +69,19 @@ class ActionRequest(models.Model, Resource):
         
     def check_same_type_already_accepted(self):
         return ActionRequest.objects.filter(
-            recipient=self.recipient, action=self.action,
+            recipient_set=self.recipient_set.all(), action=self.action,
             request_type=self.request_type, is_accepted=True
         ).exists()
 
     def check_same_type_already_processed(self):
         return ActionRequest.objects.filter(
-            recipient=self.recipient, action=self.action,
+            recipient_set=self.recipient_set.all(), action=self.action,
             request_type=self.request_type, is_processed=True
         ).exists()
 
+    def get_same_request_types(self):
+        return ActionRequest.objects.filter(
+            recipient_set=self.recipient_set.all(), action=self.action,
+            request_type=self.request_type,request_notes=self.request_notes
+        )
 

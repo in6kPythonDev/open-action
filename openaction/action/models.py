@@ -15,6 +15,7 @@ from base.utils import get_resource_icon_path
 from action import const, exceptions, tokens, managers
 from action.signals import post_action_status_update
 from organization.models import Organization
+from external_resource.models import ExternalResource
 
 import askbot_extensions.utils
 import logging, datetime, os
@@ -80,11 +81,12 @@ class Action(models.Model, Resource):
             status = const.ACTION_STATUS_CLOSED
         elif self.question.deleted:
             status = const.ACTION_STATUS_DELETED
-        elif self.score == 0:
+        #was: elif self.score == 0:
+        elif not self._threshold:
             # cannot be voted until all fields are set
             # so the Action goes into "ready" status
             status = const.ACTION_STATUS_DRAFT
-        elif not self.threshold or self.score < self.threshold:
+        elif self.score < self.threshold:
             status = const.ACTION_STATUS_READY
         elif self.score >= self.threshold:
             status = const.ACTION_STATUS_ACTIVE
@@ -110,17 +112,17 @@ class Action(models.Model, Resource):
         elif value == const.ACTION_STATUS_DRAFT:
             log.warning("Setting of DRAFT status, this shouldn't be done")
             self.question.score = 0
+            self._threshold = None
             self.question.save()
+            self.save()
         elif value == const.ACTION_STATUS_READY:
             log.warning("Setting of READY status, this should be done only by bot")
-            self.question.score = self.threshold
-            self.question.save()
+            assert self.threshold #Force threshold computation
         else:
             raise ValueError("Invalid status %s for action %s" % (value, self))
 
         post_action_status_update.send(sender=self,
-            old_status=old_status,
-            user=None
+            old_status=old_status
         )
 
     @property
@@ -271,16 +273,19 @@ class Action(models.Model, Resource):
         return self.thread.posts.filter(post_type="answer")
 
     def compute_threshold(self):
+        #TODO: Matteo
         """Compute threshold for an action to become ACTIVE.
 
         Threshold is the number of votes needed for an action to be
-        puglished and activate media and politicians contacts.
+        published and activate media and politicians contacts.
         """
 
-        #TODO
-        threshold = 3
-        self._threshold = threshold
-        self.save()
+        if self.can_be_ready(): #TODO Matteo: se ce stanno tutti i parametri
+            #TODO
+            threshold = 3
+        else:
+            raise exceptions.ThresholdNotComputableException(self)
+        return threshold
 
     @property
     def threshold(self):
@@ -290,9 +295,14 @@ class Action(models.Model, Resource):
         """
 
         if not self._threshold:
-           if self.status == const.ACTION_STATUS_READY:
-                self.compute_threshold() 
+            self._threshold = self.compute_threshold()
+            self.save()
         return self._threshold
+
+    def can_be_ready(self):
+        """ Check if it is possible to compute the threshold for an
+        Action """
+        return self.bare_title != '' and self.content != ''
 
     token_generator = tokens.ActionReferralTokenGenerator()
     def get_token_for_user(self, user):
@@ -409,22 +419,34 @@ class Action(models.Model, Resource):
 
 #--------------------------------------------------------------------------------
 
-class Geoname(models.Model):
+class Geoname(models.Model, Resource):
 
-    GEO_CHOICES = (
-        ('state', 'Stato'),
-        ('province', 'Provincia'),
-        ('municipality', 'Comune'),
-    )
+    MAX_CACHE_VALID_MINUTES = 0 #1360 #1 day
 
-    name = models.CharField(max_length=1024)
-    kind = models.CharField(max_length=32, choices=GEO_CHOICES)
+    #COMMENT LF: we do not restrict CharField choices
+    # in order to support versatile API
+    # GEO_CHOICES = (
+    #     ('state', 'Stato'),
+    #     ('province', 'Provincia'),
+    #     ('municipality', 'Comune'),
+    # )
+
+    name = models.CharField(max_length=512)
+    kind = models.CharField(max_length=64) #, choices=GEO_CHOICES)
 
     # Modifier for threshold computation
     threshold_factor = models.FloatField(default=1)
 
+    external_resource = models.OneToOneField(ExternalResource)
+
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.kind)
+
+    def get_absolute_url(self):
+        return reverse("geoname-action-list", args=(self.pk,))
+
+    class Meta:
+        unique_together = (('name','kind'),)
 
 #--------------------------------------------------------------------------------
 
@@ -438,9 +460,12 @@ class ActionCategory(models.Model, Resource):
     #image = models.ImageField(upload_to=get_resource_icon_path, null=True, blank=True,verbose_name=_('image'))
     is_deleted = models.BooleanField(default=False)
 
+    def get_absolute_url(self):
+        return reverse("category-action-list", args=(self.pk,))
+
     class Meta:
-        verbose_name=_('Product category')
-        verbose_name_plural = _("Product categories")
+        verbose_name=_('Action category')
+        verbose_name_plural = _("Action categories")
         ordering = ('name',)
 
     def __unicode__(self):
@@ -454,7 +479,19 @@ class ActionCategory(models.Model, Resource):
 #--------------------------------------------------------------------------------
 
 class Politician(models.Model):
-    pass
+
+    MAX_CACHE_VALID_MINUTES = 0 #1360 #1 day
+
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
+    charge = models.CharField(max_length=128)
+    external_resource = models.OneToOneField(ExternalResource)
+
+    def __unicode__(self):
+        return u"%s %s (%s)" % (self.first_name, self.last_name, self.charge)
+
+    class Meta:
+        unique_together = (('first_name','last_name','charge'),)
 
 #--------------------------------------------------------------------------------
 

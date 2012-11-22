@@ -1,1 +1,98 @@
-{{ form }}
+{% extends 'base.html' %}
+
+{% block footer_js_includes %}
+    <script type="text/javascript">
+
+    ;$(document).load(function(){
+
+        // populate threshold field
+        // on politician select
+        $('#id_politician_set').on('edit', function() {
+            console.log('EDIT POLITICIAN SET', arguments, $('#id_threshold').val())
+        })
+
+    })
+
+    </script>
+{% endblock %}
+
+{% block content %}
+  <h1>Crea un'Azione</h1>
+  <p>Questo è un testo introduttivo che presenta brevemente cosa fare e incoraggia l'utente a completare il form.</p>
+
+
+  <form action="{% url action-create %}" method="post" class="action-create-form">
+
+    <fieldset class="action-create-step" id="step1">
+      {% if form.non_field_errors %}
+      <p class="text-error">{{ form.non_field_errors }}</p>
+      {% endif %}
+
+      <h2><label for="id_{{ form.title.html_name }}">Per cosa bisogna agire?</label></h2>
+      {{ form.title.errors }}
+      <input type="text" name="{{ form.title.html_name }}" autocomplete="off" placeholder="Inserisci un titolo..." id="id_{{ form.title.html_name }}" value="{{ form.title.value }}">
+      <p class="help"><a href="#">Come scrivere un titolo efficace</a></p>
+
+      <label for="id_{{ form.text.html_name }}">Descrivi la questione, perché è importante e cosa vuoi che venga fatto</label>
+      {{ form.text.errors }}
+      <textarea name="{{ form.text.html_name }}" id="id_{{ form.text.html_name }}" cols="30" rows="10" placeholder="Inserisci un testo...">{{ form.text.value }}</textarea>
+      <p class="help"><a href="#">Come scrivere un testo efficace</a></p>
+    </fieldset>
+
+    <hr>
+
+    <fieldset class="action-create-step" id="step2">
+      <h2><label for="{{ form.category_set.html_name }}">Che ambiti riguarda</label></h2>
+      {{ form.category_set.errors }}
+      {{ form.category_set }}
+
+      <h2><label for="{{ form.tags.html_name }}">Specifica gli argomenti <small>(importante)</small></label></h2>
+      {{ form.tags.errors }}
+      <p>La scelta degli argomenti può aiutarti a definire meglio i prossimi passi</p>
+      {{ form.tags }}
+    </fieldset>
+
+    <hr>
+
+    <fieldset class="action-create-step" id="step3">
+      <h2><label for="{{ form.geoname_set.html_name }}">Scegli il territorio interessato</label></h2>
+      {{ form.geoname_set.errors }}
+      <div class="controls">
+        {{ form.geoname_set }}
+        <label class="btn disabled" for="ambito-nazionale"><input type="checkbox" id="ambito-nazionale" style="margin:0;" name="ambito-nazionale"> Ambito nazionale</label>
+        <p class="help"><a href="#">Come scegliere un territorio</a></p>
+      </div>
+    </fieldset>
+
+    <hr>
+
+    <fieldset class="action-create-step" id="step4">
+      <h2><label for="{{ form.politician_set.html_name }}">Scegli i decisori</label></h2>
+      <p>Questa opzione è collegata alla scelta degli argomenti e del territorio.</p>
+      {{ form.politician_set.errors }}
+      {{ form.politician_set }}
+      <p class="help"><a href="#">Come scegliere i decisori</a></p>
+
+{#    {{ form.as_p }}#}
+    </fieldset>
+    <fieldset>
+        {{ form.threshold }}
+        {{ form.in_nomine }}
+        <p class="action-form"><input type="submit" class="btn btn-info btn-large" value="Salva come bozza"></p>
+    </fieldset>
+</form>
+{% endblock content %}
+
+{% block sidebar %}
+
+  <div class="highlights">
+  <strong>Stai creando un'azione</strong>
+  <ul>
+    <li>1) <a href="#step1">Scrivi per cosa bisogna agire</a></li>
+    <li>2) <a href="#step2">Quali argomenti riguarda</a></li>
+    <li>3) <a href="#step3">Il territorio interessato dall'Azione</a></li>
+    <li>4) <a href="#step4">Scegli i decisori da coinvolgere</a></li>
+  </ul>
+  </div>
+
+{% endblock %}

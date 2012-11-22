@@ -4,3 +4,5 @@ django-social-auth
 -e git://github.com/carljm/django-model-utils.git#egg=django-model-utils
 django-registration
 -e git://github.com/brosner/django-notification.git#egg=django-notification
+redis
+django-ajax-selects

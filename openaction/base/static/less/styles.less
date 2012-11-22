@@ -1,0 +1,288 @@
+// CSS Reset
+@import "bootstrap.less";
+
+#site_header {
+  padding-top: 40px;
+}
+
+#site_menu {
+  .brand { padding: 0; margin-left: 0; }
+  #action-button {
+    border-left: 1px solid @white;
+    border-right: 1px solid @white;
+    text-transform: uppercase;
+    margin-right: 10px;
+    margin-left: 10px;
+    font-weight: bold;
+  }
+  .caret {
+    border-top: 4px solid @white;
+  }
+  .nav .navbar-text {
+    margin-right: 10px;
+  }
+  .nav .dropdown {
+    width: 110px;
+    a { text-align: center; padding-left: 0; padding-right: 0; text-align: center }
+  }
+  .navbar-form {
+    margin-top: 5px;
+  }
+}
+
+#site_body, #content, #sidebar { min-height: 200px; }
+#sidebar { background-color: @grayLighter; }
+
+#site_footer {
+  color: @white;
+  a { color: @white; }
+
+  #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+}
+
+#sidebar {
+  padding: 10px 20px;
+}
+
+#homepage_banner {
+  background: url('../img/homepage.png') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  padding-top:300px;
+  color: @black;
+
+  & > div {
+    padding-bottom: 30px;
+//    & > * { color: @black; }
+
+    background:transparent;
+    zoom: 1;
+  /* RGBa with 0.4 opacity */
+    background: rgba(235, 234, 228, 0.6);
+  /* IE6 & 7 */
+    filter: 'progid:DXImageTransform.Microsoft.gradient(startColorstr=#99EBEAE4, endColorstr=#99EBEAE4)';
+  /* IE8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#99EBEAE4,endColorstr=#99EBEAE4)";
+  }
+}
+
+body.homepage #site_body {
+  h2 { font-size: 22px; line-height: 26px; }
+  h3 { font-size: 14px; line-height: 18px; text-transform: uppercase; }
+}
+
+#content {
+//  .media { padding-bottom: 5px; border-bottom: 1px dotted @grayLight; margin-bottom: 5px; }
+  .media-heading a { color: @red; }
+  p.text-success { font-weight: bold; }
+}
+
+.action-form {
+  text-align: center;
+  background-color: transparent;
+}
+.homepage .action-form {
+  margin-top: -40px;
+}
+.action-button {
+  z-index: 9999;
+  .btn;
+  .btn-large;
+  .buttonBackground(@green, @greenDark);
+  padding: 20px 40px;
+}
+
+.action-info {
+  margin-top:5px;
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: bold;
+
+  .clearfix;
+
+  & > div {
+
+    background-color: @grayLighter;
+    padding: 3px;
+    height: 60px;
+    font-size: 12px;
+    line-height: 12px;
+
+    strong {
+      display: block;
+      height: 50%;
+      text-align: center;
+      font-size: 14px;
+      line-height: 14px;
+    }
+  }
+
+  p { margin-bottom: 3px; }
+
+  .followers strong { color: @red; }
+  .answers strong { color: @black; }
+  .adhesions strong { color: @greenLight; }
+
+  .adhesions {
+
+    .target {
+
+      .pull-left;
+
+      width: 52%;
+      background-color: @white;
+      padding-top: 3px;
+
+      .progress {
+        margin: 10px 3px;
+        height: 5px;
+      }
+    }
+    .target-value {
+
+      .pull-right;
+
+      width: 48%;
+      height: 100%;
+      text-align: center;
+
+    }
+  }
+
+}
+
+.action-status {
+  a { font-weight: bold; }
+}
+
+#content article h1 { color: @red; }
+
+.news-list {
+
+  list-style: none;
+
+  .organization-link i {
+    color: @red;
+  }
+
+  .media-header {
+    margin: 0;
+    a { color: @red; }
+  }
+
+  margin-left: 0;
+
+  li {
+    margin: 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed @grayLight;
+
+    form { margin-bottom: 0; }
+  }
+
+
+}
+
+.breadcrumb { background: transparent;  }
+
+#sidebar {
+  fieldset {margin-top: 10px;}
+  label.checkbox { font-size: 11px; color: @grayLight; }
+  h3 { font-size: 13px; text-transform: uppercase; line-height: 15px;}
+  h4 { font-size: 12px; text-transform: uppercase; line-height: 14px;}
+  ul.news-list {
+
+    li:last-child {
+      border-bottom: 0;
+    }
+  }
+}
+
+.highlights {
+  margin: 15px 0;
+  ul {
+    margin: 0;
+    li { list-style: none; font-weight: bold; }
+  }
+}
+
+.action-create-form {
+  input[type="text"] { .input-xlarge; }
+  textarea { width: 90%; }
+  h2 label {
+    font-size: 18px;
+    line-height: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .help a { color: @grayLight; font-size: 12px; text-decoration: underline; }
+
+  fieldset.action-create-step {
+    background: transparent no-repeat top right;
+
+    &#step1 { background-image: url('../img/action-step-1.png') }
+    &#step2 { background-image: url('../img/action-step-2.png') }
+    &#step3 { background-image: url('../img/action-step-3.png') }
+    &#step4 { background-image: url('../img/action-step-4.png') }
+  }
+}
+
+.homepage .action-list .action-info {
+  width: 100%;
+  float:right;
+}
+
+.action-list {
+
+  h1 a { color: @red; }
+
+  .action-info {
+    width: 50%;
+    float:right;
+  }
+
+  #action-sorting {
+
+    float:right;
+    .navbar-inner {
+      min-height: 31px;
+    }
+    .navbar-text {
+      line-height: 31px;
+      padding-right: 4px;
+    }
+    .nav > li {
+      border-right: 1px solid @navbarInverseBorder;
+      &:last-child, &:first-child {
+        border-right: 0;
+      }
+      & > a {
+        text-shadow: 0 0 0;
+        color: @greenDark;
+        padding: 5px 15px;
+      }
+    }
+  }
+}
+
+.btn-social {
+  .btn-info;
+  padding: 4px 6px 4px 4px;
+  text-transform: uppercase;
+  font-size: 12px; line-height: 24px;
+}
+
+[class^="socialicon-"] {
+  .pull-left;
+  background: transparent url("../img/social-icons.png") no-repeat center;
+  height: 24px; width: 24px;
+  margin-right: 8px;
+}
+
+.socialicon-gplus { background-position: 0 0; }
+.socialicon-facebook { background-position: -24px 0; }
+.socialicon-twitter { background-position: -48px 0; }
+
+.ui-helper-hidden-accessible { display: none; }

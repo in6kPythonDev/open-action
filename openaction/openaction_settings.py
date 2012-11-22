@@ -75,11 +75,14 @@ TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'social_auth.context_processors.social_auth_backends',
     'social_auth.context_processors.social_auth_by_type_backends',
     'social_auth.context_processors.social_auth_login_redirect',
+    'django.core.context_processors.static',
 )
 
 #--------------------------------------------------------------------------------
 
 INSTALLED_APPS = list(settings.INSTALLED_APPS)
+INSTALLED_APPS.append('base')
+INSTALLED_APPS.append('django.contrib.humanize')
 INSTALLED_APPS.append('askbot_extensions')
 INSTALLED_APPS.append('organization')
 INSTALLED_APPS.append('action')
@@ -91,6 +94,7 @@ INSTALLED_APPS.append('notification')
 INSTALLED_APPS.append('oa_notification')
 INSTALLED_APPS.append('action_request')
 INSTALLED_APPS.append('users')
+INSTALLED_APPS.append('ajax_select')
 
 
 PROJECT_NAME = "openaction"
@@ -160,7 +164,8 @@ LOGGING = {
 
 REFERRAL_TOKEN_RESET_TIMEOUT_DAYS = 5
 
-MAX_MODERATION_REQUESTS = 3 
+MAX_MODERATION_REQUESTS = 3
+MAX_DELIVERABLE_MESSAGES = 3
 
 #--------------------------------------------------------------------------------
 
@@ -176,13 +181,65 @@ NOTIFICATION_BACKENDS = (
 #--------------------------------------------------------------------------------
 
 EXTERNAL_API_BACKENDS_D = {
-    "facebook" : "external_resource.backends.FBExternalResourceInfo",
-    #"twitter" : "external_resource.backends.TwitterExternalResourceInfo",
-    "openpolis" : "external_resource.backends.OpenPolisExternalResourceInfo",
+    "facebook" : "external_resource.backends.FBResourceBackend",
+    #"twitter" : "external_resource.backends.TwitterResourceBackend",
+    "cityreps" : {
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisCityrepsBackend",
+        'HOST' : 'api.openpolis.it',
+        'PORT' : 80,
+        'PROTOCOL': 'http',
+        'BASE_PATH' : '/op/1.0/',
+        'USER' : 'your_user_here',
+        'PASSWORD' : 'your_password_here',
+    },
+    "locations" : {
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisLocationsBackend",
+        'HOST' : 'api.openpolis.it',
+        'PORT' : 80,
+        'PROTOCOL': 'http',
+        'BASE_PATH' : '/op/1.0/',
+        'USER' : 'your_user_here',
+        'PASSWORD' : 'your_password_here',
+    },
+    "politicians" : {
+        'ENGINE' : "external_resource.backends.openpolis.OpenPolisPoliticiansBackend",
+        'HOST' : 'api.openpolis.it',
+        'PORT' : 80,
+        'PROTOCOL': 'http',
+        'BASE_PATH' : '/op/1.0/',
+        'USER' : 'your_user_here',
+        'PASSWORD' : 'your_password_here',
+    },
 }
 
 # Map correspondance of backend names from social_auth to external_resource
 SOCIAL_AUTH_TO_EXTERNAL_RESOURCE_BACKEND_MAP = {
     "facebook" : "facebook",
 }
+
+#Time after that an ExternalResource has to be updated
+MAX_TIME_ELAPSED = 10
+
+#---------------------------------------------------------------------------------
+# Redis cache server
+
+# IP:PORT address. None will use default values
+REDIS_SERVER_ADDR = None
+REDIS_SERVER_PORT = None
+
+# Redis Database identifier. None will use default values
+REDIS_DATABASE    = None
+
+#---------------------------------------------------------------------------------
+# Ajax select
+
+AJAX_LOOKUP_CHANNELS = {
+    'geonamechannel' : ( 'action.lookups' , 'GeonameLookup'),
+    'politicianchannel' : ( 'action.lookups', 'PoliticianLookup'),
+    'cityrepchannel' : ( 'action.lookups', 'CityrepLookup'),
+}
+# magically include jqueryUI/js/css
+AJAX_SELECT_BOOTSTRAP = True
+AJAX_SELECT_INLINES = 'inline'
+
 

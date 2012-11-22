@@ -1,6 +1,6 @@
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
-from django.views.generic import View
+from django.views.generic import View, ListView
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.db import transaction
@@ -11,20 +11,35 @@ from django.conf import settings
 from askbot.models import Post
 from askbot.models.repute import Vote
 import askbot.utils.decorators as askbot_decorators
-from action.models import Action
+from action.models import Action, Geoname, Politician, Media, ActionCategory
 from action import const as action_const
 from action import forms
 from action.signals import action_moderator_removed
 from askbot_extensions import utils as askbot_extensions_utils
 from organization.models import Organization
-import exceptions
+from external_resource.models import ExternalResource
+from external_resource import utils
+from action.lookups import GeonameDict
+from ajax_select import get_lookup
 
 from lib import views_support
 
+import exceptions
 import logging, datetime
 
 log = logging.getLogger(settings.PROJECT_NAME)
 
+
+#NOTE: 'resource' here is meant as a pool of data. Are there better terms?
+MAP_RESOURCE_TO_CHANNEL = {
+    'cityrep' : 'cityrepchannel'
+}
+
+MAP_FIELD_NAME_TO_CHANNEL = {
+    'geoname_set' : 'geonamechannel', 
+    'politician_set' : 'politicianchannel',
+    'media_set' : 'TODO',
+}
 
 class ActionDetailView(DetailView):
     """ List the details of an Action """
@@ -42,6 +57,13 @@ class ActionDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
+        from django.contrib.sites.models import get_current_site
+        protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
+        context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
+        context['user_can_vote'] = self.request.user.assert_can_vote_action(self.instance) and (
+            # TODO: remove this if assert_can_vote_action checks if user already voted
+            self.instance not in self.request.user.actions.all()
+        )
         return context
 
 #---------------------------------------------------------------------------------
@@ -272,16 +294,17 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
     form_class = forms.ActionForm
     
-    @method_decorator(askbot_decorators.check_spam('text'))
-    def dispatch(self, request, *args, **kwargs):
-        return super(ActionView, self).dispatch(request, *args, **kwargs)
+    #KO: @method_decorator(askbot_decorators.check_spam('text'))
+    #KO: def dispatch(self, request, *args, **kwargs):
+    #KO: return super(ActionView, self).dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         return {
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
-            'in_nomine': self.request.REQUEST.get('in_nomine', ''),
+            'in_nomine': self.request.REQUEST.get('in_nomine', "user-%s" % self.request.user.pk),
+            'threshold': '0',
             'wiki': False,
             'is_anonymous': False,
         }
@@ -296,8 +319,116 @@ class ActionView(FormView, views_support.LoginRequiredView):
         form.hide_field('post_author_username')
         form.hide_field('wiki')
         form.hide_field('ask_anonymously')
+        #using the askbot logic to hide our fields
+        form.hide_field('threshold')
         return form
+ 
+    def get_or_create_geonames(self, geoname_list):
+        """ Here we have to check if there exist Geonames with pk into
+        the provided ids.
 
+        If there are ids that do not match with any of the existing Geoname
+        pk, than create new Geonames togheter with their ExternalResource. 
+        If there are some existing ExternalResource which was created too time 
+        ago, then check the openpolis API to see if there had been some changes.
+        """
+
+        geonames = []
+        lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL['geoname_set'])
+
+        for datum in geoname_list:
+
+            #print("\ndatum: %s" % json_datum)
+            ext_res_id = datum['id']
+            ext_res_type = datum['location_type']['name']
+
+            try:
+                geoname = Geoname.objects.get(
+                    external_resource__ext_res_id=ext_res_id,
+                    external_resource__ext_res_type=ext_res_type
+                )
+            except Geoname.DoesNotExist as e:
+                name = datum['name']
+                kind = ext_res_type
+
+                e_r = ExternalResource.objects.create(
+                    ext_res_id = ext_res_id, 
+                    ext_res_type = ext_res_type,
+                    backend_name = lookup.get_backend_name(),
+                )
+                geoname = Geoname.objects.create(
+                    name = name,
+                    kind = kind,
+                    external_resource = e_r
+                )
+                #TO REMOVE: just for testing purposes
+                #geoname.external_resource.update_external_data(
+                #    lookup,
+                #    ext_res_id,
+                #    datum
+                #)
+
+            else:
+                last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
+                if last_get_delta.seconds > Geoname.MAX_CACHE_VALID_MINUTES:
+                    #TODO Matteo:
+                    geoname.external_resource.update_external_data(datum)
+
+            geonames.append(geoname)
+
+        return geonames
+
+    def get_or_create_politicians(self, politician_list):
+        """ Here we have to check if there exist Politician objects with pk into
+        the provided ids.
+
+        If there are ids that do not match with any of the existing Politician
+        pks, than create new Geonames togheter with their ExternalResource. 
+        If there are some existing ExternalResource which was created too time 
+        ago, then check the openpolis API to see if there had been some changes.
+        """
+
+        politicians = []
+        lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL['politician_set'])
+
+        for datum in politician_list:
+
+            ext_res_id = datum['content_id']
+            ext_res_type = datum['institution_charges']['current'][0]['charge_type']
+
+            try:
+                politician = Politician.objects.get(
+                    external_resource__ext_res_id=ext_res_id,
+                    external_resource__ext_res_type=ext_res_type
+                )
+            except Politician.DoesNotExist as e:
+
+                first_name = datum['first_name']
+                last_name = datum['last_name']
+                charge = ext_res_type
+
+                e_r = ExternalResource.objects.create(
+                    ext_res_id = ext_res_id, 
+                    ext_res_type = ext_res_type,
+                    backend_name = lookup.get_backend_name(),
+                    # MANCA IL DATA! TODO Matteo: valutare
+                )
+                politician = Politician.objects.create(
+                    first_name=first_name,
+                    last_name=last_name,
+                    external_resource = e_r
+                )
+
+            else:
+                last_get_delta = datetime.datetime.now() - politician.external_resource.last_get_on
+                if last_get_delta.seconds > Politician.MAX_CACHE_VALID_MINUTES:
+                    #TODO Matteo: not a priority
+                    politician.external_resource.update_external_data(datum)
+
+            politicians.append(politician)
+
+        return politicians
+                
 class ActionCreateView(ActionView):
     """Create a new Action.
 
@@ -326,6 +457,7 @@ class ActionCreateView(ActionView):
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
         in_nomine = form.cleaned_data['in_nomine']
+        total_threshold = int(form.cleaned_data['threshold'])
 
         question = self.request.user.post_question(
             title = title,
@@ -338,25 +470,38 @@ class ActionCreateView(ActionView):
 
         action = question.action 
 
+        # check if this action is created by an organization
         if in_nomine[:3] == "org":
             in_nomine_pk = int(in_nomine[4:])
+            log.debug("IN_NOMINE %s _PK %s" % (in_nomine[:3], in_nomine[4:]))
             action.in_nomine_org = Organization.objects.get(pk=in_nomine_pk)
+            # We update "in_nomine_org" and no other action parameters below,
+            # so it is safe and good to "save" here.
             action.save()
 
-        for m2m_attr in (
-            'geoname_set', 
-            'category_set',
-            'politician_set',
-            'media_set'
-        ):
-            m2m_value = form.cleaned_data.get(m2m_attr)
-            if len(m2m_value) != 0:
-                getattr(action, m2m_attr).add(*m2m_value)
+        categories = form.cleaned_data['category_set']
+        action.category_set.add(*categories)
+
+        geoname_data = form.cleaned_data['geoname_set']
+        #COMMENT WARNING TODO: we should have a specific GeonameField
+        # which has a clean() method that does the following kludge
+        # The same is valid for other m2m fields below
+        geonames = self.get_or_create_geonames(geoname_data)
+        action.geoname_set.add(*geonames)
+        
+        politician_data = form.cleaned_data['politician_set']
+        politicians = self.get_or_create_politicians(politician_data)
+        action.politician_set.add(*politicians)
+        
+        medias = form.cleaned_data['media_set']
+        #TODO: Matteo 
+        action.media_set.add(*medias)
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
 class ActionUpdateView(ActionView, SingleObjectMixin):
+    #TODO: change according to the Create method
     """Update an action
 
     Firstly, the question of the Thread related to the Action to update is
@@ -373,16 +518,18 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
     """
     model = Action
     template_name = "action/update.html"
-        
+
+    def get_form_kwargs(self):
+        kwargs = super(ActionUpdateView, self).get_form_kwargs()
+        kwargs['action'] = self.get_object()
+        return kwargs
+    
     @transaction.commit_on_success
     def form_valid(self, form):
         """Edit askbot question --> then set action relations"""
 
         action = self.get_object()
         
-        #WAS: if action.status not in (action_const.ACTION_STATUS_DRAFT, ):
-        #WAS:     return views_support.response_error(self.request, msg=exceptions.EditActionInvalidStatusException(action.status))
-
         self.request.user.assert_can_edit_action(action)
 
         question = action.question 
@@ -391,6 +538,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         #theese tags will be replaced to the old ones
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
+        total_threshold = int(form.cleaned_data['threshold'])
 
         self.request.user.edit_question(
             question = question,
@@ -402,26 +550,123 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             edit_anonymously = False,
         )   
 
-        for m2m_attr in (
-            'geoname_set', 
-            'category_set',
-            'politician_set',
-            'media_set'
-        ):
-            m2m_value = form.cleaned_data.get(m2m_attr)
 
-            #WAS: if m2m_value is not None:
-            if len(m2m_value) != 0:
-                # Values can be overlapping or non overlapping
-                m2m_values_old = getattr(action, m2m_attr).all()
-                m2m_values_new = m2m_value
+        new_categories = form.cleaned_data['category_set']
+        old_categories = action.categories
+        to_add, to_remove = self.update_values(old_categories, 
+            new_categories
+        )
+        action.category_set.add(*to_add)
+        action.category_set.remove(*to_remove)
 
-                to_add, to_remove = self.update_values(m2m_values_old, 
-                    m2m_values_new
-                )
+        geoname_data = form.cleaned_data['geoname_set']
+        old_geonames = action.geonames
+        new_geonames = self.get_or_create_geonames(geoname_data)
+        to_add, to_remove = self.update_values(old_geonames, 
+            new_geonames
+        )
+        action.geoname_set.add(*to_add)
+        action.geoname_set.remove(*to_remove)
 
-                getattr(action, m2m_attr).add(*to_add)
-                getattr(action, m2m_attr).remove(*to_remove)
+        politician_data = form.cleaned_data['politician_set']
+        old_politicians = action.politicians
+        new_politicians = self.get_or_create_politicians(politician_data)
+        to_add, to_remove = self.update_values(old_politicians, 
+            new_politicians
+        )
+        action.politician_set.add(*to_add)
+        action.politician_set.remove(*to_remove)
+        
+        medias = form.cleaned_data['media_set']
+        #TODO: Matteo 
+        #old_medias = action.medias
+        #new_medias = []
+        #to_add, to_remove = self.update_values(old_medias, 
+        #    new_medias
+        #)
+        #action.media_set.add(*to_add)
+        #action.media_set.remove(*to_remove)
+
+        #for m2m_attr in (
+        #    'geoname_set', 
+        #    'politician_set',
+        #    'media_set'
+        #):
+        #    #Theese attributes should contain Json data
+        #    m2m_value = form.cleaned_data.get(m2m_attr)
+        #    if m2m_attr[:-4] == 'geoname':
+        #        model = Geoname
+        #        kwargs = {}
+        #        kwargs['ext_res_type'] = {
+        #            'type' : 'location_type',
+        #            'name' : 'name'
+        #        }
+        #        kwargs['name'] = 'name'
+        #    elif m2m_attr[:-4] == 'politician':
+        #        model = Politician
+        #        kwargs = {}
+        #        #GET cityreps from locations ids
+        #        if form.cleaned_data['geoname_set']:
+        #            cityreps_ids = form.cleaned_data.get('geoname_set')
+        #        else:
+        #            cityreps_ids = [long(obj.external_resource.ext_res_id) 
+        #                for obj in action.geonames]
+
+        #        # here we check that the threshold arrived is equal to
+        #        # the the sum of the thrershold delta of all the politicians
+        #        # the metho dwill raise exceptions if necessary
+        #        #kwargs['charge_ids'] = self.get_politicians_charge_ids(
+        #        #    cityreps_ids,
+        #        #    m2m_value,
+        #        #    get_lookup(MAP_MODEL_SET_TO_CHANNEL['cityrep'])
+        #        #)
+        #        if type(m2m_value) != list:
+        #            m2m_value = [int(elem) for elem in m2m_value.strip('|').split('|')]
+
+        #        m2m_value_copy = [elem for elem in m2m_value]
+        #        kwargs['politicians_jsons'] = self.check_threshold(
+        #            cityreps_ids,
+        #            m2m_value_copy,
+        #            total_threshold
+        #        )
+        #        kwargs['id_prefix'] = 'content_'
+        #    elif m2m_attr[:-4] == 'media':
+        #        kwargs = {}
+        #        model = Media
+
+        #    if len(m2m_value) != 0:
+        #        """ Here we have to check if there are ExternalResource
+        #        objects with pk equal to the provided ids.
+        #        If there are ids that do not match with any ExternalResource
+        #        object pk, than create them. 
+        #        If the ExternalResource which pks match with some ids was
+        #        created too time ago, then check the openpolis Json to see
+        #        if there had been some changes.
+        #        
+        #        Finally check if there are Geoname objects linked to the found
+        #        ExternalResource objects. If not, create them.
+        #        
+        #        """
+        #        # Values can be overlapping or non overlapping
+        #        m2m_values_old = getattr(action, m2m_attr).all()
+
+        #        m2m_values_new = self.get_m2m_values(
+        #            m2m_attr,
+        #            m2m_value,
+        #            model,
+        #            #ext_res_type={
+        #            #    'type' : 'location_type',
+        #            #    'name' : 'name'
+        #            #}
+        #            **kwargs
+        #        )
+
+        #        to_add, to_remove = self.update_values(m2m_values_old, 
+        #            m2m_values_new
+        #        )
+
+        #        getattr(action, m2m_attr).add(*to_add)
+        #        getattr(action, m2m_attr).remove(*to_remove)
     
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
@@ -442,6 +687,8 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         count = 0
         values_new_length = len(new_values)
 
+        #print("\nold: %s\n" % old_values)
+        #print("\nnew: %s\n" % new_values)
         for obj_new in new_values:
             to_add.append(obj_new)
 
@@ -516,15 +763,17 @@ class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
         return views_support.response_success(request)
 
 class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
+    """ Allow to the Action owner to remove an Action moderator.
+
+    The ex-moderator is notified of this and he can send a message to 
+    the Action owner asking for the reasons behind his removal. 
+
+    """ 
 
     model = Action
     form_class = forms.ModeratorRemoveForm
     template_name = 'moderation/remove.html'
 
-    @method_decorator(askbot_decorators.check_spam('text'))
-    def dispatch(self, request, *args, **kwargs):
-        return super(ActionModerationRemoveView, self).dispatch(request, *args, **kwargs)
- 
     def get_form_kwargs(self):
         kwargs = super(ActionModerationRemoveView, self).get_form_kwargs()
         kwargs['action'] = self.get_object()
@@ -538,7 +787,10 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         moderator = form.cleaned_data['moderator']
         #notes = form.cleaned_data['text']
 
-        sender.assert_can_remove_action_moderator(sender, moderator, action)
+        sender.assert_can_remove_action_moderator(
+            moderator, 
+            action
+        )
 
         action.moderator_set.remove(moderator)
 
@@ -548,3 +800,33 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
+
+
+
+class ActionListView(ListView):
+
+    model = Action
+    filter_class = None
+
+    def get_context_data(self, **kwargs):
+        context = super(ActionListView, self).get_context_data(**kwargs)
+
+        context['filter_object'] = self.filter_class.objects.get(pk=self.kwargs['pk'])
+
+        return context
+
+
+class CategoryActionListView(ActionListView):
+
+    filter_class = ActionCategory
+
+    def get_queryset(self):
+        return super(ActionListView, self).get_queryset().filter(category_set=self.kwargs['pk'] )
+
+
+class GeonameListView(ActionListView):
+
+    filter_class = Geoname
+
+    def get_queryset(self):
+        return super(ActionListView, self).get_queryset().filter(geoname_set=self.kwargs['pk'] )

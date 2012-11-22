@@ -16,6 +16,7 @@ from action import const as a_consts
 from lib import views_support
 
 class UserDetailView(DetailView):
+    """ Show the given User details """
 
     def get_object(self, queryset=None):
 
@@ -25,6 +26,9 @@ class UserDetailView(DetailView):
         return object
 
 class UserProfileListView(ListView):
+    """ Show a list of Users details with other information about users 
+    last activities """
+
     model = UserProfile
     template_name = 'profiles/profile_list.html'
     context_object_name = 'user_profile'
@@ -40,7 +44,25 @@ class UserProfileListView(ListView):
         })
         return context
 
-class UserProfileView(DetailView, views_support.LoginRequiredView):
+class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
+    """ Show the User profile page.
+
+    The page contains:
+
+    * voted actions : the actions the user joined to
+    * friends : the user friends into the site
+    * followed organizations : the organizations followed by the user
+    * represented organizations : the organizations represented by the user
+    * activities : the registered activities of the user
+    * number of unread notices : notices sent to the user that he has not 
+    read yet
+    * number of voted active actions : the number of the active actions the 
+    user joined to
+    * number of activists involved : number of users who joined an action and 
+    for which he was the referral 
+    * global impact factor : how many joinings have been done thanks to the user
+    
+    """
 
     model = UserProfile
     template_name = 'profiles/profile_detail.html'
@@ -55,7 +77,7 @@ class UserProfileView(DetailView, views_support.LoginRequiredView):
 
     def get_context_data(self, **kwargs):
 
-        context = super(UserProfileView, self).get_context_data(**kwargs)
+        context = super(UserProfileDetailView, self).get_context_data(**kwargs)
         user = self.get_object().user
        
         #note: typo from django-notification "recieved" :)
@@ -72,8 +94,7 @@ class UserProfileView(DetailView, views_support.LoginRequiredView):
             'num_of_involved_activists' : user.involved_users.count(),
             'global_impact_factor' : user.global_impact_factor,
         })
-
-        print("\n\nCONTEXT: %s\n\n" % context)
+        #print("\nContext: %s" % context)
 
         return context
 

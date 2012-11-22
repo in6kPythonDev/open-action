@@ -1,39 +1,347 @@
-<html>
-<head><title>Apri L'AZIONE!</title></head>
+{% extends 'base.html' %}
+{% load action_tags %}
 
-<body>
+{% block head_scripts %}
+  {{ block.super }}
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
+{% endblock head_scripts %}
 
-Score: {{action.score}}
+{# START BITLY SUPPORT : ADD BITLY INPUT FORMFIELD #}
+{% block footer_scripts %}
+    <script type="text/javascript">
+    {% if settings.BITLY %}
+    $(document).ready(function(){
+        $('input.bitly').each(function() {
+            var $input = $(this);
+            $.getJSON(
+                "http://api.bitly.com/v3/shorten?callback=?",
+                {
+                    "format": "json",
+                    "apiKey": '{{ settings.BITLY.API_KEY }}',
+                    "login": '{{ settings.BITLY.API_KEY }}',
+                    "longUrl": $input.val()
+                },
+                function(response) {
+                    $input.val(response.data.url)
+                }
+            );
+        });
+    });
+    {% endif %}
 
-<p>Question: {{action.title}}</p>
+    </script>
+{% endblock %}
+{# END BITLY SUPPORT #}
 
-<p>Description: {{action.description}}</p>
+{% block content %}
 
-<p>Text: {{action.content}}</p>
+  <div class="row-fluid">
+    <div class="span6">
+      <ul class="breadcrumb">
+        <li><a href="#">Home</a> <span class="divider">/</span></li>
+        <li><a href="#">Actions</a> <span class="divider">/</span></li>
+        <li class="active">You are here</li>
+      </ul>
+    </div>
+    <div class="span6">
+      {% html_action_status action %}
+    </div>
+  </div>
 
-<p>Author: {{action.owner}}</p>
+  <article>
+    <h1>{{ action.title }}</h1>
 
-<p>VOTERS:</p>
-<ul>
-{% for voter in action.voters %}
-<li>{{ voter.user__username }}</li>
-{% endfor %}
-</ul>
+    {% html_action_tags action %}
 
-<p>COMMENTS: </p>
-<ul>
-{% for comment in action.comments %}
-<li>{{ comment }}</li>
-{% endfor %}
-</ul>
+    <div class="media action-status">
+      <a class="pull-left"><img src="http://placehold.it/160x160" alt=""></a>
+      <div class="media-body">
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="http://placehold.it/64x64">
+          </a>
+          <div class="media-body">
+            Creata il {{ action.created_on }} <br>
+            da <a href="{{ action.owner.get_absolute_url }}">{{ action.owner }}</a> <br>
+            <a href="#">Barano d'Ischia</a>
+          </div>
+        </div>
 
-<p>ANSWERS: </p>
-<ul>
-{% for answer in action.blog_posts %}
-<li>{{ answer.text }}</li>
-{% endfor %}
-</ul>
+        <div class="highlights">
+          Indirizzata a:
+          <ul>
+            <li>Sindaco di Barano d'Ischia (NA)</li>
+            <li>Presidente della provincia di Napoli</li>
+          </ul>
+          + <a href="#">altri 10 politici <i class="icon-sort-down"></i></a>
+        </div>
 
-</body>
-</html>
+        <div class="highlights">
+          <ul>
+            <li>Repubblica Napoli</li>
+            <li>Corriere del Mezzogiorno</li>
+          </ul>
+          + <a href="#">altri 10 media <i class="icon-sort-down"></i></a>
+        </div>
+      </div>
+
+    </div>
+
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#action-overview" data-toggle="tab">Azione</a></li>
+      <li><a href="#action-blog" data-toggle="tab">Blog</a></li>
+      <li><a href="#action-voters" data-toggle="tab">Aderenti</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="action-overview">
+        {{ action.content|safe }}
+      </div>
+      <div class="tab-pane" id="action-blog">
+        {% for blog_post in action.blog_posts %}
+        {% html_blogpost_item blog_post %}
+        {% endfor %}
+      </div>
+      <div class="tab-pane" id="action-voters">
+        <ul>
+          {% for voter in action.voters %}
+          <li><span class="action-vote-number">{{ forloop.revcounter }}</span> {{ voter.username}}</li>
+          {% empty %}
+          <li><i>Nessuna persona ha aderito a questa Action</i></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </article>
+
+  <hr>
+
+  <h3>Azioni correlate</h3>
+
+  <section id="related-actions">
+    <ul class="news-list">
+      <li>
+        <div class="media">
+          <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+          <div class="media-body">
+            <div class="organization-link"><i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a></div>
+            <h4 class="media-header"><a href="#">Fermiamo l'inquinamento della spiaggia dei Maronti</a></h4>
+            {% html_action_tags action %}
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="media">
+          <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+          <div class="media-body">
+            <div class="organization-link"><i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a></div>
+            <h4 class="media-header"><a href="#">Fermiamo l'inquinamento della spiaggia dei Maronti</a></h4>
+            {% html_action_tags action %}
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <a href="#">Altre azioni correlate <i class="icon-sort-down"></i></a>
+  </section>
+
+{% endblock content %}
+
+
+{% block sidebar %}
+
+  {% for voter in action.voters %}
+  {% html_render_resource voter %}
+  {% if forloop.last %}
+      ha{% if not forloop.first %}nno{% endif %} già aderito.
+    {% else %},{% endif %}
+  {% empty %}
+  <strong>Nessuno ha ancora aderito a questa Action</strong>
+  {% endfor %}
+  {% if user_can_vote %}
+  <br>Fallo anche tu, cambia le cose.
+  <form action="{% url action-vote-add pk=action.pk %}" method="post">{% csrf_token %}
+    <fieldset class="action-form">
+      <button class="action-button">Aderisci</button>
+    </fieldset>
+    <fieldset>
+    <label class="checkbox">
+      <input type="checkbox" name="anonymous"> Mostra pubblicamente la mia firma
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="accept_terms"> Autorizza OpenAction al trattamento dei miei dati personali
+    </label>
+    </fieldset>
+  </form>
+  {% else %}
+     <div class="text-success">Hai già aderito a questa Action</div>
+  {% endif %}
+
+  <hr>
+
+  <h3>A che punto siamo</h3>
+
+  <ul>
+    <li>Invii massivi di email: <strong>0</strong></li>
+    <li>Risposte dei politici: <strong>{{ action.comments.count }}</strong></li>
+  </ul>
+
+  <p class="well">
+    Gentili signori,
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla pulvinar adipiscing lorem, aliquet tristique nisi pretium at. Aliquam sed tristique elit. Maecenas ultricies condimentum urna.
+    <a href="#">Continua a leggere...</a>
+  </p>
+
+  <hr>
+
+  <p>
+    <strong>Mancano 200 adesioni per il prossimo obiettivo</strong>.
+    Aiutaci a coinvolgere più persone possibili
+  </p>
+
+  <p>
+    <button class="btn btn-social">
+      <i class="socialicon-twitter"></i> Condividi su Twitter
+    </button>
+  </p>
+  <p>
+    <button class="btn btn-social">
+      <i class="socialicon-facebook"></i> Condividi su Facebook
+    </button>
+  </p>
+
+  <h4>Copia e condividi sul tuo sito</h4>
+  <div class="input-append">
+    <input type="text" class="span2 bitly" value="{{ action_absolute_uri }}">
+    <button class="btn btn-info">Copia</button>
+  </div>
+
+
+  <hr>
+
+  <h3>Sostenitori più attivi</h3>
+
+  <ul class="news-list">
+  {% for referral in action.referrers %}
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          {% html_render_resource referral %}
+          <br> Roma
+          <br> 200 persone coinvolte
+        </div>
+      </div>
+    </li>
+  {% empty %}
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> 200 persone coinvolte
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> 200 persone coinvolte
+        </div>
+      </div>
+    </li>
+  {% endfor %}
+  </ul>
+  <a href="#">Tutti i sostenitori</a>
+
+  <hr>
+
+  <h3>Ultime adesioni</h3>
+  <a href="#">Tutti le adesioni</a>
+
+  <hr>
+
+  <h3>Perchè aderisco</h3>
+  <ul class="news-list">
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> oggi
+        </div>
+      </div>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+        Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+      <form action="#">
+        145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
+      </form>
+    </li>
+    <li>
+      <div class="media">
+        <a class="pull-left" href="#">
+          <img class="media-object" src="http://placehold.it/64x64">
+        </a>
+        <div class="media-body">
+          <a href="#">Mario rossi</a>
+          <br> Roma
+          <br> oggi
+        </div>
+      </div>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+        Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+      <form action="#">
+        145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
+      </form>
+    </li>
+  </ul>
+
+  <a href="#">Leggi tutte le altre</a>
+
+  <hr>
+
+  <h3>Se ne parla in rete</h3>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <div class="media-body">
+      25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
+      - <a href="#">ItaliaLavoroTv</a>
+    </div>
+  </div>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <div class="media-body">
+      25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
+      - <a href="#">ItaliaLavoroTv</a>
+    </div>
+  </div>
+  <div class="media">
+    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <div class="media-body">
+      25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
+      - <a href="#">ItaliaLavoroTv</a>
+    </div>
+  </div>
+
+
+
+
+{% endblock sidebar %}
 

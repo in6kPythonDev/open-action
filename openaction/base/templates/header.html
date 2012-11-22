@@ -1,0 +1,32 @@
+{% load i18n %}
+<header id="site_header" class="container">
+  <div class="row">
+    {% if organization %}
+    <h1>{{ organization.name }}</h1>
+    {% endif %}
+    <div class="pull-right">
+
+      <div class="btn-group">
+        {% if request.user.is_authenticated %}
+          <a class="btn btn-link dropdown-toggle" href="#" data-toggle="dropdown"><i class="icon-user"></i> {{ request.user.username|escape }} <span class="caret"></span></a>
+          <ul class="dropdown-menu user-info">
+            <li>
+              <a href="{{ settings.LOGOUT_URL }}?next={{ settings.LOGOUT_REDIRECT_URL }}"><i class="icon-signout"></i> {% blocktrans %}sign out{% endblocktrans %}</a>
+            </li>
+            <li><a href="#"><i class="icon-pencil"></i> Edit</a></li>
+            <li><a href="#"><i class="icon-trash"></i> Delete</a></li>
+            <li><a href="#"><i class="icon-ban-circle"></i> Ban</a></li>
+            <li class="divider"></li>
+            <li><a href="#"><i class="i"></i> Make admin</a></li>
+          </ul>
+          <a href="" title="{% blocktrans %}help{% endblocktrans %}">{% blocktrans %}help{% endblocktrans %}</a>
+        {% else %}
+          <a href="{{ settings.LOGIN_URL }}?next={{ request.path }}" class="btn btn-link">{% blocktrans %}Hi there! Please sign in{% endblocktrans %}</a>
+        {% endif %}
+        <a class="btn btn-link" href="{% url help %}" title="{% blocktrans %}help{% endblocktrans %}"><i class="icon-question-sign"></i></a>
+
+      </div>
+
+    </div>
+  </div>
+</header>
