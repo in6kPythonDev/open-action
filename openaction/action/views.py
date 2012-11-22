@@ -816,7 +816,7 @@ class ActionListView(ListView):
         return context
 
 
-class CategoryActionListView(ActionListView):
+class ActionByCategoryListView(ActionListView):
 
     filter_class = ActionCategory
 
@@ -824,7 +824,7 @@ class CategoryActionListView(ActionListView):
         return super(ActionListView, self).get_queryset().filter(category_set=self.kwargs['pk'] )
 
 
-class GeonameListView(ActionListView):
+class ActionByGeonameListView(ActionListView):
 
     filter_class = Geoname
 
