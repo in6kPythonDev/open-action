@@ -62,16 +62,12 @@ OpenAction installation guide
         python manage.py syncdb 
         python manage.py migrate askbot 
         python manage.py migrate django_authopenid
+        python manage.py migrate askbot_extensions
 
      Don't mind errors appearing during the migrations, if they're something like::
 
         ... already exist ...
-     They shouldn't be a problem.::
-
-         python manage.py syncdb
-         python manage.py migrate askbot
-         python manage.py migrate django_authopenid
-         python manage.py migrate askbot_extensions
+     They shouldn't be a problem.
 
      At this point you can test the installation by::
 
@@ -83,10 +79,7 @@ OpenAction installation guide
 
     pip install -r CLONEDIR/openaction/requirements.txt
 
-6. Merge ``CLONEDIR/openaction/urls.py.dist`` with ``WEBDIR/urls.py``::
-
-    cat CLONEDIR/openaction/urls.py.dist >> WEBDIR/urls.py
-
+6. Merge ``CLONEDIR/openaction/urls.py.dist`` with ``WEBDIR/urls.py``
 
 7. Merge ``CLONEDIR/openaction/openaction_settings.py`` with ``WEBDIR/settings.py``::
 
@@ -124,7 +117,7 @@ OpenAction installation guide
 
     python manage.py syncdb
 
-10. Run redis cache server (for ajax selects) with ``redis-server``
+10. Install and run redis cache server (for ajax selects) with ``redis-server``
 
 Now Open Action is installed correcty.
 
