@@ -762,7 +762,7 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        geoname_set = '|23|45|123|12|'
+        geoname_set = '|145|185|287|'
         threshold = 0
 
         response = self._do_POST_create_action(
@@ -791,7 +791,7 @@ class ActionViewTest(OpenActionViewTestCase):
             # since the user is not representative of any ot them
             self.assertTrue(action_obj.in_nomine_org == None)
             #TODO: check that Action has the desired locations
-            for _id in [23,45,123,12]:
+            for _id in [145,185,287]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     geoname_obj = Geoname.objects.get(external_resource=e_r)
