@@ -81,9 +81,12 @@ OpenAction installation guide
 
 6. Merge ``CLONEDIR/openaction/urls.py.dist`` with ``WEBDIR/urls.py``
 
-7. Merge ``CLONEDIR/openaction/openaction_settings.py`` with ``WEBDIR/settings.py``::
+7. Move ``CLONEDIR/openaction/openaction_settings.py`` in ``WEBDIR/`` and add to ``WEBDIR/settings.py``::
 
-    cat CLONEDIR/openaction/openaction_settings.py >> WEBDIR/settings.py
+    try:
+        from openaction_settings import *
+    except ImportError:
+        pass
 
 8. Integrate openaction project
 

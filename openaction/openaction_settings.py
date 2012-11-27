@@ -14,7 +14,7 @@ LOGIN_ERROR_URL    = '/social_auth/login-error/'
 FACEBOOK_EXTENDED_PERMISSIONS = ['email'] # if this is missing, only username is retrieved
 SOCIAL_AUTH_COMPLETE_URL_NAME  = 'socialauth_complete'
 SOCIAL_AUTH_ASSOCIATE_URL_NAME = 'socialauth_associate_complete'
-SOCIAL_AUTH_RAISE_EXCEPTIONS = DEBUG
+SOCIAL_AUTH_RAISE_EXCEPTIONS = settings.DEBUG
 SOCIAL_AUTH_PIPELINE = (
     'social_auth.backends.pipeline.social.social_auth_user',
     'social_auth.backends.pipeline.associate.associate_by_email',
@@ -100,8 +100,8 @@ INSTALLED_APPS.append('ajax_select')
 PROJECT_NAME = "openaction"
 
 # A sample logging configuration. 
-LOG_FILE = PROJECT_ROOT + '/log/%s.log' % PROJECT_NAME
-LOG_FILE_DEBUG = PROJECT_ROOT + '/log/%s_debug.log' % PROJECT_NAME
+LOG_FILE = settings.PROJECT_ROOT + '/log/%s.log' % PROJECT_NAME
+LOG_FILE_DEBUG = settings.PROJECT_ROOT + '/log/%s_debug.log' % PROJECT_NAME
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
