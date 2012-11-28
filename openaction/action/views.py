@@ -42,6 +42,8 @@ MAP_FIELD_NAME_TO_CHANNEL = {
     'media_set' : 'TODO',
 }
 
+COMMA = ','
+
 class ActionDetailView(DetailView):
     """ List the details of an Action """
 
@@ -832,4 +834,7 @@ class ActionListView(ListView, views_support.LoginRequiredView):
         #})
         return context
 
+    def get(self, request, *args, **kwargs):
+        super(ActionListView, self).get(request, *args, **kwargs)
+        return views_support.response_success(request)
 
