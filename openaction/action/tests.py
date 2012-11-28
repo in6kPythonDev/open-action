@@ -155,6 +155,19 @@ class ActionViewTest(OpenActionViewTestCase):
             )
         return response
 
+    def _GET(self, url, is_ajax, **kwargs):
+
+        if is_ajax:
+            response = self._c.get(url,
+                kwargs,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        else:
+            response = self._c.get(url,
+                kwargs
+            )
+        return response
+
     def _do_POST_action_add_vote(self, action, query_string="", ajax=False):
 
         response = self._POST(
@@ -232,6 +245,16 @@ class ActionViewTest(OpenActionViewTestCase):
 
         response = self._POST(
             reverse('action-unfollow', args=(action.pk,)),
+            ajax,
+            **kwargs
+        )
+        return response
+
+    #WAS: def _do_GET_filter_actions_by_geoname(self, geoname_ext_res_id, ajax=False, **kwargs):
+    def _do_GET_filter_actions(self, ajax=False, **kwargs):
+
+        response = self._GET(
+            reverse('actions-filter', args=()),#args=(geoname_ext_res_id,)),
             ajax,
             **kwargs
         )
@@ -724,6 +747,7 @@ class ActionViewTest(OpenActionViewTestCase):
         title = "Aggiungo una nuova action"
         tagnames = None
         text = "Blablablablablablabla" 
+        geoname_set = '|145|185|287|', 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         threshold = 0
 
@@ -732,6 +756,7 @@ class ActionViewTest(OpenActionViewTestCase):
             title=title,
             tagnames=tagnames,
             text=text,
+            geoname_set=geoname_set, 
             in_nomine=in_nomine,
             threshold=threshold
         )
@@ -874,7 +899,9 @@ class ActionViewTest(OpenActionViewTestCase):
 
         title = "Aggiungo una nuova action in nomine di un'associazione"
         tagnames = None
+        geoname_set = '|145|185|287|', 
         text = "Blablablablablablabla"
+        threshold = 0
         in_nomine = "%s-%s" % ("org", organization.pk)
 
         # NOT DRY: This post is implemented in organization.tests.
@@ -905,8 +932,10 @@ class ActionViewTest(OpenActionViewTestCase):
         response = self._do_POST_create_action(
             ajax=True,
             title=title,
+            geoname_set=geoname_set, 
             tagnames=tagnames,
             text=text,
+            threshold=threshold,
             in_nomine=in_nomine
         )
         #print "-------------------response: %s" % response
@@ -1068,8 +1097,10 @@ class ActionViewTest(OpenActionViewTestCase):
 
         title = "Aggiungo una nuova action"
         tagnames = None
+        geoname_set = '|145|185|287|', 
         text = "Blablablablablablabla"
         in_nomine = "%s-%s" % ("user", self._author.pk)
+        threshold = 0;
 
         #create action
         r = self._do_POST_create_action(
@@ -1077,7 +1108,9 @@ class ActionViewTest(OpenActionViewTestCase):
             title=title,
             tagnames=tagnames,
             text=text,
-            in_nomine=in_nomine
+            in_nomine=in_nomine,
+            geoname_set=geoname_set,
+            threshold=threshold
         )
         #print "-------------------response: %s" % r
         action = Action.objects.latest()
@@ -1093,8 +1126,10 @@ class ActionViewTest(OpenActionViewTestCase):
             title=title,
             tags=tagnames,
             summary=None,
-            text=updated_text
-            #in_nomine=in_nomine
+            text=updated_text,
+            #geoname_set=geoname_set, 
+            threshold=threshold,
+            in_nomine=in_nomine
         ) 
         #print "-------------------response: %s" % response
 
@@ -1110,14 +1145,18 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", self._author.pk)
-
+        geoname_set = '|145|185|287|', 
+        threshold = 0
         #create action
+
         r = self._do_POST_create_action(
             ajax=True,
             title=title,
             tagnames=tagnames,
             text=text,
-            in_nomine=in_nomine
+            in_nomine=in_nomine,
+            geoname_set=geoname_set, 
+            threshold = threshold
         )
         #print "-------------------response: %s" % r
         action = Action.objects.latest()
@@ -1136,8 +1175,10 @@ class ActionViewTest(OpenActionViewTestCase):
             title=title,
             tags=tagnames,
             summary=None,
-            text=updated_text
-            #in_nomine=in_nomine
+            text=updated_text,
+            #geoname_set=geoname_set, 
+            threshold = threshold,
+            in_nomine=in_nomine
         ) 
         #print "-------------------response: %s" % response
 
@@ -1237,3 +1278,47 @@ class ActionViewTest(OpenActionViewTestCase):
         else:
             self._check_for_redirect_response(response)
 
+    def test_filter_actions_by_geoname(self, user=None):
+        """ """
+
+        geo_ext_res_id = 145
+
+        self.test_create_action_with_locations(user)
+
+        response = self._do_GET_filter_actions(
+            #geoname_ext_res_id,
+            ajax=True,
+            geo_ext_res_id=geo_ext_res_id
+        )
+
+        self._check_for_success_response(response)
+
+    def test_filter_actions_by_politician(self, user=None):
+        """ """
+
+        pol_ext_res_id = 332997
+
+        self.test_create_action_with_politicians(user)
+
+        response = self._do_GET_filter_actions(
+            ajax=True,
+            pol_ext_res_id=pol_ext_res_id
+        )
+
+        self._check_for_success_response(response)
+
+    def test_filter_actions_by_geoname_and_politician(self, user=None):
+        """ """
+
+        pol_ext_res_id = 332997
+        geo_ext_res_id = 145
+
+        self.test_create_action_with_politicians(user)
+
+        response = self._do_GET_filter_actions(
+            ajax=True,
+            pol_ext_res_id=pol_ext_res_id,
+            geo_ext_res_id=geo_ext_res_id
+        )
+
+        self._check_for_success_response(response)

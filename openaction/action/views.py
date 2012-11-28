@@ -1,6 +1,7 @@
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
 from django.views.generic import View
+from django.views.generic.list import ListView
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.db import transaction
@@ -11,7 +12,7 @@ from django.conf import settings
 from askbot.models import Post
 from askbot.models.repute import Vote
 import askbot.utils.decorators as askbot_decorators
-from action.models import Action, Geoname, Politician, Media
+from action.models import Action, ActionCategory, Geoname, Politician, Media
 from action import const as action_const
 from action import forms
 from action.signals import action_moderator_removed
@@ -364,7 +365,10 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
                 if last_get_delta.seconds > Geoname.MAX_CACHE_VALID_MINUTES:
                     #TODO Matteo:
-                    geoname.external_resource.update_external_data(datum)
+                    geoname.external_resource.update_external_data(lookup, 
+                        ext_res_id, 
+                        datum
+                    )
 
             geonames.append(geoname)
 
@@ -415,7 +419,11 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 last_get_delta = datetime.datetime.now() - politician.external_resource.last_get_on
                 if last_get_delta.seconds > Politician.MAX_CACHE_VALID_MINUTES:
                     #TODO Matteo: not a priority
-                    politician.external_resource.update_external_data(datum)
+                    politician.external_resource.update_external_data(
+                        lookup,
+                        ext_res_id,
+                        datum
+                    )
 
             politicians.append(politician)
 
@@ -513,6 +521,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 
     def get_form_kwargs(self):
         kwargs = super(ActionUpdateView, self).get_form_kwargs()
+        print("\n____________________action.get_object %s\n" % self.get_object())
         kwargs['action'] = self.get_object()
         return kwargs
     
@@ -792,3 +801,35 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
+
+class ActionListView(ListView, views_support.LoginRequiredView):
+
+    model = Action
+    paginate_by = 25
+    template_name = 'action/action_list.html'
+    context_object_name = "action_list"
+
+    def get_queryset(self):
+        #geo_ext_res_id = self.kwargs['geo_ext_res_id']
+        filtered = Action.objects.all()
+
+        if self.request.GET.get('geo_ext_res_id'):
+            geo_ext_res_id = self.request.GET.get('geo_ext_res_id')
+            filtered = filtered.filter(geoname_set__external_resource__ext_res_id=geo_ext_res_id)
+        if self.request.GET.get('pol_ext_res_id'):
+            pol_ext_res_id = self.request.GET.get('pol_ext_res_id')
+            filtered = filtered.filter(politician_set__external_resource__ext_res_id=pol_ext_res_id)
+
+        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+        return filtered
+
+    def get_context_data(self, **kwargs):
+        context = super(ActionListView, self).get_context_data(**kwargs)
+
+        #print("\n-----------context: %s -----------\n" % context)
+        #context.update({
+        #    '' : '',
+        #})
+        return context
+
+
