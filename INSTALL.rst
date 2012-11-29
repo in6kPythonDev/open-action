@@ -63,6 +63,7 @@ OpenAction installation guide
         python manage.py migrate askbot 
         python manage.py migrate django_authopenid
         python manage.py migrate askbot_extensions
+        python manage.py migrate friendship
 
      Don't mind errors appearing during the migrations, if they're something like::
 
