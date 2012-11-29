@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load action_tags %}
+
+{% block head_scripts %}
+    {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
+{% endblock head_scripts %}
+
+{% block title %}Utente {{ profile.public_name }}{% endblock %}
+
+{% block content %}
+
+    {% include 'breadcrumbs.html' %}
+
+    <div class="media user-profile">
+        <a class="pull-left thumbnail">
+            <img src="http://placehold.it/160x160" alt="{{ profile.public_name }}">
+        </a>
+
+        <div class="media-body">
+            <h1>{{ profile.public_name }}</h1>
+            <a href="#">{{ profile.city }}</a>
+
+            <p>{{ profile.description }}</p>
+
+            {% if profile.home_page %}<a href="{{ profile.home_page }}">{{ profile.home_page }}</a>{% endif %}
+        </div>
+
+    </div>
+
+    <hr>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#profile-overview" data-toggle="tab">Ultime novità</a></li>
+        <li><a href="#profile-activities" data-toggle="tab">Le azioni di {{ profile.public_name }}</a></li>
+        <li><a href="#profile-locations" data-toggle="tab">Territori</a></li>
+        <li><a href="#profile-arguments" data-toggle="tab">Argomenti</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="profile-overview">
+
+            {% for activity in profile.related_news %}
+
+            {% html_activity_item activity %}
+
+            <hr>
+
+            {% empty %}
+            <div class="media">
+                <div class="media-body">
+                    <small>5 minuti fa Mario ha scritto</small>
+                    <h4 class="media-heading"><a href="#">Media heading</a></h4>
+                    <p class="text-success">"Un passo avanti per tutti"</p>
+                </div>
+            </div>
+            <hr>
+            <div class="media">
+                <div class="media-body">
+                    <small>5 minuti fa Mario ha scritto</small>
+                    <h4 class="media-heading"><a href="#">Media heading</a></h4>
+                    <p class="text-success">"Un passo avanti per tutti"</p>
+                </div>
+            </div>
+            <hr>
+            <div class="media">
+                <div class="media-body">
+                    <small>5 minuti fa Mario ha scritto</small>
+                    <h4 class="media-heading"><a href="#">Media heading</a></h4>
+                    <p class="text-success">"Un passo avanti per tutti"</p>
+                </div>
+            </div>
+
+            {% endfor %}
+
+        </div>
+        <div class="tab-pane" id="profile-activities">
+            Ultime azioni...
+        </div>
+        <div class="tab-pane" id="profile-locations">
+            Territori interessanti...
+        </div>
+        <div class="tab-pane" id="profile-arguments">
+            Argomenti interessanti...
+        </div>
+    </div>
+
+{% endblock content %}
+
+
+{% block sidebar %}
+
+    <h2>12 azioni attive</h2>
+    <h2>2000 attivisti coinvolti</h2>
+
+    <hr>
+
+    <h5>{{ profile.public_name }} ha aderito a 12 azioni</h5>
+
+    {% for action in profile.actions %}
+
+        {% html_action_overview action %}
+
+        <hr>
+
+    {% endfor %}
+
+    <a href="#">Tutte le azioni di {{ profile.public_name }}</a>
+
+    <hr>
+
+    <h5>{{ profile.public_name }} ha 200 amici</h5>
+
+    <div class="media">
+        <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+            <a href="#">Mario rossi</a><br>Napoli
+        </div>
+    </div>
+    <div class="media">
+        <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+            <a href="#">Mario rossi</a><br>Napoli
+        </div>
+    </div>
+
+    <a href="#">Tutti gli amici di {{ profile.public_name }}</a>
+
+    <hr>
+
+    <h5>{{ profile.public_name }} segue 20 organizzazioni</h5>
+
+    <div class="media">
+        <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+            <a href="#">ACTIONAID</a><br>Milano
+        </div>
+    </div>
+    <div class="media">
+        <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+            <a href="#">Lega Ambiente</a><br>Barano d'Ischia (NA)
+        </div>
+    </div>
+    <div class="media">
+        <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+            <a href="#">GREENPEACE</a><br>Roma
+        </div>
+    </div>
+
+    <a href="#">Tutte le organizzazioni seguite da {{ profile.public_name }}</a>
+
+{% endblock sidebar %}
