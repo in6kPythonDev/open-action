@@ -30,6 +30,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-dropdown.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-modal.js"></script>
     {% endblock head_scripts %}
 
     {% block head_extras %}{% endblock %}
@@ -58,6 +59,10 @@
 </div>
 
 {% block footer_js_includes %}{% endblock %}
+
+{% if not request.user.is_authenticated %}
+{% include "access/signup_modal.html" %}
+{% endif %}
 
 </body>
 </html>

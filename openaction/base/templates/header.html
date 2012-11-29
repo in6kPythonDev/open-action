@@ -21,7 +21,7 @@
           </ul>
           <a href="" title="{% blocktrans %}help{% endblocktrans %}">{% blocktrans %}help{% endblocktrans %}</a>
         {% else %}
-          <a href="{{ settings.LOGIN_URL }}?next={{ request.path }}" class="btn btn-link">{% blocktrans %}Hi there! Please sign in{% endblocktrans %}</a>
+          <a href="#access-modal" role="button" class="btn btn-link" data-toggle="modal">Accedi</a>
         {% endif %}
         <a class="btn btn-link" href="{% url help %}" title="{% blocktrans %}help{% endblocktrans %}"><i class="icon-question-sign"></i></a>
 

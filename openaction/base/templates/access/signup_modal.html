@@ -1,0 +1,59 @@
+<div class="modal hide fade bigModal" id="access-modal" tabindex="-1" role="dialog" aria-labelledby="Access" aria-hidden="true">
+    <div class="modal-body">
+
+        <div class="row-fluid">
+
+            <div class="span6">
+                <h4>Accedi con Google plus</h4>
+                <p>Usa il tuo account Google per accedere
+                    più comodamente ad Open action.
+                </p>
+                <a class="btn btn-social" href="{% url socialauth_begin 'google' %}?{{ redirect_querystring }}">
+                    <i class="socialicon-google"></i> Accedi con Google
+                </a>
+
+                <hr>
+
+                <h4>Accedi con Facebook</h4>
+                <p>Usa il tuo Facebook per accedere
+                    ad Open action e mobilitare i tuoi amici.
+                </p>
+                <a class="btn btn-social" href="{% url socialauth_begin 'facebook' %}?{{ redirect_querystring }}">
+                    <i class="socialicon-facebook"></i> Accedi con Facebook
+                </a>
+
+                <br><br>
+
+                Oppure accedi con il <a href="{{ settings.LOGIN_URL }}?next={{ request.path }}">tuo account di Open action</a>.
+            </div>
+
+            <div class="span6">
+
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+
+                <h4>Crea un account</h4>
+
+                <form action="{% url user_signup_with_password %}" method="post" accept-charset="utf-8">{% csrf_token %}
+                    <fieldset>
+                        <label for="first_name_id">Nome</label><input type="text" name="id_first_name" id="first_name_id" placeholder="Digita il tuo nome">
+                        <label for="last_name_id">Cognome</label><input type="text" name="id_last_name" id="last_name_id" placeholder="Digita il tuo cognome">
+                        <label for="city_id">Comune di residenza</label><input type="text" name="id_city" id="city_id" placeholder="Digita la tua città">
+                        <label for="email_id">Email</label><input type="text" name="id_email" id="email_id" placeholder="Digita la tua email">
+                        <label for="password1_id">Password</label><input type="password" name="id_password1" id="password1_id">
+                        <label for="password2_id">Ripeti Password</label><input type="password" name="id_password2" id="password2_id">
+
+                        <label class="checkbox">
+                            <input type="checkbox" name="id_accept_terms"> Aderendo, <a href="#">accetti le condizioni per l'utilizzo e la privacy</a>
+                            di <a href="#">Open action</a>.
+                        </label>
+
+                        <input type="submit" class="submit btn btn-info" value="Registrati" />
+
+                    </fieldset>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>

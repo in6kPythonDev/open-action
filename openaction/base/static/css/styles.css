@@ -5726,7 +5726,7 @@ body.homepage #site_body h3 {
   width: 24px;
   margin-right: 8px;
 }
-.socialicon-gplus {
+.socialicon-google {
   background-position: 0 0;
 }
 .socialicon-facebook {
@@ -5753,4 +5753,11 @@ body.homepage #site_body h3 {
   color: #868686;
   font-weight: normal;
   font-size: 22px;
+}
+.bigModal {
+  width: 80%;
+  margin-left: -40%;
+}
+.bigModal .modal-body {
+  max-height: 600px;
 }
