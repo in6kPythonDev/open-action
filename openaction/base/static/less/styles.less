@@ -286,3 +286,14 @@ body.homepage #site_body {
 .socialicon-twitter { background-position: -48px 0; }
 
 .ui-helper-hidden-accessible { display: none; }
+
+.image-upload-box {
+  // display a gray box with centered text (vertical and horizontal)
+  width: 160px; height: 160px; background-color: #ccc; display: table; cursor: pointer;
+  & > div {
+    // vertical align
+    display: table-cell; vertical-align: middle; width: 80%; text-align: center;
+    // beautify
+    color: #868686; font-weight: normal; font-size: 22px;
+  }
+}

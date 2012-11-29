@@ -60,10 +60,9 @@ class ActionDetailView(DetailView):
         from django.contrib.sites.models import get_current_site
         protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
         context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
-        context['user_can_vote'] = self.request.user.assert_can_vote_action(self.instance) and (
-            # TODO: remove this if assert_can_vote_action checks if user already voted
-            self.instance not in self.request.user.actions.all()
-        )
+        #TODO: check if user can vote or edit this action
+        context['user_can_vote'] = self.request.user.is_authenticated()
+        context['user_can_edit'] = self.request.user.is_authenticated()
         return context
 
 #---------------------------------------------------------------------------------

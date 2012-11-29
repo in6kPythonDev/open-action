@@ -4,13 +4,26 @@
 {% block head_scripts %}
   {{ block.super }}
   <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
+  {% if user_can_edit %}
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-editable.css">
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-editable-inline.min.js"></script>
+  {% endif %}
 {% endblock head_scripts %}
 
-{# START BITLY SUPPORT : ADD BITLY INPUT FORMFIELD #}
-{% block footer_scripts %}
+{% block footer_js_includes %}
     <script type="text/javascript">
-    {% if settings.BITLY %}
     $(document).ready(function(){
+        {% if user_can_edit %}
+        $('#action-description').editable({
+            url: '{% url edit-parameter pk=action.pk attr='description' %}',
+            title: 'Modifica la descrizione della Action',
+            pk: {{ action.pk }},
+            type: 'textarea', inputclass: 'span6'
+        }).css('border-bottom','0');
+        {% endif %}
+
+        {% if settings.BITLY %}
+        {# START BITLY SUPPORT : ADD BITLY INPUT FORMFIELD #}
         $('input.bitly').each(function() {
             var $input = $(this);
             $.getJSON(
@@ -26,12 +39,11 @@
                 }
             );
         });
+        {# END BITLY SUPPORT #}
+        {% endif %}
     });
-    {% endif %}
-
     </script>
 {% endblock %}
-{# END BITLY SUPPORT #}
 
 {% block content %}
 
@@ -54,7 +66,20 @@
     {% html_action_tags action %}
 
     <div class="media action-status">
-      <a class="pull-left"><img src="http://placehold.it/160x160" alt=""></a>
+      <a class="pull-left thumbnail">
+      {% if action.image %}
+        <img src="{{ action.image.url }}" height="160" width="160" alt="{{ action.title }}">
+      {% else %}
+        {% if user_can_edit %}
+        <div class="image-upload-box">
+            <div><i class="icon-edit"></i> Inserisci un'immagine</div>
+        </div>
+        {% else %}
+        <img src="http://placehold.it/160x160" alt="{{ action.title }}">
+        {% endif %}
+      {% endif %}
+      </a>
+
       <div class="media-body">
         <div class="media">
           <a class="pull-left" href="#">
@@ -95,7 +120,9 @@
 
     <div class="tab-content">
       <div class="tab-pane active" id="action-overview">
-        {{ action.content|safe }}
+        <div id="action-description">
+          {{ action.content|safe }}
+        </div>
       </div>
       <div class="tab-pane" id="action-blog">
         {% for blog_post in action.blog_posts %}
