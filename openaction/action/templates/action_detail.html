@@ -49,11 +49,7 @@
 
   <div class="row-fluid">
     <div class="span6">
-      <ul class="breadcrumb">
-        <li><a href="#">Home</a> <span class="divider">/</span></li>
-        <li><a href="#">Actions</a> <span class="divider">/</span></li>
-        <li class="active">You are here</li>
-      </ul>
+      {% include 'breadcrumbs.html' %}
     </div>
     <div class="span6">
       {% html_action_status action %}
@@ -87,7 +83,7 @@
           </a>
           <div class="media-body">
             Creata il {{ action.created_on }} <br>
-            da <a href="{{ action.owner.get_absolute_url }}">{{ action.owner }}</a> <br>
+            da <a href="{% url user-profile-details username=action.owner.username %}">{{ action.owner }}</a> <br>
             <a href="#">Barano d'Ischia</a>
           </div>
         </div>

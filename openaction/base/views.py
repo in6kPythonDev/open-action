@@ -1,5 +1,6 @@
 from django.views.generic import TemplateView
 from action.models import Action
+from askbot.models import Activity
 
 class HomepageView(TemplateView):
 
@@ -8,7 +9,7 @@ class HomepageView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(HomepageView,self).get_context_data(**kwargs)
 
-        context['action_list'] = Action.objects.all()
-        context['notifications'] = []
+        context['action_list'] = Action.objects.all()[:5]
+        context['latest_activities'] = Activity.objects.all()[:5]
 
         return context

@@ -96,23 +96,26 @@ def html_blogpost_item(blogpost):
 @register.simple_tag
 def html_activity_item(activity):
     """Return html snippet for an activity item."""
+    from askbot_extensions import consts
+    activities = dict(consts.TYPE_ACTIVITY_CHOICES)
 
     extra_content = ""
-    if activity.activity_type == askbot_extensions_consts.TYPE_ACTIVITY_ANSWER:
+    if activity.activity_type == consts.TYPE_ACTIVITY_ANSWER:
         extra_content = activity.content_object.title
 
     html = """
-<div class="activity-item">
-    <div class="activity-author">il %(activity_date)s %(activity_user)s</div>
-    <div class="activity-type">ha %(activity_type)s</div>
-    <div class="activity-action">%(action)s</div>
-    <div class="activity-extra">%(extra_content)s</div>
+<div class="media">
+  <div class="media-body">
+    <small>%(activity_date)s %(activity_user)s %(activity_type)s</small>
+    <h4 class="media-heading">%(action)s</h4>
+    <p class="text-success">%(extra_content)s</p>
+  </div>
 </div>
 """ % {
         "activity_user" : activity.user,
         "activity_date" : activity.active_at,
-        "activity_type" : askbot_extensions_consts.ACTIVITY_TYPE_DISPLAY_D[activity.activity_type],
-        "action" : activity.content_object.action,
+        "activity_type" : activities[activity.activity_type],
+        "action" : activity.content_object,
         "extra_content" : extra_content,
     }
     return html

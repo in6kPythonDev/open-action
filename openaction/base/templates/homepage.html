@@ -56,7 +56,9 @@
   <div class="span6">
     <h3>Dentro OpenAction</h3>
 
-    {% for post in post_list %}
+    {% for activity in latest_activities %}
+    {% html_activity_item activity %}
+    <hr>
     {% empty %}
     <div class="media">
       <div class="media-body">
