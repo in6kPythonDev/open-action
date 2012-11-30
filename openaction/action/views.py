@@ -42,7 +42,7 @@ MAP_FIELD_NAME_TO_CHANNEL = {
     'media_set' : 'TODO',
 }
 
-COMMA = ','
+SEP = ','
 
 ORDERING_PREFERENCES = {
     'popular' : '-thread__score',
@@ -834,23 +834,23 @@ class NewActionListView(ListView, views_support.LoginRequiredView):
 
     model = Action
     paginate_by = 25
-    template_name = 'action/action_list.html'
+    #template_name = 'action/action_list.html'
     #context_object_name = "action_list"
 
     def get_queryset(self):
         #geo_ext_res_id = self.kwargs['geo_ext_res_id']
         filtered = Action.objects.all()
 
-        if self.request.GET.get('geo_ext_res_id'):
-            geo_ext_res_id = self.request.GET.get('geo_ext_res_id')
-            filtered = filtered.filter(geoname_set__external_resource__ext_res_id=geo_ext_res_id)
-        if self.request.GET.get('pol_ext_res_id'):
-            pol_ext_res_id = self.request.GET.get('pol_ext_res_id')
-            filtered = filtered.filter(politician_set__external_resource__ext_res_id=pol_ext_res_id)
+        if self.request.GET.get('geo_pk'):
+            geo_id = self.request.GET.get('geo_pk')
+            filtered = filtered.filter(geoname_set=geo_pk)
+        if self.request.GET.get('pol_pk'):
+            pol_id = self.request.GET.get('pol_pk')
+            filtered = filtered.filter(politician_set=pol_pk)
 
-        print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
         self.sort(filtered)
-        print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
 
         return filtered
 
@@ -871,15 +871,17 @@ class NewActionListView(ListView, views_support.LoginRequiredView):
         return views_support.response_success(request)
 
     def sort(self, queryset):
-        ordering = self.request.GET.get('sort').split(COMMA)
-
-        if ordering:
-            for preference in ordering:
-                #sorted(filtered, key=lambda a:a.score)
-                #print("\npreference: %s value: %s\n" % (preference,ORDERING_PREFERENCES[preference]))
-                queryset.order_by(ORDERING_PREFERENCES[preference])
+        sort = self.request.GET.get('sort')
+        if sort:
+            ordering = []
+            sort = sort.split(SEP)
+            for preference in sort:
+                ordering.append(ORDERING_PREFERENCES[preference])
         else:
             raise Exception
+
+        #sorted(filtered, key=lambda a:a.score)
+        queryset.order_by(ordering)
 
 
 
