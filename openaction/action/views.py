@@ -44,6 +44,11 @@ MAP_FIELD_NAME_TO_CHANNEL = {
 
 COMMA = ','
 
+ORDERING_PREFERENCES = {
+    'popular' : '-thread__score',
+    'politicians' : '-politician_set',
+}
+
 class ActionDetailView(DetailView):
     """ List the details of an Action """
 
@@ -805,6 +810,19 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         return views_support.response_redirect(self.request, success_url)
 
 class ActionListView(ListView, views_support.LoginRequiredView):
+    """ Filter Action objects basing on (possibly more than one) parameters.
+        
+        Implemented filter:
+        - by location
+        - by politician
+
+        it is possible to combine filtering parameters.
+
+        TODO: filterd QS ordering. Need to pass a keyword arg 'sort' containing
+        comma separated values to determine the ordering preferences, i.e.:
+
+        [POPULAR,POLITICIANS(by mean of number of involved politcians)]
+    """
 
     model = Action
     paginate_by = 25
@@ -822,10 +840,15 @@ class ActionListView(ListView, views_support.LoginRequiredView):
             pol_ext_res_id = self.request.GET.get('pol_ext_res_id')
             filtered = filtered.filter(politician_set__external_resource__ext_res_id=pol_ext_res_id)
 
-        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+        print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+        self.sort(filtered)
+        print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+
         return filtered
 
     def get_context_data(self, **kwargs):
+        """ What kind of data could we need to get from here? """
+
         context = super(ActionListView, self).get_context_data(**kwargs)
 
         #print("\n-----------context: %s -----------\n" % context)
@@ -836,5 +859,17 @@ class ActionListView(ListView, views_support.LoginRequiredView):
 
     def get(self, request, *args, **kwargs):
         super(ActionListView, self).get(request, *args, **kwargs)
+
         return views_support.response_success(request)
+
+    def sort(self, queryset):
+        ordering = self.request.GET.get('sort').split(COMMA)
+
+        if ordering:
+            for preference in ordering:
+                #sorted(filtered, key=lambda a:a.score)
+                #print("\npreference: %s value: %s\n" % (preference,ORDERING_PREFERENCES[preference]))
+                queryset.order_by(ORDERING_PREFERENCES[preference])
+        else:
+            raise Exception
 
