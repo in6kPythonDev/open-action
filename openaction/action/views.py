@@ -44,7 +44,7 @@ MAP_FIELD_NAME_TO_CHANNEL = {
 
 SEP = ','
 
-ORDERING_PREFERENCES = {
+ORDERING_MAPS = {
     'popular' : '-thread__score',
     'politicians' : '-politician_set',
 }
@@ -872,9 +872,15 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
             pass
 
 
-
         #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
-        self.sort(qs)
+        try:
+            sorting = self.request.GET['__sort']
+            self.sort_queryset(qs, sorting)
+
+        except KeyError:
+            #OK: no sorting requested
+            pass
+
         #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
 
         return qs
@@ -920,18 +926,10 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
 
         return views_support.response_success(request)
 
-    def sort(self, queryset):
-        sort = self.request.GET.get('sort')
-        if sort:
-            ordering = []
-            sort = sort.split(SEP)
-            for preference in sort:
-                ordering.append(ORDERING_PREFERENCES[preference])
-        else:
-            raise Exception
+    def sort_queryset(self, qs, sorting):
 
-        #sorted(filtered, key=lambda a:a.score)
-        queryset.order_by(ordering)
+        ordering = [ ORDERING_MAPS[x] for x in sorting.split(SEP) ]
+        qs.order_by(*ordering)
 
 #--------------------------------------------------------------------------------
 
