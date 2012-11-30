@@ -1,4 +1,206 @@
-<form action="/action/create/" method="post">
-{{ form }}
-<INPUT type="submit" value="submit" />
+{% extends 'base.html' %}
+
+{% block head_scripts %}
+    {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-transition.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-collapse.js"></script>
+{% endblock %}
+
+{% block footer_js_includes %}
+    <script type="text/javascript">
+
+    ;$(document).ready(function(){
+
+        var geoname_form_id = "#id_{{ form.geoname_set.html_name }}";
+        var geoname_form_deck_id = "#id_{{ form.geoname_set.html_name }}_on_deck";
+        var politicians_form_id = "#id_{{ form.politician_set.html_name }}";
+        var politicians_table_id = "#politician_accordion";
+
+        var cached_geoname_pks = [], cached_geonames= {};
+
+        function parseGeonamePks( text ) {
+            // example : |1|2|3|4|
+            var pks = text.split('|').map(function(el){ return el ? parseInt(el) : el});
+            pks.pop(); pks.shift();
+            return pks;
+        }
+
+        // fix for collapse with dynamic content: https://github.com/twitter/bootstrap/issues/2274
+        $(politicians_table_id).on('show hide', function() {
+            $(this).css('height', 'auto');
+        });
+
+        function updatePoliticiansTable() {
+
+            var table = $(politicians_table_id), politician;
+
+            // remember old selections
+            var selected = []; $('input:checked', table).each(function() { selected.push($(this).attr('name')); });
+
+            // clean all
+            table.find('*').fadeOut('slow').remove();
+
+            // init context
+            var added = [], accordion_groups = {}, is_first = true;
+
+            for(var i = 0; i < cached_geoname_pks.length; i++) {
+                var group_list = cached_geonames[ cached_geoname_pks[i] ]['value']['city_representatives'];
+
+                for (var group in group_list ) { if ( !group_list.hasOwnProperty(group) || group == 'location' ) continue;
+                    var body;
+                    var to_add = [];
+
+                    if ( group == 'comune' || group == 'regione' || group == 'provincia' ) {
+                        for (politician in group_list[group]['consiglio'])  { to_add.push( group_list[group]['consiglio'][politician] ); }
+                        for (politician in group_list[group]['giunta'])     { to_add.push( group_list[group]['giunta'][politician] ); }
+                    }
+                    else if ( group == 'camera' || group == 'senato' || group == 'europarl') {
+                        to_add = group_list[group]['representatives'];
+                    }
+
+                    if ( !accordion_groups.hasOwnProperty(group) ) {
+                        var header = $('<div class="accordion-heading"></div>').append(
+                              '<a class="accordion-toggle" data-toggle="collapse" data-parent="'+politicians_table_id+'" href="#accordion_'+ group +'">'+ group + ' (<span>'+ to_add.length +'</span>)</a>'
+                        );
+                        var container = $('<div class="accordion-body collapse'+(is_first ? ' in' : '')+'" id="accordion_'+ group +'"></div>').append(
+                              body = $('<div class="accordion-inner"></div>').css({ 'max-height': '200px', 'overflow': 'auto' })
+                        );
+                        is_first && ( is_first = false );
+{#                        body = $('<div class="accordion-inner"></div>').css({ 'max-height': '200px', 'overflow': 'auto' }).appendTo(container);#}
+                        accordion_groups[group] = $('<div class="accordion-group"></div>').append(header, container);
+                    }
+                    else {
+                        var length_el = $('.accordion-heading a span', accordion_groups[group]);
+                        length_el.text( parseInt(length_el.text()) + to_add.length );
+                        body = $('.accordion-inner', accordion_groups[group]);
+                    }
+
+
+                    for (politician in to_add) {
+                        var check_box_name = 'politician_set_pks['+ to_add[politician]['politician_id'] +']';
+                        var check_box_el = $('<label class="checkbox">'+to_add[politician]['first_name']+' '+to_add[politician]['last_name']+'</label>')
+                                .prepend( $('<input type="checkbox" name="'+ check_box_name +'" />').attr('checked', selected.indexOf(check_box_name) != -1) );
+                        body.append(check_box_el);
+                    }
+
+                }
+            }
+
+            for (var group_name in accordion_groups) {
+                table.append( accordion_groups[group_name] );
+            }
+            table.collapse();
+        }
+
+        // event triggered in autocompleteselectmultiple_geonamechannel
+        $(geoname_form_id).on('geoname_loaded', function( e, item ) {
+            cached_geonames[item.pk] = item;
+        });
+
+        $(geoname_form_deck_id).on('added',function() {
+            var pks = parseGeonamePks( $(geoname_form_id).val() );
+            var added_id = pks.filter(function(pk){ return cached_geoname_pks.indexOf(pk) == -1 ; }).pop();
+            if (added_id) {
+                cached_geoname_pks.push(added_id);
+                updatePoliticiansTable();
+            }
+        });
+        $(geoname_form_deck_id).on('killed',function() {
+            var pks = parseGeonamePks( $(geoname_form_id).val() );
+            var removed_id = cached_geoname_pks.filter(function(pk){ return pks.indexOf(pk) == -1 ; }).pop();
+            if (removed_id) {
+                cached_geoname_pks = pks;
+                updatePoliticiansTable();
+            }
+        });
+
+    });
+
+    </script>
+{% endblock %}
+
+
+
+{% block content %}
+  <h1>Crea un'Azione</h1>
+  <p>Questo è un testo introduttivo che presenta brevemente cosa fare e incoraggia l'utente a completare il form.</p>
+
+
+  <form action="{% url action-create %}" method="post" class="action-create-form">
+
+    <fieldset class="action-create-step" id="step1">
+      {% if form.non_field_errors %}
+      <p class="text-error">{{ form.non_field_errors }}</p>
+      {% endif %}
+
+      <h2><label for="id_{{ form.title.html_name }}">Per cosa bisogna agire?</label></h2>
+      {{ form.title.errors }}
+      <input type="text" name="{{ form.title.html_name }}" autocomplete="off" placeholder="Inserisci un titolo..." id="id_{{ form.title.html_name }}" value="{{ form.title.value }}">
+      <p class="help"><a href="#">Come scrivere un titolo efficace</a></p>
+
+      <label for="id_{{ form.text.html_name }}">Descrivi la questione, perché è importante e cosa vuoi che venga fatto</label>
+      {{ form.text.errors }}
+      <textarea name="{{ form.text.html_name }}" id="id_{{ form.text.html_name }}" cols="30" rows="10" placeholder="Inserisci un testo...">{{ form.text.value }}</textarea>
+      <p class="help"><a href="#">Come scrivere un testo efficace</a></p>
+    </fieldset>
+
+    <hr>
+
+    <fieldset class="action-create-step" id="step2">
+      <h2><label for="{{ form.category_set.html_name }}">Che ambiti riguarda</label></h2>
+      {{ form.category_set.errors }}
+      {{ form.category_set }}
+
+      <h2><label for="{{ form.tags.html_name }}">Specifica gli argomenti <small>(importante)</small></label></h2>
+      {{ form.tags.errors }}
+      <p>La scelta degli argomenti può aiutarti a definire meglio i prossimi passi</p>
+      {{ form.tags }}
+    </fieldset>
+
+    <hr>
+
+    <fieldset class="action-create-step" id="step3">
+      <h2><label for="{{ form.geoname_set.html_name }}">Scegli il territorio interessato</label></h2>
+      {{ form.geoname_set.errors }}
+      <div class="controls">
+        {{ form.geoname_set }}
+        <label class="btn disabled" for="ambito-nazionale"><input type="checkbox" id="ambito-nazionale" style="margin:0;" name="ambito-nazionale"> Ambito nazionale</label>
+        <p class="help"><a href="#">Come scegliere un territorio</a></p>
+      </div>
+    </fieldset>
+
+    <hr>
+
+    <fieldset class="action-create-step" id="step4">
+      <h2><label for="{{ form.politician_set.html_name }}">Scegli i decisori</label></h2>
+      <p>Questa opzione è collegata alla scelta degli argomenti e del territorio.</p>
+      {{ form.politician_set.errors }}
+      {{ form.politician_set }}
+      <div id="politician_accordion" class="accordion">
+
+      </div>
+      <p class="help"><a href="#">Come scegliere i decisori</a></p>
+
+{#    {{ form.as_p }}#}
+    </fieldset>
+    <fieldset>
+        {{ form.threshold }}
+        {{ form.in_nomine }}
+        <p class="action-form"><input type="submit" class="btn btn-info btn-large" value="Salva come bozza"></p>
+    </fieldset>
 </form>
+{% endblock content %}
+
+{% block sidebar %}
+
+  <div class="highlights">
+  <strong>Stai creando un'azione</strong>
+  <ul>
+    <li>1) <a href="#step1">Scrivi per cosa bisogna agire</a></li>
+    <li>2) <a href="#step2">Quali argomenti riguarda</a></li>
+    <li>3) <a href="#step3">Il territorio interessato dall'Azione</a></li>
+    <li>4) <a href="#step4">Scegli i decisori da coinvolgere</a></li>
+  </ul>
+  </div>
+
+{% endblock %}

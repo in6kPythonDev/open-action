@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load action_tags %}
+
+{% block body_class %}homepage{% endblock %}
+
+{% block body %}
+  <div id="homepage_banner">
+    <div>
+      <div class="container">
+        <div class="row">
+
+          <div class="span4">
+            <h2>Scrivi ai politici italiani</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+              Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+          </div>
+          <div class="span4">
+            <h2>Coinvolgi amici e giornalisti</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+              Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+          </div>
+          <div class="span4">
+            <h2>Preparati a cambiare le cose</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
+              Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
+          </div>
+
+        </div></div>
+    </div>
+  </div>
+
+  {{ block.super }}
+{% endblock %}
+
+
+{% block content %}
+<div class="row-fluid">
+  <div class="span6 action-list">
+    <h3>Le Azioni più calde</h3>
+
+    {% for action in action_list %}
+
+      {% html_action_overview action %}
+
+    <hr>
+
+    {% endfor %}
+
+    <a href="#">Tutte le azioni più calde</a>
+
+
+  </div>
+  <div class="span6">
+    <h3>Dentro OpenAction</h3>
+
+    {% for post in post_list %}
+    {% empty %}
+    <div class="media">
+      <div class="media-body">
+        <small>5 minuti fa Mario ha scritto</small>
+        <h4 class="media-heading"><a href="#">Media heading</a></h4>
+        <p class="text-success">"Un passo avanti per tutti"</p>
+      </div>
+    </div>
+    <hr>
+    <div class="media">
+      <div class="media-body">
+        <small>5 minuti fa Mario ha scritto</small>
+        <h4 class="media-heading"><a href="#">Media heading</a></h4>
+        <p class="text-success">"Un passo avanti per tutti"</p>
+      </div>
+    </div>
+    <hr>
+    <div class="media">
+      <div class="media-body">
+        <small>5 minuti fa Mario ha scritto</small>
+        <h4 class="media-heading"><a href="#">Media heading</a></h4>
+        <p class="text-success">"Un passo avanti per tutti"</p>
+      </div>
+    </div>
+
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+
+{% block sidebar %}
+  <form action="{% url action-create %}" class="action-form">
+    <button class="action-button">Crea un'Azione</button>
+  </form>
+
+  <p>
+    <b>Questo è un call to action</b>.
+    Un testo molto convincente che invita gli utenti a iscriversi e aprire un'azione.
+    Può essere a firma di un testimonial, di utenti, o di Action aid e Openpolis,
+    o anche solo un semplice testo breve ma potente, che centri il punto della questione e inviti all'azione.
+    <br>
+    <i>– Mario Rossi</i>
+  </p>
+{% endblock %}
+

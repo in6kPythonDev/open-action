@@ -67,7 +67,7 @@ class OpenPolisPoliticiansBackend(OpenPolisResourceBackend):
 
     def get_url(self, url, request):
         url = 'politicians/' + url
-        return super(OpenPolisPoliticianBackend, self).get_url(url, request)
+        return super(OpenPolisPoliticiansBackend, self).get_url(url, request)
 
     def get_info(self, resource):
         """Call OpenPolis API and return normalized data."""

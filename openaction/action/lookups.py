@@ -116,6 +116,11 @@ class GeonameLookup(LookupChannel):
             return "locations/%s/" % _id
         return "locations/"
 
+    def get_result(self,obj):
+        """ Override default unicode(obj), to allow json.dumps """
+        return obj
+
+
 class CityrepLookup(LookupChannel):
 
     def get_objects(self, ids):

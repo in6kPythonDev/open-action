@@ -1,0 +1,19 @@
+{% extends 'autocompleteselectmultiple.html' %}
+{#
+ = hack for autocomplete jquery ui plugin =
+
+ use repr instead of label to autocomplete input text on menu item focus
+ and fix UP/DOWN menu navigation:
+ http://stackoverflow.com/questions/8045773/jquery-ui-autocomplete-downarrow-uparrow
+
+ #}
+{% block extra_script %}
+
+    $("#{{html_id}}_text").on('autocompletefocus', function( event, ui){
+      this.value = $(ui.item.repr).text();
+      event.preventDefault(); // Prevent the default focus behavior.
+    });
+    $("#{{html_id}}_text").on('autocompleteselect', function( event, ui){
+      $("#{{html_id}}").trigger('geoname_loaded', [ui.item])
+    });
+{% endblock %}

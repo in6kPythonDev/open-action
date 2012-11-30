@@ -36,6 +36,43 @@ def html_action_item(action):
     return html
 
 @register.simple_tag
+def html_action_tags(action):
+    """ Return html for action category and locations """
+
+    html = """
+<i class="icon-map-marker"></i> %(locations)s
+<br>
+<i class="icon-tag"></i> %(categories)s
+""" % {
+        "locations" : ", ".join([html_render_resource(geoname) for geoname in action.geonames]),
+        "categories" : ", ".join([html_render_resource(category) for category in action.categories])
+    }
+    return html
+
+@register.inclusion_tag('tags/action_status.html')
+def html_action_status(action):
+    """ Return html for an action status """
+    vote_count = action.votes.count()
+    threshold = action.threshold if action.threshold else 0
+    return {
+        "votes": vote_count,
+        "answers": action.comments.count(),
+        "target": threshold,
+        "progress": ((vote_count * 100.0) / threshold) if threshold else 0.0,
+    }
+
+@register.inclusion_tag('tags/action_overview.html')
+def html_action_overview(action):
+    """Return html for an action item """
+    d = {
+        "action": html_render_resource(action),
+        "tags" : html_action_tags(action),
+        "action_url": action.get_absolute_url(),
+    }
+    d.update( html_action_status(action) )
+    return d
+
+@register.simple_tag
 def html_blogpost_item(blogpost):
     """Return html snippet for a blog post item."""
 

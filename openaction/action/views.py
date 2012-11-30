@@ -1,7 +1,6 @@
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
-from django.views.generic import View
-from django.views.generic.list import ListView
+from django.views.generic import View, ListView
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.db import transaction
@@ -12,7 +11,8 @@ from django.conf import settings
 from askbot.models import Post
 from askbot.models.repute import Vote
 import askbot.utils.decorators as askbot_decorators
-from action.models import Action, ActionCategory, Geoname, Politician, Media
+
+from action.models import Action, Geoname, Politician, Media, ActionCategory
 from action import const as action_const
 from action import forms
 from action.signals import action_moderator_removed
@@ -65,6 +65,13 @@ class ActionDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
+        from django.contrib.sites.models import get_current_site
+        protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
+        context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
+        context['user_can_vote'] = self.request.user.assert_can_vote_action(self.instance) and (
+            # TODO: remove this if assert_can_vote_action checks if user already voted
+            self.instance not in self.request.user.actions.all()
+        )
         return context
 
 #---------------------------------------------------------------------------------
@@ -304,7 +311,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'title': self.request.REQUEST.get('title', ''),
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
-            'in_nomine': self.request.REQUEST.get('in_nomine', ''),
+            'in_nomine': self.request.REQUEST.get('in_nomine', "user-%s" % self.request.user.pk),
+            'threshold': '0',
             'wiki': False,
             'is_anonymous': False,
         }
@@ -809,7 +817,7 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
-class ActionListView(ListView, views_support.LoginRequiredView):
+class NewActionListView(ListView, views_support.LoginRequiredView):
     """ Filter Action objects basing on (possibly more than one) parameters.
         
         Implemented filter:
@@ -827,7 +835,7 @@ class ActionListView(ListView, views_support.LoginRequiredView):
     model = Action
     paginate_by = 25
     template_name = 'action/action_list.html'
-    context_object_name = "action_list"
+    #context_object_name = "action_list"
 
     def get_queryset(self):
         #geo_ext_res_id = self.kwargs['geo_ext_res_id']
@@ -849,7 +857,7 @@ class ActionListView(ListView, views_support.LoginRequiredView):
     def get_context_data(self, **kwargs):
         """ What kind of data could we need to get from here? """
 
-        context = super(ActionListView, self).get_context_data(**kwargs)
+        context = super(NewActionListView, self).get_context_data(**kwargs)
 
         #print("\n-----------context: %s -----------\n" % context)
         #context.update({
@@ -858,7 +866,7 @@ class ActionListView(ListView, views_support.LoginRequiredView):
         return context
 
     def get(self, request, *args, **kwargs):
-        super(ActionListView, self).get(request, *args, **kwargs)
+        super(NewActionListView, self).get(request, *args, **kwargs)
 
         return views_support.response_success(request)
 
@@ -873,3 +881,32 @@ class ActionListView(ListView, views_support.LoginRequiredView):
         else:
             raise Exception
 
+
+
+class ActionListView(ListView):
+
+    model = Action
+    filter_class = None
+
+    def get_context_data(self, **kwargs):
+        context = super(ActionListView, self).get_context_data(**kwargs)
+
+        context['filter_object'] = self.filter_class.objects.get(pk=self.kwargs['pk'])
+
+        return context
+
+
+class ActionByCategoryListView(ActionListView):
+
+    filter_class = ActionCategory
+
+    def get_queryset(self):
+        return super(ActionListView, self).get_queryset().filter(category_set=self.kwargs['pk'] )
+
+
+class ActionByGeonameListView(ActionListView):
+
+    filter_class = Geoname
+
+    def get_queryset(self):
+        return super(ActionListView, self).get_queryset().filter(geoname_set=self.kwargs['pk'] )

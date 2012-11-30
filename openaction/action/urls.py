@@ -72,5 +72,15 @@ urlpatterns = patterns('',
         name='actions-filter'
     ),
 
+    #categories navigation
+    url(r'^argument/(?P<pk>\d+)/$', action_views.ActionByCategoryListView.as_view(),
+        name='category-action-list'
+    ),
+
+    #geonames navigation
+    url(r'^location/(?P<pk>\d+)/$', action_views.ActionByGeonameListView.as_view(),
+        name='geoname-action-list'
+    ),
+
 )
 

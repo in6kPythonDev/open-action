@@ -1,0 +1,14 @@
+{% load humanize %}
+<div class="action-info row-fluid">
+  <div class="followers span3"><strong>{{ votes|intword }}</strong> <p>Adesioni utenti</p></div>
+  <div class="answers span3"><strong>{{ answers|intword }}</strong> <p>Risposte politici</p></div>
+  <div class="adhesions span6">
+    <div class="target">
+      <p>Prossimo obiettivo</p>
+      <div class="progress progress-success" title="{{ progress|floatformat:"0" }}%"><div class="bar" style="width: {{ progress|floatformat:"0" }}%;"></div></div>
+    </div>
+    <div class="target-value">
+      <strong>{{ target|intword }}</strong> <p>Adesioni</p>
+    </div>
+  </div>
+</div>

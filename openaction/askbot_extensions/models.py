@@ -209,6 +209,9 @@ class UserExtension(AskbotModelExtender):
         ):
             raise exceptions.VoteActionInvalidStatusException(action.status)
 
+        # TODO Matteo: return False if action already voted by user. And remove code by Daniele in action.views.ActionDetailView
+
+
         return True
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
@@ -420,7 +423,7 @@ class UserExtension(AskbotModelExtender):
     def _askbot_ext_actions(self):
        
         #WAS: thread_pks = self.votes.declareds().values_list('post__thread__pk', flat=True).distinct()
-        thread_pks = Vote.objects.filter(pk__in=self.votes.all()).declareds().values_list('voted_post__pk', flat=True).distinct()
+        thread_pks = Vote.objects.filter(pk__in=self.votes.all()).declareds().values_list('voted_post__thread__pk', flat=True).distinct()
         return Action.objects.filter(thread__pk__in=thread_pks)
 
 

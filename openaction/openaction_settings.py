@@ -14,7 +14,7 @@ LOGIN_ERROR_URL    = '/social_auth/login-error/'
 FACEBOOK_EXTENDED_PERMISSIONS = ['email'] # if this is missing, only username is retrieved
 SOCIAL_AUTH_COMPLETE_URL_NAME  = 'socialauth_complete'
 SOCIAL_AUTH_ASSOCIATE_URL_NAME = 'socialauth_associate_complete'
-SOCIAL_AUTH_RAISE_EXCEPTIONS = DEBUG
+SOCIAL_AUTH_RAISE_EXCEPTIONS = settings.DEBUG
 SOCIAL_AUTH_PIPELINE = (
     'social_auth.backends.pipeline.social.social_auth_user',
     'social_auth.backends.pipeline.associate.associate_by_email',
@@ -75,11 +75,14 @@ TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'social_auth.context_processors.social_auth_backends',
     'social_auth.context_processors.social_auth_by_type_backends',
     'social_auth.context_processors.social_auth_login_redirect',
+    'django.core.context_processors.static',
 )
 
 #--------------------------------------------------------------------------------
 
 INSTALLED_APPS = list(settings.INSTALLED_APPS)
+INSTALLED_APPS.append('base')
+INSTALLED_APPS.append('django.contrib.humanize')
 INSTALLED_APPS.append('askbot_extensions')
 INSTALLED_APPS.append('organization')
 INSTALLED_APPS.append('action')
@@ -97,8 +100,8 @@ INSTALLED_APPS.append('ajax_select')
 PROJECT_NAME = "openaction"
 
 # A sample logging configuration. 
-LOG_FILE = PROJECT_ROOT + '/log/%s.log' % PROJECT_NAME
-LOG_FILE_DEBUG = PROJECT_ROOT + '/log/%s_debug.log' % PROJECT_NAME
+LOG_FILE = settings.PROJECT_ROOT + '/log/%s.log' % PROJECT_NAME
+LOG_FILE_DEBUG = settings.PROJECT_ROOT + '/log/%s_debug.log' % PROJECT_NAME
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -232,6 +235,8 @@ REDIS_DATABASE    = None
 
 AJAX_LOOKUP_CHANNELS = {
     'geonamechannel' : ( 'action.lookups' , 'GeonameLookup'),
+    'politicianchannel' : ( 'action.lookups', 'PoliticianLookup'),
+    'cityrepchannel' : ( 'action.lookups', 'CityrepLookup'),
 }
 # magically include jqueryUI/js/css
 AJAX_SELECT_BOOTSTRAP = True
