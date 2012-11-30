@@ -1279,7 +1279,7 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response)
 
     def test_filter_actions_by_geoname(self, user=None):
-        """ """
+        """ Filter action by geoname, then order the resulting QS"""
 
         #self.test_create_action_with_locations(user)
         logged_in = self._login(user)
@@ -1343,7 +1343,7 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        geoname_set = '|287|'
+        geoname_set = '|145|'
         threshold = 0
 
         response = self._do_POST_create_action(
@@ -1368,7 +1368,7 @@ class ActionViewTest(OpenActionViewTestCase):
             self.assertTrue(action_obj)
 
             self.assertTrue(action_obj.in_nomine_org == None)
-            for _id in [287]:
+            for _id in [145]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     geoname_obj = Geoname.objects.get(external_resource=e_r)
@@ -1380,24 +1380,24 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response)
 
         #TEST FILTERING
-        geo_ext_res_id = 287
+        geo_pks = "1"
         sort="popular"
 
         response = self._do_GET_filter_actions(
-            #geoname_ext_res_id,
             ajax=True,
-            geo_ext_res_id=geo_ext_res_id,
+            geo_pks=geo_pks,
             sort=sort
         )
 
         self._check_for_success_response(response)
 
     def test_filter_actions_by_politician(self, user=None):
-        """ """
+        """ Filter action by politician, then order the resulting QS"""
 
-        pol_ext_res_id = 332997
+        pol_pks = "1"
         sort="popular"
 
+        #TODO
         self.test_create_action_with_locations(user)
         self.test_create_action_with_politicians(user)
 
@@ -1410,7 +1410,9 @@ class ActionViewTest(OpenActionViewTestCase):
         self._check_for_success_response(response)
 
     def test_filter_actions_by_geoname_and_politician(self, user=None):
-        """ """
+        """ Filter action by geoname and politician, then order the 
+        resulting QS
+        """
 
         #self.test_create_action_with_politicians(user)
         logged_in = self._login(user)
@@ -1520,14 +1522,14 @@ class ActionViewTest(OpenActionViewTestCase):
             self._check_for_redirect_response(response)
 
         #FILTER ACTION
-        pol_ext_res_id = 332997
-        geo_ext_res_id = 145
+        pol_pks = "1"
+        geo_pks = "1"
         sort="politicians"
 
         response = self._do_GET_filter_actions(
             ajax=True,
-            pol_ext_res_id=pol_ext_res_id,
-            geo_ext_res_id=geo_ext_res_id,
+            pol_pks=pol_pks,
+            geo_pks=geo_pks,
             sort=sort
         )
 

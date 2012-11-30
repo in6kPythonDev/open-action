@@ -46,12 +46,11 @@ class OpenPolisLocationsBackend(OpenPolisResourceBackend):
         location_detail_url = urlparse.urljoin(self.base_url, rel_url)
         location_data = self.get_data(location_detail_url)
 
-        rel_url = 'cityreps/op_id/' + str(resource) + '/'
-        city_reps_url = urlparse.urljoin(self.base_url, rel_url)
-        city_reps_data = self.get_data(city_reps_url)
+        #KO: rel_url = 'cityreps/op_id/' + str(resource) + '/'
+        #KO: city_reps_url = urlparse.urljoin(self.base_url, rel_url)
+        #KO: city_reps_data = self.get_data(city_reps_url)
 
-        #normalized_data = location_data.update(city_reps_data)
-        location_data.update(city_reps_data)
+        #KO: location_data.update(city_reps_data)
 
         #normalized_data = {
         #    'id' : data.get('id'),
