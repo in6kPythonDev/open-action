@@ -16,24 +16,15 @@ def html_render_resource(resource):
     }
     return html
 
-@register.simple_tag
+@register.inclusion_tag('tags/action_item.html')
 def html_action_item(action):
     """Return html snippet for an action item."""
-
-    html = """
-<li class="action-item">
-    <div class="action-author">%(author)s</div>
-    <div class="action-title">%(action)s</div>
-    <div class="action-geonames">%(geonames)s</div>
-    <div class="action-categories">%(categories)s</div>
-</li>
-""" % {
-        "author" : html_render_resource(action.author),
-        "action" : html_render_resource(action),
-        "geonames" : [html_render_resource(geoname) for geoname in action.geonames],
-        "categories" :  [html_render_resource(category) for category in action.categories],
+    d = {
+        "action": html_render_resource(action),
+        "tags" : html_action_tags(action),
+        "action_url": action.get_absolute_url()
     }
-    return html
+    return d
 
 @register.simple_tag
 def html_action_tags(action):
@@ -67,7 +58,7 @@ def html_action_overview(action):
     d = {
         "action": html_render_resource(action),
         "tags" : html_action_tags(action),
-        "action_url": action.get_absolute_url(),
+        "action_url": action.get_absolute_url()
     }
     d.update( html_action_status(action) )
     return d

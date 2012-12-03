@@ -83,16 +83,20 @@
           </a>
           <div class="media-body">
             Creata il {{ action.created_on }} <br>
-            da <a href="{% url profiles_profile_detail username=action.owner.username %}">{{ action.owner }}</a> <br>
-            <a href="#">Barano d'Ischia</a>
+            da <a href="{% url profiles_profile_detail username=action.owner.username %}">{{ action.owner.get_profile.public_name }}</a> <br>
+            <a href="#">{{ action.owner.get_profile.city }}</a>
           </div>
         </div>
 
         <div class="highlights">
           Indirizzata a:
           <ul>
-            <li>Sindaco di Barano d'Ischia (NA)</li>
+            {% for politician in action.politicians %}
+            <li>{{ politician.charge }} {{ politician.first_name }} {{ politician.first_name }}</li>
+            {% empty %}
             <li>Presidente della provincia di Napoli</li>
+            <li>Sindaco di Barano d'Ischia (NA)</li>
+            {% endfor %}
           </ul>
           + <a href="#">altri 10 politici <i class="icon-sort-down"></i></a>
         </div>
@@ -144,26 +148,18 @@
 
   <section id="related-actions">
     <ul class="news-list">
-      <li>
-        <div class="media">
-          <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
-          <div class="media-body">
-            <div class="organization-link"><i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a></div>
-            <h4 class="media-header"><a href="#">Fermiamo l'inquinamento della spiaggia dei Maronti</a></h4>
-            {% html_action_tags action %}
-          </div>
-        </div>
-      </li>
-      <li>
-        <div class="media">
-          <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
-          <div class="media-body">
-            <div class="organization-link"><i class="icon-star"></i> <a href="#">Associazione Blu Mediterraneo</a></div>
-            <h4 class="media-header"><a href="#">Fermiamo l'inquinamento della spiaggia dei Maronti</a></h4>
-            {% html_action_tags action %}
-          </div>
-        </div>
-      </li>
+      {% for action_related in '' %}
+        <li>
+          {% html_action_item action %}
+        </li>
+      {% empty %}
+        <li>
+          {% html_action_item action %}
+        </li>
+        <li>
+          {% html_action_item action %}
+        </li>
+      {% endfor %}
     </ul>
 
     <a href="#">Altre azioni correlate <i class="icon-sort-down"></i></a>
