@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load action_tags %}
+
+{% block content %}
+
+  <h1>Lista degli Attivisti</h1>
+
+  <ul>
+    {% for profile in user_profiles %}
+    <li><a href="{{ profile.get_absolute_url }}">{{ profile.public_name }}</a></li>
+    {% endfor %}
+  </ul>
+
+{% endblock content %}

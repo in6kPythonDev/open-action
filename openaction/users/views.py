@@ -31,7 +31,7 @@ class UserProfileListView(ListView):
 
     model = UserProfile
     template_name = 'profiles/profile_list.html'
-    context_object_name = 'user_profile'
+    context_object_name = 'user_profiles'
 
     def get_context_data(self, **kwargs):
         # call the base implementation first to get a context
