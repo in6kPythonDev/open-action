@@ -11,3 +11,12 @@ class ActionQuerySet(QuerySet):
             if action.status == act_consts.ACTION_STATUS_ACTIVE
         ]
 
+    def by_categories(self, *categories):
+        return self.filter(category_set=categories)
+
+    def by_geonames(self, *geonames):
+        return self.filter(geoname_set=geonames)
+
+    def by_politicians(self, *politicians):
+        return self.filter(politician_set=politicians)
+

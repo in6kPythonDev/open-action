@@ -82,14 +82,16 @@ OpenAction installation guide
 
 6. Merge ``CLONEDIR/openaction/urls.py.dist`` with ``WEBDIR/urls.py``
 
-7. Move ``CLONEDIR/openaction/openaction_settings.py`` in ``WEBDIR/`` and add to ``WEBDIR/settings.py``::
+7. Move ``CLONEDIR/openaction/openaction_settings.py`` in ``WEBDIR/`` 
+
+8. Add the following lines at the end of ``WEBDIR/settings.py``::
 
     try:
         from openaction_settings import *
     except ImportError:
         pass
 
-8. Integrate openaction project
+9. Integrate openaction project
 
    - by creating symlinks::
 
@@ -117,11 +119,11 @@ OpenAction installation guide
 
       settings.site.addsitedir( 'CLONEDIR/openaction' )
 
-9. Resync the DB::
+10. Resync the DB::
 
     python manage.py syncdb
 
-10. Install and run redis cache server (for ajax selects) with ``redis-server``
+11. Install and run redis cache server (for ajax selects) with ``redis-server``
 
 Now Open Action is installed correcty.
 

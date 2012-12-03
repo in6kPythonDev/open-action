@@ -11,6 +11,7 @@ from django.conf import settings
 from askbot.models import Post
 from askbot.models.repute import Vote
 import askbot.utils.decorators as askbot_decorators
+
 from action.models import Action, Geoname, Politician, Media, ActionCategory
 from action import const as action_const
 from action import forms
@@ -39,6 +40,13 @@ MAP_FIELD_NAME_TO_CHANNEL = {
     'geoname_set' : 'geonamechannel', 
     'politician_set' : 'politicianchannel',
     'media_set' : 'TODO',
+}
+
+SEP = ','
+
+ORDERING_MAPS = {
+    'popular' : '-thread__score',
+    'politicians' : '-politician_set',
 }
 
 class ActionDetailView(DetailView):
@@ -371,7 +379,10 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
                 if last_get_delta.seconds > Geoname.MAX_CACHE_VALID_MINUTES:
                     #TODO Matteo:
-                    geoname.external_resource.update_external_data(datum)
+                    geoname.external_resource.update_external_data(lookup, 
+                        ext_res_id, 
+                        datum
+                    )
 
             geonames.append(geoname)
 
@@ -422,7 +433,11 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 last_get_delta = datetime.datetime.now() - politician.external_resource.last_get_on
                 if last_get_delta.seconds > Politician.MAX_CACHE_VALID_MINUTES:
                     #TODO Matteo: not a priority
-                    politician.external_resource.update_external_data(datum)
+                    politician.external_resource.update_external_data(
+                        lookup,
+                        ext_res_id,
+                        datum
+                    )
 
             politicians.append(politician)
 
@@ -520,6 +535,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 
     def get_form_kwargs(self):
         kwargs = super(ActionUpdateView, self).get_form_kwargs()
+        print("\n____________________action.get_object %s\n" % self.get_object())
         kwargs['action'] = self.get_object()
         return kwargs
     
@@ -800,32 +816,151 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
+#--------------------------------------------------------------------------------
+
+class FilteredActionListView(ListView, views_support.LoginRequiredView):
+    """ Generic filterable and orderable action list view basing on one or more parameters.
+        
+        Implemented filters:
+        - by location
+        - by politician
+        - by category
+
+        it is possible to combine filtering parameters.
+
+        TODO: filterd QS ordering. Need to pass a keyword arg '__sort' containing
+        separated values to determine the ordering preferences, p.e.:
+
+        [POPULAR,POLITICIANS(by mean of number of involved politcians)]
+    """
+
+    model = Action
+    paginate_by = 25
+    #template_name = 'action/action_list.html'
+    #context_object_name = "action_list"
+
+    def get_queryset(self):
+
+        qs = super(FilteredActionListView, self).get_queryset()
+
+        #Process categories
+        try:
+            cat_pks = self.request.GET['cat_pks'].split(SEP)
+            qs = qs.by_categories(*cat_pks)
+
+        except KeyError:
+            #OK: cat_pks is not among GET parameters
+            pass
+
+        #Process geonames
+        try:
+            geo_pks = self.request.GET['geo_pks'].split(SEP)
+            qs = qs.by_geonames(*geo_pks)
+
+        except KeyError:
+            #OK: geo_pks is not among GET parameters
+            pass
+
+        #Process politicians
+        try:
+            pol_pks = self.request.GET['pol_pks'].split(SEP)
+            qs = qs.by_politicians(*pol_pks)
+
+        except KeyError:
+            #OK: pol_pks is not among GET parameters
+            pass
 
 
-class ActionListView(ListView):
+        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+        try:
+            sorting = self.request.GET['__sort']
+            self.sort_queryset(qs, sorting)
+
+        except KeyError:
+            #OK: no sorting requested
+            pass
+
+        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        """ What kind of data could we need to get from here? """
+
+        context = super(FilteredActionListView, self).get_context_data(**kwargs)
+
+        #-- Process categories
+        try:
+            cat_pks = self.request.GET['cat_pks'].split(SEP)
+            context['filter_categories'] = ActionCategory.objects.filter(pk__in=cat_pks)
+
+        except KeyError:
+            #OK: cat_pks is not among GET parameters
+            pass
+
+        #-- Process geonames
+        try:
+            geo_pks = self.request.GET['geo_pks'].split(SEP)
+            context['filter_geonames'] = Geoname.objects.filter(pk__in=geo_pks)
+
+        except KeyError:
+            #OK: geo_pks is not among GET parameters
+            pass
+
+        #-- Process politicians
+        try:
+            pol_pks = self.request.GET['pol_pks'].split(SEP)
+            context['filter_politicians'] = Politician.objects.filter(pk__in=pol_pks)
+
+        except KeyError:
+            #OK: pol_pks is not among GET parameters
+            pass
+
+
+        #print("\n-----------context: %s -----------\n" % context)
+        return context
+
+    def get(self, request, *args, **kwargs):
+        super(FilteredActionListView, self).get(request, *args, **kwargs)
+
+        return views_support.response_success(request)
+
+    def sort_queryset(self, qs, sorting):
+
+        ordering = [ ORDERING_MAPS[x] for x in sorting.split(SEP) ]
+        qs.order_by(*ordering)
+
+#--------------------------------------------------------------------------------
+
+class BaseActionListView(ListView):
 
     model = Action
     filter_class = None
 
     def get_context_data(self, **kwargs):
-        context = super(ActionListView, self).get_context_data(**kwargs)
 
+        if self.__class__ == BaseActionListView:
+            raise ProgrammingError("This method must be called by an BaseActionListView subclass")
+
+        context = super(BaseActionListView, self).get_context_data(**kwargs)
         context['filter_object'] = self.filter_class.objects.get(pk=self.kwargs['pk'])
 
         return context
 
 
-class ActionByCategoryListView(ActionListView):
+class ActionByCategoryListView(BaseActionListView):
 
     filter_class = ActionCategory
 
     def get_queryset(self):
-        return super(ActionListView, self).get_queryset().filter(category_set=self.kwargs['pk'] )
+        qs = super(ActionByCategoryListView, self).get_queryset()
+        return qs.by_categories(self.kwargs['pk'])
 
 
-class ActionByGeonameListView(ActionListView):
+class ActionByGeonameListView(BaseActionListView):
 
     filter_class = Geoname
 
     def get_queryset(self):
-        return super(ActionListView, self).get_queryset().filter(geoname_set=self.kwargs['pk'] )
+        qs = super(ActionByGeonameListView, self).get_queryset()
+        return qs.by_geonames(self.kwargs['pk'])
