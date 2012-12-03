@@ -12,11 +12,11 @@ class ActionQuerySet(QuerySet):
         ]
 
     def by_categories(self, *categories):
-        return self.filter(category_set=categories)
+        return self.filter(category_set__in=categories)
 
     def by_geonames(self, *geonames):
-        return self.filter(geoname_set=geonames)
+        return self.filter(geoname_set__in=geonames)
 
     def by_politicians(self, *politicians):
-        return self.filter(politician_set=politicians)
+        return self.filter(politician_set__in=politicians)
 
