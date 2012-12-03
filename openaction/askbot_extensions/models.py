@@ -209,8 +209,9 @@ class UserExtension(AskbotModelExtender):
         ):
             raise exceptions.VoteActionInvalidStatusException(action.status)
 
-        # TODO Matteo: return False if action already voted by user. And remove code by Daniele in action.views.ActionDetailView
-
+        # checks if user already voted
+        if action in self.actions.all():
+            return False
 
         return True
 
