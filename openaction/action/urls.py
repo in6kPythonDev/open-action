@@ -68,7 +68,7 @@ urlpatterns = patterns('',
     url(r'^(?P<pk>\d+)/status/change/$', action_request_views.ActionSetStatusRequestView.as_view(), 
         name='action-status-change-request'
     ),
-    url(r'^filter/$', action_views.ActionListView.as_view(), 
+    url(r'^filter/$', action_views.FilteredActionListView.as_view(),
         name='actions-filter'
     ),
 
