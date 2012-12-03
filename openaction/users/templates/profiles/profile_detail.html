@@ -40,7 +40,7 @@
     <div class="tab-content">
         <div class="tab-pane active" id="profile-overview">
 
-            {% for activity in profile.related_news %}
+            {% for activity in activities %}
 
             {% html_activity_item activity %}
 
@@ -90,65 +90,83 @@
 
 {% block sidebar %}
 
-    <h2>12 azioni attive</h2>
-    <h2>2000 attivisti coinvolti</h2>
+    <h2>{{ num_of_voted_actions_active }} azioni attive</h2>
+    <h2>{{ num_of_involved_activists }} attivisti coinvolti</h2>
 
     <hr>
 
-    <h5>{{ profile.public_name }} ha aderito a 12 azioni</h5>
+    <h5>{{ profile.public_name }} ha aderito a {{ voted_actions|length }} azioni</h5>
 
-    {% for action in profile.actions %}
+    {% for action in voted_actions %}
 
         {% html_action_overview action %}
 
-        <hr>
+        {% if not forloop.last %}<hr>{% endif %}
 
     {% endfor %}
 
-    <a href="#">Tutte le azioni di {{ profile.public_name }}</a>
+    <p class="media"><a href="#">Tutte le azioni di {{ profile.public_name }}</a></p>
 
     <hr>
 
-    <h5>{{ profile.public_name }} ha 200 amici</h5>
+    <h5>{{ profile.public_name }} ha {{ friends|length }} amici</h5>
 
-    <div class="media">
+    {% for friend in friends %}
+      <div class="media">
+        <a class="pull-left" href="{{ friend.get_absolute_url }}"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+          <a href="{{ friend.get_absolute_url }}">{{ friend.public_name }}</a><br>{{ friend.city }}
+        </div>
+      </div>
+    {% empty %}
+      <div class="media">
         <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
         <div class="media-body">
-            <a href="#">Mario rossi</a><br>Napoli
+          <a href="#">Mario rossi</a><br>Napoli
         </div>
-    </div>
-    <div class="media">
+      </div>
+      <div class="media">
         <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
         <div class="media-body">
-            <a href="#">Mario rossi</a><br>Napoli
+          <a href="#">Giovanni verdi</a><br>Firenze
         </div>
-    </div>
+      </div>
+    {% endfor %}
 
-    <a href="#">Tutti gli amici di {{ profile.public_name }}</a>
+    <p class="media"><a href="#">Tutti gli amici di {{ profile.public_name }}</a></p>
 
     <hr>
 
-    <h5>{{ profile.public_name }} segue 20 organizzazioni</h5>
+    <h5>{{ profile.public_name }} segue {{ followed_orgs|length }} organizzazioni</h5>
 
-    <div class="media">
+    {% for organization in followed_orgs %}
+      <div class="media">
+        <a class="pull-left" href="{{ organization.get_absolute_url }}"><img class="media-object" src="http://placehold.it/64x64"></a>
+        <div class="media-body">
+          <a href="{{ organization.get_absolute_url }}">{{ organization.public_name }}</a><br>{{ organization.city }}
+        </div>
+      </div>
+    {% empty %}
+      <div class="media">
         <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
         <div class="media-body">
-            <a href="#">ACTIONAID</a><br>Milano
+          <a href="#">ACTIONAID</a><br>Milano
         </div>
-    </div>
-    <div class="media">
+      </div>
+      <div class="media">
         <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
         <div class="media-body">
-            <a href="#">Lega Ambiente</a><br>Barano d'Ischia (NA)
+          <a href="#">Lega Ambiente</a><br>Barano d'Ischia (NA)
         </div>
-    </div>
-    <div class="media">
+      </div>
+      <div class="media">
         <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/64x64"></a>
         <div class="media-body">
-            <a href="#">GREENPEACE</a><br>Roma
+          <a href="#">GREENPEACE</a><br>Roma
         </div>
-    </div>
+      </div>
+    {% endfor %}
 
-    <a href="#">Tutte le organizzazioni seguite da {{ profile.public_name }}</a>
+    <p class="media"><a href="#">Tutte le organizzazioni seguite da {{ profile.public_name }}</a></p>
 
 {% endblock sidebar %}
