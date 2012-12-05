@@ -3,7 +3,11 @@
     <img class="media-object" src="http://placehold.it/64x64">
   </a>
   <div class="media-body">
+    {% if organization %}
+    <div class="organization-link"><i class="icon-star"></i> {{ organization }}</div>
+    {% endif %}
     <h4 class="media-heading">{{ action|safe }}</h4>
     {{ tags|safe }}
   </div>
+  {% if status %}{% include 'tags/action_status.html' %}{% endif %}
 </div>

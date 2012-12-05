@@ -1,14 +1,17 @@
 {% load humanize %}
-<div class="action-info row-fluid">
-  <div class="followers span3"><strong>{{ votes|intword }}</strong> <p>Adesioni utenti</p></div>
-  <div class="answers span3"><strong>{{ answers|intword }}</strong> <p>Risposte politici</p></div>
-  <div class="adhesions span6">
-    <div class="target">
-      <p>Prossimo obiettivo</p>
-      <div class="progress progress-success" title="{{ progress|floatformat:"0" }}%"><div class="bar" style="width: {{ progress|floatformat:"0" }}%;"></div></div>
-    </div>
-    <div class="target-value">
-      <strong>{{ target|intword }}</strong> <p>Adesioni</p>
-    </div>
-  </div>
-</div>
+<table class="action-status">
+    <tr>
+        <td class="action-votes">{{ votes|intword }}</td>
+        <td class="action-answers">{{ answers|intword }}</td>
+        <td class="highlight">Prossimo obiettivo</td>
+        <td class="action-target"><span class="hidden-tablet">{{ target|intword }}</span></td>
+    </tr>
+    <tr>
+        <td>Adesioni utenti</td>
+        <td>Risposte politci</td>
+        <td class="highlight">
+            <div class="progress progress-success" title="{{ progress|floatformat:"0" }}% ({{ votes|intword }}/{{ target|intword }})"><div class="bar" style="width: {{ progress|floatformat:"0" }}%;"></div></div>
+        </td>
+        <td><span class="hidden-tablet">Adesioni</span></td>
+    </tr>
+</table>

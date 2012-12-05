@@ -64,6 +64,7 @@
 
 #sidebar {
   padding: 10px 20px;
+//  .full-sidebar { margin-left: -20px; margin-right: -20px; }
 }
 
 #homepage_banner {
@@ -117,66 +118,105 @@ body.homepage #site_body {
   padding: 20px 40px;
 }
 
-.action-info {
-  margin-top:5px;
+table.action-status {
   text-transform: uppercase;
   text-align: center;
   font-weight: bold;
+  vertical-align: middle;
+  color: @black;
+  border-collapse: separate;
+//  border-spacing: 3px 0;
+  width: 100%;
+  margin-top:5px;
 
-  .clearfix;
+  tr td:first-child { border-right: 3px solid @white; }
 
-  & > div {
-
-    background-color: @grayLighter;
-    padding: 3px;
-    height: 60px;
+  td {
     font-size: 12px;
     line-height: 12px;
+    background-color: @grayLighter;
+    padding: 0 3px;
 
-    strong {
-      display: block;
-      height: 50%;
-      text-align: center;
-      font-size: 14px;
-      line-height: 14px;
+    .progress {
+      margin: 10px 5px;
+      height: 5px;
     }
+
+    &.highlight { background-color: @white; }
+
+    &.action-votes, &.action-answers, &.action-target {
+      font-size: 25px;
+      line-height: 23px;
+      color: @black;
+    }
+
+    &.action-votes { color: @red; }
+    &.action-target { color: @greenLight; }
+
   }
-
-  p { margin-bottom: 3px; }
-
-  .followers strong { color: @red; }
-  .answers strong { color: @black; }
-  .adhesions strong { color: @greenLight; }
-
-  .adhesions {
-
-    .target {
-
-      .pull-left;
-
-      width: 52%;
-      background-color: @white;
-      padding-top: 3px;
-
-      .progress {
-        margin: 10px 3px;
-        height: 5px;
-      }
-    }
-    .target-value {
-
-      .pull-right;
-
-      width: 48%;
-      height: 100%;
-      text-align: center;
-
-    }
-  }
-
 }
+#content table.action-status tr td:first-child { border-right: 3px solid @white; }
 
-.action-status {
+//.action-info {
+//  margin-top:5px;
+//  text-transform: uppercase;
+//  text-align: center;
+//  font-weight: bold;
+//
+//  .clearfix;
+//
+//  & > div {
+//
+//    background-color: @grayLighter;
+//    padding: 3px;
+//    height: 60px;
+//    font-size: 12px;
+//    line-height: 12px;
+//
+//    strong {
+//      display: block;
+//      height: 50%;
+//      text-align: center;
+//      font-size: 14px;
+//      line-height: 14px;
+//    }
+//  }
+//
+//  p { margin-bottom: 3px; }
+//
+//  .followers strong { color: @red; }
+//  .answers strong { color: @black; }
+//  .adhesions strong { color: @greenLight; }
+//
+//  .adhesions {
+//
+//    .target {
+//
+//      .pull-left;
+//
+//      width: 52%;
+//      background-color: @white;
+//      padding-top: 3px;
+//
+//      .progress {
+//        margin: 10px 3px;
+//        height: 5px;
+//      }
+//    }
+//    .target-value {
+//
+//      .pull-right;
+//
+//      width: 48%;
+//      height: 100%;
+//      text-align: center;
+//
+//    }
+//  }
+//
+//}
+
+.action-header {
   a { font-weight: bold; }
 }
 
@@ -252,7 +292,7 @@ body.homepage #site_body {
   }
 }
 
-.homepage .action-list .action-info {
+.homepage .action-list .action-status {
   width: 100%;
   float:right;
 }
@@ -261,7 +301,7 @@ body.homepage #site_body {
 
   h1 a { color: @red; }
 
-  .action-info {
+  .action-status {
     width: 50%;
     float:right;
   }
@@ -310,12 +350,28 @@ body.homepage #site_body {
 
 .ui-helper-hidden-accessible { display: none; }
 
+// general block for vertical alignment
+.vertical-align {
+  display: table;
+  & > .middle, & > .top, & > .bottom {
+    display: table-cell; text-align: center;
+  }
+  // vertical alignments
+  & > .middle { vertical-align: middle; }
+  & > .top { vertical-align: top; }
+  & > .bottom { vertical-align: bottom; }
+}
+
+// action image box
 .image-upload-box {
+
+  .vertical-align;
+
   // display a gray box with centered text (vertical and horizontal)
-  width: 160px; height: 160px; background-color: #ccc; display: table; cursor: pointer;
+  width: 160px; height: 160px; background-color: #ccc; cursor: pointer;
   & > div {
-    // vertical align
-    display: table-cell; vertical-align: middle; width: 80%; text-align: center;
+    // padding
+    width: 80%;
     // beautify
     color: #868686; font-weight: normal; font-size: 22px;
   }

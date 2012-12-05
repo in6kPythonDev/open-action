@@ -22,7 +22,8 @@ def html_action_item(action):
     d = {
         "action": html_render_resource(action),
         "tags" : html_action_tags(action),
-        "action_url": action.get_absolute_url()
+        "action_url": action.get_absolute_url(),
+        'organization': html_render_resource(action.in_nomine_org) if action.in_nomine_org else None,
     }
     return d
 
@@ -30,15 +31,14 @@ def html_action_item(action):
 def html_action_tags(action):
     """ Return html for action category and locations """
 
-    html = """
-<i class="icon-map-marker"></i> %(locations)s
-<br>
-<i class="icon-tag"></i> %(categories)s
-""" % {
-        "locations" : ", ".join([html_render_resource(geoname) for geoname in action.geonames]),
-        "categories" : ", ".join([html_render_resource(category) for category in action.categories])
-    }
-    return html
+    html = []
+    if action.geonames:
+        html.append( '<i class="icon-map-marker"></i> %s' % ", ".join([html_render_resource(geoname) for geoname in action.geonames]) )
+    if action.categories:
+        html.append( '<i class="icon-tag"></i> %s' % ", ".join([html_render_resource(category) for category in action.categories]) )
+
+    return "<br>".join(html)
+
 
 @register.inclusion_tag('tags/action_status.html')
 def html_action_status(action):
@@ -52,13 +52,15 @@ def html_action_status(action):
         "progress": ((vote_count * 100.0) / threshold) if threshold else 0.0,
     }
 
-@register.inclusion_tag('tags/action_overview.html')
+@register.inclusion_tag('tags/action_item.html')
 def html_action_overview(action):
     """Return html for an action item """
     d = {
         "action": html_render_resource(action),
         "tags" : html_action_tags(action),
-        "action_url": action.get_absolute_url()
+        "action_url": action.get_absolute_url(),
+        'organization': html_render_resource(action.in_nomine_org) if action.in_nomine_org else None,
+        "status": True
     }
     d.update( html_action_status(action) )
     return d
@@ -84,7 +86,7 @@ def html_blogpost_item(blogpost):
     }
     return html
 
-@register.simple_tag
+@register.inclusion_tag('tags/action_activity.html')
 def html_activity_item(activity):
     """Return html snippet for an activity item."""
     from askbot_extensions import consts
@@ -94,21 +96,12 @@ def html_activity_item(activity):
     if activity.activity_type == consts.TYPE_ACTIVITY_ANSWER:
         extra_content = activity.content_object.title
 
-    html = """
-<div class="media">
-  <div class="media-body">
-    <small>%(activity_date)s %(activity_user)s %(activity_type)s</small>
-    <h4 class="media-heading">%(action)s</h4>
-    <p class="text-success">%(extra_content)s</p>
-  </div>
-</div>
-""" % {
+    return {
         "activity_user" : activity.user,
         "activity_date" : activity.active_at,
         "activity_type" : activities[activity.activity_type],
         "action" : activity.content_object,
         "extra_content" : extra_content,
-    }
-    return html
+        }
 
 

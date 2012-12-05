@@ -97,13 +97,15 @@
 
     <h5>{{ profile.public_name }} ha aderito a {{ voted_actions|length }} azioni</h5>
 
-    {% for action in voted_actions %}
+    <div class="full-sidebar">
+        {% for action in voted_actions %}
 
-        {% html_action_overview action %}
+            {% html_action_overview action %}
 
-        {% if not forloop.last %}<hr>{% endif %}
+            {% if not forloop.last %}<hr>{% endif %}
 
-    {% endfor %}
+        {% endfor %}
+    </div>
 
     <p class="media"><a href="#">Tutte le azioni di {{ profile.public_name }}</a></p>
 
