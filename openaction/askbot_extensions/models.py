@@ -210,7 +210,7 @@ class UserExtension(AskbotModelExtender):
             raise exceptions.VoteActionInvalidStatusException(action.status)
 
         # checks if user already voted
-        if action in self.request.user.actions.all():
+        if action in self.actions.all():
             return False
 
         return True
