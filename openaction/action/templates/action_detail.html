@@ -47,9 +47,8 @@
     });
     </script>
 
-    {% if user_can_vote %}
     {% include "action/action_share_modal.html" %}
-    {% endif %}
+
 {% endblock %}
 
 {% block content %}
@@ -191,7 +190,7 @@
   {% endfor %}
   {% if user_can_vote %}
   <br>Fallo anche tu, cambia le cose.
-  <form action="{% url action-vote-add pk=action.pk %}" method="post">{% csrf_token %}
+  <form action="{% url action-vote-add pk=action.pk %}" id="action-vote-form" method="post">{% csrf_token %}
     <fieldset class="action-form">
       <button class="action-button">Aderisci</button>
     </fieldset>
@@ -206,7 +205,7 @@
     </fieldset>
   </form>
   {% else %}
-     <div class="text-success">Hai già aderito a questa Action</div>
+  <div class="text-success">Hai già aderito a questa Action, <a href="#" data-toggle="modal" data-target="#share-modal">Condividi!</a></div>
   {% endif %}
 
   <hr>

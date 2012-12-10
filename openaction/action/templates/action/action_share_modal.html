@@ -1,9 +1,25 @@
+<script type="text/javascript">
+
+  $(document).ready(function(){
+    var $el = $('#action-vote-form');
+    $el.submit(function() {
+      $.post($el.attr('action')).done(function() {
+        $('#share-modal').modal().on('hidden', function() {
+          document.location.reload(true);
+        })
+      });
+      return false;
+    });
+  });
+
+</script>
+
 <div class="modal hide fade bigModal" id="share-modal" tabindex="-1" role="dialog" aria-labelledby="Share" aria-hidden="true">
     <div class="modal-body">
 
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 
-        <h2>{{ request.user.public_name }}, grazie per aver aderito. <br>Aiutaci ad incoraggiare anche gli altri a farlo.</h2>
+        <h3>{{ request.user.username }}, grazie per aver aderito. <br>Aiutaci ad incoraggiare anche gli altri a farlo.</h3>
         <p class="lead">
             Scrivici perchè hai aderito:
         </p>
@@ -15,7 +31,7 @@
             </fieldset>
         </form>
 
-        <h2>Aiutaci a sensibilizzare più persone possibili</h2>
+        <h3>Aiutaci a sensibilizzare più persone possibili</h3>
 
         ## INVITA I TUOI AMICI - FB ##
 
