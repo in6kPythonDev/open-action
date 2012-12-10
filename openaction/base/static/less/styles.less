@@ -45,7 +45,7 @@
   }
   .nav .dropdown {
     width: 110px;
-    a { text-align: center; padding-left: 0; padding-right: 0; text-align: center }
+    &>a { text-align: center; padding-left: 0; padding-right: 0; text-align: center }
   }
   .navbar-form {
     margin-top: 5px;
@@ -53,7 +53,7 @@
 }
 
 #site_body, #content, #sidebar { min-height: 200px; }
-#sidebar { background-color: @grayLighter; }
+#sidebar { background-color: #ECEEEE; }
 
 #site_footer {
   color: @white;
@@ -129,25 +129,27 @@ table.action-status {
   width: 100%;
   margin-top:5px;
 
-  tr td:first-child { border-right: 3px solid @white; }
+  tr td:first-child, tr th:first-child { border-right: 3px solid @white; }
 
-  td {
+  th, td {
     font-size: 12px;
     line-height: 12px;
     background-color: @grayLighter;
     padding: 0 3px;
+    letter-spacing: -1px;
+
+    &.highlight { background-color: @white; }
+  }
+
+  td {
+
+    font-size: 25px;
+    line-height: 23px;
+    color: @black;
 
     .progress {
       margin: 10px 5px;
       height: 5px;
-    }
-
-    &.highlight { background-color: @white; }
-
-    &.action-votes, &.action-answers, &.action-target {
-      font-size: 25px;
-      line-height: 23px;
-      color: @black;
     }
 
     &.action-votes { color: @red; }

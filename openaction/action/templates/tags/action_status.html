@@ -1,17 +1,17 @@
 {% load humanize %}
 <table class="action-status">
     <tr>
-        <td class="action-votes">{{ votes|intword }}</td>
-        <td class="action-answers">{{ answers|intword }}</td>
-        <td class="highlight">Prossimo obiettivo</td>
+        <td class="action-votes" style="width: 25%">{{ votes|intword }}</td>
+        <td class="action-answers" style="width: 25%">{{ answers|intword }}</td>
+        <th class="highlight">Prossimo obiettivo</th>
         <td class="action-target"><span class="hidden-tablet">{{ target|intword }}</span></td>
     </tr>
     <tr>
-        <td>Adesioni utenti</td>
-        <td>Risposte politci</td>
+        <th>Adesioni utenti</th>
+        <th>Risposte politci</th>
         <td class="highlight">
             <div class="progress progress-success" title="{{ progress|floatformat:"0" }}% ({{ votes|intword }}/{{ target|intword }})"><div class="bar" style="width: {{ progress|floatformat:"0" }}%;"></div></div>
         </td>
-        <td><span class="hidden-tablet">Adesioni</span></td>
+        <th><span class="hidden-tablet">Adesioni</span></th>
     </tr>
 </table>

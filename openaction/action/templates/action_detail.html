@@ -4,6 +4,9 @@
 {% block head_scripts %}
   {{ block.super }}
   <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-tab.js"></script>
+
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-transition.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-collapse.js"></script>
   {% if user_can_edit %}
   <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-editable.css">
   <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-editable-inline.min.js"></script>
@@ -43,6 +46,10 @@
         {% endif %}
     });
     </script>
+
+    {% if user_can_vote %}
+    {% include "action/action_share_modal.html" %}
+    {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -92,13 +99,17 @@
           Indirizzata a:
           <ul>
             {% for politician in action.politicians %}
-            <li>{{ politician.charge }} {{ politician.first_name }} {{ politician.first_name }}</li>
-            {% empty %}
-            <li>Presidente della provincia di Napoli</li>
-            <li>Sindaco di Barano d'Ischia (NA)</li>
+            <li>{{ politician.charge }} {{ politician.first_name|title }} {{ politician.last_name|title }}</li>
+            {% if forloop.counter == 5 %}
+            <li><a data-toggle="collapse" href="#morePoliticians">e altri {{ action.politicians|length|add:-5 }} politici <i class="icon-sort-down"></i></a>
+                <ul id="morePoliticians" class="collapse">
+            {% endif %}
+            {% if forloop.last and forloop.index > 5 %}
+            </ul></li>
+            {% endif %}
             {% endfor %}
           </ul>
-          + <a href="#">altri 10 politici <i class="icon-sort-down"></i></a>
+
         </div>
 
         <div class="highlights">
@@ -359,8 +370,6 @@
     </div>
   </div>
 
-
-
-
 {% endblock sidebar %}
+
 

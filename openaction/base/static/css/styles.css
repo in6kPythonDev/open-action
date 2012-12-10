@@ -5300,7 +5300,7 @@ a.badge:hover {
 #site_menu .nav .dropdown {
   width: 110px;
 }
-#site_menu .nav .dropdown a {
+#site_menu .nav .dropdown > a {
   padding-left: 0;
   padding-right: 0;
   text-align: center;
@@ -5314,7 +5314,7 @@ a.badge:hover {
   min-height: 200px;
 }
 #sidebar {
-  background-color: #eeeeee;
+  background-color: #ECEEEE;
 }
 #site_footer {
   color: #ffffff;
@@ -5531,28 +5531,30 @@ table.action-status {
   width: 100%;
   margin-top: 5px;
 }
-table.action-status tr td:first-child {
+table.action-status tr td:first-child,
+table.action-status tr th:first-child {
   border-right: 3px solid #ffffff;
 }
+table.action-status th,
 table.action-status td {
   font-size: 12px;
   line-height: 12px;
   background-color: #eeeeee;
   padding: 0 3px;
+  letter-spacing: -1px;
+}
+table.action-status th.highlight,
+table.action-status td.highlight {
+  background-color: #ffffff;
+}
+table.action-status td {
+  font-size: 25px;
+  line-height: 23px;
+  color: #000000;
 }
 table.action-status td .progress {
   margin: 10px 5px;
   height: 5px;
-}
-table.action-status td.highlight {
-  background-color: #ffffff;
-}
-table.action-status td.action-votes,
-table.action-status td.action-answers,
-table.action-status td.action-target {
-  font-size: 25px;
-  line-height: 23px;
-  color: #000000;
 }
 table.action-status td.action-votes {
   color: #c6242a;

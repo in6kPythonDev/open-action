@@ -10,8 +10,8 @@
 {% block extra_script %}
 
     $("#{{html_id}}_text").on('autocompletefocus', function( event, ui){
-      this.value = $(ui.item.repr).text();
       event.preventDefault(); // Prevent the default focus behavior.
+      this.value = $(ui.item.repr).text();
     });
     $("#{{html_id}}_text").on('autocompleteselect', function( event, ui){
       $("#{{html_id}}").trigger('geoname_loaded', [ui.item])

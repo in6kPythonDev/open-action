@@ -1032,18 +1032,34 @@
     padding-left: 20px;
     padding-right: 20px;
   }
+  #sidebar {
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+  #action-create-helper {
+    position: relative;
+  }
+  .homepage .action-form {
+    margin-top: 5px;
+  }
 }
 @media (min-width: 768px) and (max-width: 979px) {
   #sidebar {
     padding: 10px 5px;
   }
-  #sidebar .action-status td {
+}
+@media (min-width: 768px) and (max-width: 1200px) {
+  #content table.action-status th {
     font-size: 11px;
   }
-}
-@media (min-width: 979px) and (max-width: 1200px) {
-  #sidebar {
-    padding: 10px 5px;
+  #sidebar table.action-status th {
+    font-size: 11px;
+  }
+  table.action-status tr th:last-child {
+    padding: 0;
+  }
+  table.action-status tr td:last-child {
+    padding: 0;
   }
 }
 @media (max-width: 979px) {

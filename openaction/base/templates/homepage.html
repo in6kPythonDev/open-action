@@ -42,48 +42,19 @@
     <h3>Le Azioni più calde</h3>
 
     {% for action in action_list %}
-
       {% html_action_overview action %}
-
-    <hr>
-
+      <hr>
     {% endfor %}
 
     <p class="media"><a href="#">Tutte le azioni più calde</a></p>
-
 
   </div>
   <div class="span6">
     <h3>Dentro OpenAction</h3>
 
     {% for activity in latest_activities %}
-    {% html_activity_item activity %}
-    <hr>
-    {% empty %}
-    <div class="media">
-      <div class="media-body">
-        <small>5 minuti fa Mario ha scritto</small>
-        <h4 class="media-heading"><a href="#">Media heading</a></h4>
-        <p class="text-success">"Un passo avanti per tutti"</p>
-      </div>
-    </div>
-    <hr>
-    <div class="media">
-      <div class="media-body">
-        <small>5 minuti fa Mario ha scritto</small>
-        <h4 class="media-heading"><a href="#">Media heading</a></h4>
-        <p class="text-success">"Un passo avanti per tutti"</p>
-      </div>
-    </div>
-    <hr>
-    <div class="media">
-      <div class="media-body">
-        <small>5 minuti fa Mario ha scritto</small>
-        <h4 class="media-heading"><a href="#">Media heading</a></h4>
-        <p class="text-success">"Un passo avanti per tutti"</p>
-      </div>
-    </div>
-
+      {% html_activity_item activity %}
+      <hr>
     {% endfor %}
   </div>
 </div>

@@ -1,6 +1,7 @@
 <nav class="navbar navbar-static-top" id="site_menu">
   <div class="navbar-inner">
     <div class="container">
+
       <a href="{% url homepage %}" class="brand">
         <img src="{{ STATIC_URL }}img/logo-openaction-small.png" alt="OpenAction">
       </a>
@@ -8,9 +9,25 @@
       <ul class="nav">
         <li class=""><a href="{% url action-create %}" id="action-button">Crea un'Azione</a></li>
         <li class="navbar-text">Sfoglia:</li>
-        <li class="dropdown"><a href="#">Argomenti <b class="caret"></b></a></li>
-        <li class="dropdown"><a href="#">Territori <b class="caret"></b></a></li>
-        <li class="dropdown"><a href="{% url profiles_profile_list %}">Attivisti <b class="caret"></b></a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" id="menuCategories" data-target="#">
+              Argomenti <b class="caret"></b></a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="menuCategories">
+              {% for argument in main_arguments %}
+                  <li><a href="{% url category-action-list pk=argument.pk %}">{{ argument }}</a></li>
+              {% endfor %}
+          </ul>
+        </li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" id="menuLocations" data-target="#">
+                Territori <b class="caret"></b></a>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="menuLocations">
+                {% for location in main_locations %}
+                    <li><a href="{% url geoname-action-list pk=location.pk %}">{{ location }}</a></li>
+                {% endfor %}
+            </ul>
+        </li>
+        <li class="dropdown"><a href="{% url profiles_profile_list %}">Attivisti</a></li>
       </ul>
       <form class="navbar-form pull-right">
         <div class="input-append">

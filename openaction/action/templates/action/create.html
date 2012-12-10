@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
+{% load action_tags %}
 
 {% block head_scripts %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-transition.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-collapse.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-affix.js"></script>
 {% endblock %}
 
 {% block footer_js_includes %}
@@ -30,12 +32,26 @@
             $(this).css('height', 'auto');
         });
 
+        // selection of politician populate politician_set fields
+        $(politicians_table_id).on('click', 'input[type=checkbox]', function() {
+            var value_list = $(politicians_form_id).val();
+            var new_value = $(this).val();
+            if ($(this).is(':checked')) {
+                if (value_list.length == 0) value_list = '|';
+                $(politicians_form_id).val(value_list + new_value +'|');
+            }
+            else {
+                value_list = value_list.replace('|' + new_value +'|', '|');
+                $(politicians_form_id).val( value_list == '|' ? '' : value_list );
+            }
+        })
+
         function updatePoliticiansTable() {
 
             var table = $(politicians_table_id), politician;
 
             // remember old selections
-            var selected = []; $('input:checked', table).each(function() { selected.push($(this).attr('name')); });
+            var selected = []; $('input:checked', table).each(function() { selected.push(parseInt($(this).val(),10)); });
 
             // clean all
             table.find('*').fadeOut('slow').remove();
@@ -77,9 +93,8 @@
 
 
                     for (politician in to_add) {
-                        var check_box_name = 'politician_set_pks['+ to_add[politician]['politician_id'] +']';
                         var check_box_el = $('<label class="checkbox">'+to_add[politician]['first_name']+' '+to_add[politician]['last_name']+'</label>')
-                                .prepend( $('<input type="checkbox" name="'+ check_box_name +'" />').attr('checked', selected.indexOf(check_box_name) != -1) );
+                                .prepend( $('<input type="checkbox" name="politician_set_pks" value="'+to_add[politician]['politician_id']+'" />').attr('checked', selected.indexOf(to_add[politician]['politician_id']) != -1) );
                         body.append(check_box_el);
                     }
 
@@ -136,12 +151,12 @@
       <h2><label for="id_{{ form.title.html_name }}">Per cosa bisogna agire?</label></h2>
       {{ form.title.errors }}
       <input type="text" name="{{ form.title.html_name }}" autocomplete="off" placeholder="Inserisci un titolo..." id="id_{{ form.title.html_name }}" value="{{ form.title.value }}">
-      <p class="help"><a href="#">Come scrivere un titolo efficace</a></p>
+      <p class="help"><a href="#" tabindex="-1">Come scrivere un titolo efficace</a></p>
 
       <label for="id_{{ form.text.html_name }}">Descrivi la questione, perché è importante e cosa vuoi che venga fatto</label>
       {{ form.text.errors }}
       <textarea name="{{ form.text.html_name }}" id="id_{{ form.text.html_name }}" cols="30" rows="10" placeholder="Inserisci un testo...">{{ form.text.value }}</textarea>
-      <p class="help"><a href="#">Come scrivere un testo efficace</a></p>
+      <p class="help"><a href="#" tabindex="-1">Come scrivere un testo efficace</a></p>
     </fieldset>
 
     <hr>
@@ -165,21 +180,21 @@
       <div class="controls">
         {{ form.geoname_set }}
         <label class="btn disabled" for="ambito-nazionale"><input type="checkbox" id="ambito-nazionale" style="margin:0;" name="ambito-nazionale"> Ambito nazionale</label>
-        <p class="help"><a href="#">Come scegliere un territorio</a></p>
+        <p class="help"><a href="#" tabindex="-1">Come scegliere un territorio</a></p>
       </div>
     </fieldset>
 
     <hr>
 
     <fieldset class="action-create-step" id="step4">
-      <h2><label for="{{ form.politician_set.html_name }}">Scegli i decisori</label></h2>
+      <h2><label for="id_{{ form.politician_set.html_name }}">Scegli i decisori</label></h2>
       <p>Questa opzione è collegata alla scelta degli argomenti e del territorio.</p>
       {{ form.politician_set.errors }}
-      {{ form.politician_set }}
+      <input type="hidden" id="id_{{ form.politician_set.html_name }}" name="{{ form.politician_set.html_name }}" value="{{ form.politician_set.value|default:'' }}" />
       <div id="politician_accordion" class="accordion">
 
       </div>
-      <p class="help"><a href="#">Come scegliere i decisori</a></p>
+      <p class="help"><a href="#" tabindex="-1">Come scegliere i decisori</a></p>
 
 {#    {{ form.as_p }}#}
     </fieldset>
@@ -193,7 +208,7 @@
 
 {% block sidebar %}
 
-  <div class="highlights">
+  <div class="highlights hidden-phone">
   <strong>Stai creando un'azione</strong>
   <ul>
     <li>1) <a href="#step1">Scrivi per cosa bisogna agire</a></li>
@@ -201,6 +216,24 @@
     <li>3) <a href="#step3">Il territorio interessato dall'Azione</a></li>
     <li>4) <a href="#step4">Scegli i decisori da coinvolgere</a></li>
   </ul>
+  </div>
+
+  <div id="action-create-helper" class="well affix-bottom" data-spy="affix" data-offset-top="100">
+    <p>{% html_render_resource request.user %}, stai facendo un ottimo lavoro.</p>
+    <p>
+      Considera che nella scelta dei decisori
+      maggiore è la quantità maggiore sarà
+      l'impegno per rendere pubblica e
+      attiva l'azione.
+    </p>
+    <p>
+      In questo momento la tua azione può<br>
+      attivarsi con l'adesione di:
+    </p>
+    <p class="lead"><strong>400 persone</strong></p>
+
+    <a href="#">Come funziona la scelta dei decisori.</a>
+
   </div>
 
 {% endblock %}
