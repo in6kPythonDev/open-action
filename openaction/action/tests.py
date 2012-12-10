@@ -266,13 +266,17 @@ class ActionViewTest(OpenActionViewTestCase):
             old_ids = kwargs['geoname_set'][1:-1].split('|')
             geoname_set = kwargs['geoname_set']
             updated_set = kwargs['updated_geoname_set']
+            updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
         elif model == Politician:
-            old_ids = kwargs['politician_set'][1:-1].split('|')
+            #old_ids = kwargs['politician_set'][1:-1].split('|')
+            old_ids = kwargs['old_politician_set'][1:-1].split('|')
             geoname_set = kwargs['geoname_set']
             politician_set = kwargs['politician_set']
             updated_set = kwargs['updated_politician_set']
+            updated_set_ids = kwargs['updated_politician_ids']
+            updated_ids = [int(_id) for _id in  updated_set_ids[1:-1].split('|')] 
             
-        updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
+        #updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
         
         logged_in = self._login(user)
 
@@ -374,6 +378,7 @@ class ActionViewTest(OpenActionViewTestCase):
             if model == Politician:
                 for obj in action.politician_set.all():
                     _list.append(int(obj.external_resource.ext_res_id))
+            updated_ids.sort()
             _list.sort()
             #geoname_set = action.geoname_set.all()
             #geoname_list_ids = "|" + "|".join( str(pk) for pk in geoname_list ) + "|"
@@ -835,9 +840,12 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        geoname_set = '|145|185|287|'
+          
+        #geoname_set = '|145|185|287|'
+        geoname_set = '|5132|1974|', 
         #politician_set = '|332997|543662|626209|'
-        politician_set = '|332997|543662|626222|'
+        politician_set = '|355786|397514|583733|583732|391934|391931|',
+        #politician_set = '|332997|543662|626222|'
         threshold = "0"
 
         response = self._do_POST_create_action(
@@ -867,7 +875,8 @@ class ActionViewTest(OpenActionViewTestCase):
             # since the user is not representative of any ot them
             self.assertTrue(action_obj.in_nomine_org == None)
             #TODO: check that Action has the desired locations
-            for _id in [145,185,287]:
+            #for _id in [145,185,287]:
+            for _id in [5132,1974]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     geoname_obj = Geoname.objects.get(external_resource=e_r)
@@ -876,8 +885,8 @@ class ActionViewTest(OpenActionViewTestCase):
 
                 self.assertTrue(geoname_obj)
             #check that the politicians have been created
-            #for _id in [332997,543662,626209]:
-            for _id in [332997,543662,626222]:
+            #for _id in [332997,543662,626222]:
+            for _id in [125719,397513,740,583731,274820,21]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -996,9 +1005,11 @@ class ActionViewTest(OpenActionViewTestCase):
 
         #TEST #1
         self._test_edit_set(Geoname, 
-            user, 
-            geoname_set = '|145|185|',
-            updated_geoname_set = '|145|185|287|'
+            user,
+            #geoname_set = '|145|185|' 
+            geoname_set = '|5132|1974|',
+            #updated_geoname_set = '|145|185|287|'
+            updated_geoname_set = '|5132|1974|145|',
         ) 
 
     def test_update_action_add_politicians(self, user=None):
@@ -1008,10 +1019,14 @@ class ActionViewTest(OpenActionViewTestCase):
         #TEST #1
         self._test_edit_set(Politician, 
             user, 
-            geoname_set = '|145|185|287|', 
-            politician_set = '|332997|543662|',
+            #geoname_set = '|145|185|287|',
+            geoname_set = '|5132|1974|', 
+            #politician_set = '|332997|543662|',
+            politician_set = '|355786|397514|',
+            old_politician_set = '|125719|397513|',
             #updated_politician_set = '|332997|543662|626209|'
-            updated_politician_set = '|332997|543662|626222|'
+            updated_politician_set = '|624417|333080|498067|',
+            updated_politician_ids = '|274713|333079|4521|'
         ) 
 
     def test_update_action_remove_geonames(self, user=None):
@@ -1021,8 +1036,10 @@ class ActionViewTest(OpenActionViewTestCase):
         #TEST #2
         self._test_edit_set(Geoname, 
             user, 
-            geoname_set = '|145|185|287|',
-            updated_geoname_set = '|145|185|'
+            #geoname_set = '|145|185|287|',
+            geoname_set = '|5132|1974|',
+            #updated_geoname_set = '|145|185|'
+            updated_geoname_set = '|5132|',
         ) 
 
     def test_update_action_remove_politicians(self, user=None):
@@ -1032,10 +1049,13 @@ class ActionViewTest(OpenActionViewTestCase):
         #TEST #2
         self._test_edit_set(Politician, 
             user, 
-            geoname_set = '|145|185|287|', 
+            #geoname_set = '|145|185|287|', 
+            geoname_set = '|5132|1974|',
             #politician_set = '|332997|543662|626209|',
-            politician_set = '|332997|543662|626222|',
-            updated_politician_set = '|332997|543662|'
+            politician_set = '|355786|397514|583733|',
+            old_politician_set = '|125719|397513|740|',
+            updated_politician_set = '|355786|397514|',
+            updated_politician_ids = '|125719|397513|'
         ) 
 
     def test_update_action_same_geonames(self, user=None):
@@ -1045,8 +1065,10 @@ class ActionViewTest(OpenActionViewTestCase):
         #TEST #3
         self._test_edit_set(Geoname, 
             user, 
-            geoname_set = '|145|185|287|',
-            updated_geoname_set = '|145|185|287|'
+            #geoname_set = '|145|185|287|',
+            geoname_set = '|5132|1974|',
+            #updated_geoname_set = '|145|185|287|'
+            updated_geoname_set = '|5132|1974|',
         ) 
 
     def test_update_action_same_politicians(self, user=None):
@@ -1056,11 +1078,14 @@ class ActionViewTest(OpenActionViewTestCase):
         #TEST #3
         self._test_edit_set(Politician, 
             user, 
-            geoname_set = '|145|185|287|', 
+            #geoname_set = '|145|185|287|', 
+            geoname_set = '|5132|1974|',
             #politician_set = '|332997|543662|626209|',
-            politician_set = '|332997|543662|626222|',
+            politician_set = '|355786|397514|583733|',
+            old_politician_set = '|125719|397513|740|',
             #updated_politician_set = '|332997|543662|626209|'
-            updated_politician_set = '|332997|543662|626222|',
+            updated_politician_set = '|355786|397514|583733|',
+            updated_politician_ids = '|125719|397513|740|'
         ) 
 
     def test_update_action_not_overlapping_geonames(self, user=None):
@@ -1081,10 +1106,13 @@ class ActionViewTest(OpenActionViewTestCase):
         #TEST #4
         self._test_edit_set(Politician, 
             user, 
-            geoname_set = '|145|185|287|', 
+            #geoname_set = '|145|185|287|', 
+            geoname_set = '|5132|1974|',
             #politician_set = '|332997|543662|626209|',
-            politician_set = '|332997|543662|626222|',
-            updated_politician_set = '|543662|'
+            politician_set = '|355786|397514|583733|',
+            old_politician_set = '|125719|397513|740|',
+            updated_politician_set = '|583733|',
+            updated_politician_ids = '|740|'
         ) 
 
 #    def test_update_unauthenticated_action(self):
@@ -1403,7 +1431,7 @@ class ActionViewTest(OpenActionViewTestCase):
 
         response = self._do_GET_filter_actions(
             ajax=True,
-            pol_ext_res_id=pol_ext_res_id,
+            pol_ext_res_id=pol_pks,
             sort=sort
         )
 
@@ -1423,7 +1451,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|185|287|'
-        politician_set = '|332997|'
+        politician_set = '|657159|'
         threshold = "0"
 
         response = self._do_POST_create_action(
@@ -1457,7 +1485,7 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
-            for _id in [332997]:
+            for _id in [657157]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -1474,8 +1502,10 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        geoname_set = '|145|185|287|'
-        politician_set = '|332997|543662|626222|'
+        #geoname_set = '|145|185|287|'
+        geoname_set = '|5132|1974|',
+        #politician_set = '|332997|543662|626222|'
+        politician_set = '|355786|397514|583733|'
         threshold = "0"
 
         response = self._do_POST_create_action(
@@ -1509,7 +1539,8 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
-            for _id in [332997,543662,626222]:
+            #for _id in [332997,543662,626222]:
+            for _id in [125719,397513,740]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)

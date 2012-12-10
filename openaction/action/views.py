@@ -369,17 +369,10 @@ class ActionView(FormView, views_support.LoginRequiredView):
                     kind = kind,
                     external_resource = e_r
                 )
-                #TO REMOVE: just for testing purposes
-                #geoname.external_resource.update_external_data(
-                #    lookup,
-                #    ext_res_id,
-                #    datum
-                #)
 
             else:
                 last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
                 if last_get_delta.seconds > Geoname.MAX_CACHE_VALID_MINUTES:
-                    #TODO Matteo:
                     geoname.external_resource.update_external_data(lookup, 
                         ext_res_id, 
                         datum
@@ -433,7 +426,6 @@ class ActionView(FormView, views_support.LoginRequiredView):
             else:
                 last_get_delta = datetime.datetime.now() - politician.external_resource.last_get_on
                 if last_get_delta.seconds > Politician.MAX_CACHE_VALID_MINUTES:
-                    #TODO Matteo: not a priority
                     politician.external_resource.update_external_data(
                         lookup,
                         ext_res_id,
