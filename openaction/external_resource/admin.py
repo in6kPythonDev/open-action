@@ -4,7 +4,7 @@ from external_resource.models import ExternalResource
 
 class ExternalResourceAdmin(admin.ModelAdmin):
 
-    list_display = ('__unicode__', 'backend_name', 'resource_type', 'first_get_on', 'last_get_on')
+    list_display = ('__unicode__', 'backend_name', 'first_get_on', 'last_get_on', 'is_valid', 'is_deleted')
     
 
 admin.site.register(ExternalResource, ExternalResourceAdmin)
