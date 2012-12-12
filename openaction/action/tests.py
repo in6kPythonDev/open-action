@@ -110,13 +110,16 @@ class OpenActionViewTestCase(AskbotTestCase):
         )
         self.assertEqual(response.context_data['exception_type'], e)
 
-    def _check_for_success_response(self, response):
+    def _check_for_success_response(self, response, is_ajax=True):
         """HTTP response is always 200, context_data 'http_status_code' tells the truth"""
-        self.assertEqual(response.status_code, views_support.HTTP_SUCCESS)
-        self.assertEqual(
-            response.context_data['http_status_code'], 
-            views_support.HTTP_SUCCESS
-        )
+        if is_ajax:
+            self.assertEqual(response.status_code, views_support.HTTP_SUCCESS)
+            self.assertEqual(
+                response.context_data['http_status_code'], 
+                views_support.HTTP_SUCCESS
+            )
+        else:
+            self.assertEqual(response.status_code, views_support.HTTP_SUCCESS)
     
     def _check_for_redirect_response(self,response, is_ajax=False):
         """ HTTP response is 302, in case the server redirects to another page"""
@@ -166,6 +169,14 @@ class ActionViewTest(OpenActionViewTestCase):
             response = self._c.get(url,
                 kwargs
             )
+        return response
+
+    def _do_GET_action_details(self, action, ajax=False):
+
+        response = self._GET(
+            reverse('action-detail', args=(action.pk,)),
+            ajax
+        )
         return response
 
     def _do_POST_action_add_vote(self, action, query_string="", ajax=False):
@@ -1565,3 +1576,26 @@ class ActionViewTest(OpenActionViewTestCase):
         )
 
         self._check_for_success_response(response)
+
+    def test_action_details(self, user=None):
+
+        action = self._create_action(title="see_action_detail")
+
+        # Test for authenticated user
+        logged_in = self._login(user)
+        action.update_status(const.ACTION_STATUS_DRAFT)
+
+        if logged_in:
+            response = self._do_GET_action_details(action)
+            self._check_for_success_response(response, is_ajax=False)
+
+            action.update_status(const.ACTION_STATUS_READY)
+
+            response = self._do_GET_action_details(action)
+            self._check_for_success_response(response, is_ajax=False)
+
+            self._do_POST_action_add_vote(action)
+
+            response = self._do_GET_action_details(action)
+            #print("response: %s" % response)
+            self._check_for_success_response(response, is_ajax=False)

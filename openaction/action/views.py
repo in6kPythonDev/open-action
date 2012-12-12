@@ -49,7 +49,7 @@ ORDERING_MAPS = {
     'politicians' : '-politician_set',
 }
 
-class ActionDetailView(DetailView):
+class ActionDetailView(DetailView, views_support.LoginRequiredView):
     """ List the details of an Action """
 
     model = Action
@@ -66,9 +66,22 @@ class ActionDetailView(DetailView):
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
         from django.contrib.sites.models import get_current_site
+
+        action = self.get_object()
+
         protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
+
         context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
-        context['user_can_vote'] = self.request.user.assert_can_vote_action(self.instance) 
+        try:
+            context['user_can_vote'] = self.request.user.assert_can_vote_action(action)
+        except exceptions.VoteActionInvalidStatusException as e:
+            context['user_can_vote'] = False
+        context['user_voted'] = self.request.user in action.voters
+        try:
+            context['user_can_edit'] = self.request.user.assert_can_edit_action(action)
+        except (exceptions.EditActionInvalidStatusException, exceptions.UserIsNotActionOwnerException) as e:
+            context['user_can_edit'] = False
+        print("\n\n\ncontext: %s\n" % context) 
         #KO: and (
         #KO:     self.instance not in self.request.user.actions.all()
         #KO: )
