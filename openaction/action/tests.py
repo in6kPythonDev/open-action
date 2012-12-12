@@ -1578,6 +1578,9 @@ class ActionViewTest(OpenActionViewTestCase):
         self._check_for_success_response(response)
 
     def test_action_details(self, user=None):
+        """ Show Action details, including data on its politicians 
+            and locations  
+        """
 
         action = self._create_action(title="see_action_detail")
 
@@ -1599,3 +1602,28 @@ class ActionViewTest(OpenActionViewTestCase):
             response = self._do_GET_action_details(action)
             #print("response: %s" % response)
             self._check_for_success_response(response, is_ajax=False)
+
+    def test_action_remaining_votes_to_threshold(self, user=None):
+        """ See how many votes remain to hit the threshold """
+
+        action = self._create_action(title="remaining_votes_to_threshold")
+
+        # Test for authenticated user
+        logged_in = self._login(user)
+        action.update_status(const.ACTION_STATUS_DRAFT)
+
+        if logged_in:
+            #try:
+            #    action.votes_to_threshold
+            #    raise_exception = False
+            #except exceptions.ThresholdNotComputableException as e:
+            #    raise_exception = True
+            #self.assertTrue(raise_exception)
+
+            self.assertEqual(action.votes_to_threshold, 3)
+
+            action.update_status(const.ACTION_STATUS_READY)
+ 
+            self._do_POST_action_add_vote(action)
+
+            self.assertEqual(action.votes_to_threshold, 2)
