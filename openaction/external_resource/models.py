@@ -14,7 +14,7 @@ from external_resource import utils
 
 import datetime, pickle
 
-class ExternalResource(models.Model, Resource):
+class ExternalResource(models.Model):
     """Registry of external resources."""
 
     backend_name = models.CharField(max_length=64, verbose_name=u"nome del backend",
@@ -23,8 +23,8 @@ class ExternalResource(models.Model, Resource):
 
     ext_res_id = models.CharField(max_length=1024, verbose_name="id della risorsa nel backend")
     ext_res_type = models.CharField(max_length=128, verbose_name="tipo della risorsa nel backend")
-    first_get_on = models.DateTimeField(auto_now_add=True)
-    last_get_on = models.DateTimeField(auto_now=True)
+    first_get_on = models.DateTimeField(verbose_name="FIRST", auto_now_add=True)
+    last_get_on = models.DateTimeField(verbose_name="LAST", auto_now=True)
 
     # is_valid is used to force cache reload
     is_valid = models.BooleanField(default=True)
