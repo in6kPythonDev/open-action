@@ -49,7 +49,7 @@ ORDERING_MAPS = {
     'politicians' : '-politician_set',
 }
 
-class ActionDetailView(DetailView):
+class ActionDetailView(DetailView, views_support.LoginRequiredView):
     """ List the details of an Action """
 
     model = Action
@@ -66,12 +66,26 @@ class ActionDetailView(DetailView):
         context = super(ActionDetailView, self).get_context_data(**kwargs)
         # needs to do something here...?
         from django.contrib.sites.models import get_current_site
-        protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
-        context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
-        #TODO: check if user can edit this action
-        context['user_can_edit'] = self.request.user.is_authenticated()
-        context['user_can_vote'] = self.request.user.is_authenticated() and self.request.user.assert_can_vote_action(self.instance)
 
+        action = self.get_object()
+
+        protocol = 'http%s://' % ('s' if self.request.is_secure() else '')
+
+        context['action_absolute_uri'] = ''.join([protocol, get_current_site(self.request).domain, self.instance.get_absolute_url()])
+
+        try:
+            context['user_can_vote'] = self.request.user.assert_can_vote_action(action)
+        except exceptions.VoteActionInvalidStatusException as e:
+            context['user_can_vote'] = False
+        context['user_voted'] = self.request.user in action.voters
+        try:
+            context['user_can_edit'] = self.request.user.assert_can_edit_action(action)
+        except (exceptions.EditActionInvalidStatusException, exceptions.UserIsNotActionOwnerException) as e:
+            context['user_can_edit'] = False
+        #print("\n\n\ncontext: %s\n" % context) 
+        #KO: and (
+        #KO:     self.instance not in self.request.user.actions.all()
+        #KO: )
         return context
 
 #---------------------------------------------------------------------------------
@@ -369,17 +383,10 @@ class ActionView(FormView, views_support.LoginRequiredView):
                     kind = kind,
                     external_resource = e_r
                 )
-                #TO REMOVE: just for testing purposes
-                #geoname.external_resource.update_external_data(
-                #    lookup,
-                #    ext_res_id,
-                #    datum
-                #)
 
             else:
                 last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
                 if last_get_delta.seconds > Geoname.MAX_CACHE_VALID_MINUTES:
-                    #TODO Matteo:
                     geoname.external_resource.update_external_data(lookup, 
                         ext_res_id, 
                         datum
@@ -433,7 +440,6 @@ class ActionView(FormView, views_support.LoginRequiredView):
             else:
                 last_get_delta = datetime.datetime.now() - politician.external_resource.last_get_on
                 if last_get_delta.seconds > Politician.MAX_CACHE_VALID_MINUTES:
-                    #TODO Matteo: not a priority
                     politician.external_resource.update_external_data(
                         lookup,
                         ext_res_id,

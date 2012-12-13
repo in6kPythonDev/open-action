@@ -64,6 +64,15 @@ class OpenPolisLocationsBackend(OpenPolisResourceBackend):
 
 class OpenPolisPoliticiansBackend(OpenPolisResourceBackend):
 
+    INSTITUTIONS = {
+        'comune' : ['consiglio','giunta',],
+        'provincia' : ['consiglio','giunta',],
+        'regione' : ['consiglio','giunta',],
+        'senato' : ['representatives',],
+        'europarl' : ['representatives',],
+        'camera' : ['representatives',],
+    }
+
     def get_url(self, url, request):
         url = 'politicians/' + url
         return super(OpenPolisPoliticiansBackend, self).get_url(url, request)
@@ -88,6 +97,38 @@ class OpenPolisPoliticiansBackend(OpenPolisResourceBackend):
 
         return normalized_data
 
+    #def get_info(self, cityrep, resource):
+    #    """Call OpenPolis API and return normalized data."""
+
+    #    rel_url = 'cityreps/op_id/' + str(cityrep) + '/'
+    #    cityrep_url =  urlparse.urljoin(self.base_url, rel_url)
+
+    #    cityrep_data = self.get_data(cityrep_url)
+
+    #    politician_id = 0
+    #    for institution, institution_kinds in self.INSTITUTIONS.items():
+
+    #        for inst_kind in institution_kinds:
+    #            cityreps_of_kind = cityrep_data[institution][inst_kind]
+
+    #            for politician in cityreps_of_kind:
+    #                if politician['charge_id'] in charge_ids:
+    #                    politician_id = politician['politician_id']
+    #                    break
+    #            if politician_id:
+    #                break
+    #        if politician_id:
+    #            break
+
+    #    rel_url = 'politicians/' + str(politician_id)
+    #    location_detail_url = urlparse.urljoin(self.base_url, rel_url)
+
+    #    location_data = self.get_data(location_detail_url)
+
+    #    normalized_data = location_data
+
+    #    return normalized_data
+
 class OpenPolisCityrepsBackend(OpenPolisResourceBackend):
 
     def get_url(self, url, request):
@@ -103,7 +144,7 @@ class OpenPolisCityrepsBackend(OpenPolisResourceBackend):
         city_reps_data = self.get_data(city_reps_url)
 
         normalized_data = city_reps_data
-#        print("\ncity_reps_data: %s\n" % normalized_data['city_representatives'])
+        #print("\ncity_reps_data: %s\n" % normalized_data['city_representatives'])
         #normalized_data = {
         #    'id' : data.get('id'),
         #    'name' : data.get('name'),
