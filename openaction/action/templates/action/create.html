@@ -44,7 +44,7 @@
                 value_list = value_list.replace('|' + new_value +'|', '|');
                 $(politicians_form_id).val( value_list == '|' ? '' : value_list );
             }
-        })
+        });
 
         function updatePoliticiansTable() {
 
@@ -94,7 +94,7 @@
 
                     for (politician in to_add) {
                         var check_box_el = $('<label class="checkbox">'+to_add[politician]['first_name']+' '+to_add[politician]['last_name']+'</label>')
-                                .prepend( $('<input type="checkbox" name="politician_set_pks" value="'+to_add[politician]['politician_id']+'" />').attr('checked', selected.indexOf(to_add[politician]['politician_id']) != -1) );
+                                .prepend( $('<input type="checkbox" name="politician_set_pks" value="'+to_add[politician]['charge_id']+'" />').attr('checked', selected.indexOf(to_add[politician]['charge_id']) != -1) );
                         body.append(check_box_el);
                     }
 
