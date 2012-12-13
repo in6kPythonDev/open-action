@@ -10,6 +10,6 @@ class HomepageView(TemplateView):
         context = super(HomepageView,self).get_context_data(**kwargs)
 
         context['action_list'] = Action.objects.all()[:5]
-        context['latest_activities'] = Activity.objects.all()[:5]
+        context['latest_activities'] = Activity.objects.order_by('-active_at').all()[:5]
 
         return context
