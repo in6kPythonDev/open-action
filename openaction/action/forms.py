@@ -104,24 +104,28 @@ class ActionForm(askbot_forms.AskForm):
         to the sum of politicians threshold deltas  """
 
         field_name = 'politician_set'
-        politician_ids = [int(elem) for elem in cleaned_data[field_name].strip('|').split('|')]
-        politician_ids_copy = list(politician_ids)
+        charge_ids = [int(elem) for elem in cleaned_data[field_name].strip('|').split('|')]
+        charge_ids_copy = list(charge_ids)
 
-        if politician_ids:
+        if charge_ids:
+
+            politician_ids = []
 
             for cityrep_id in geoname_ids:
-                if not len(politician_ids_copy):
+                if not len(charge_ids_copy):
                     break
-                found_ids = self.get_politicians_from_cityrep(
-                    politician_ids_copy,
+                found_ids, pol_ids = self.get_politicians_from_cityrep(
+                    charge_ids_copy,
                     cityrep_id
                 )
-                #print("\n\nfound_ids: %s\n" % found_ids)
-                for politician_id in found_ids:
-                    politician_ids_copy.remove(politician_id)
+                for pol_id in pol_ids:
+                    politician_ids.append(pol_id)
+                #print("\ncityrep_id: %s\ncharge_ids_copy: %s\nfound_ids: %s\n" % (cityrep_id, charge_ids_copy, found_ids))
+                for charge_id in found_ids:
+                    charge_ids_copy.remove(charge_id)
                 
-            if len(politician_ids_copy):
-                raise exceptions.ValidationError(u"Non tutti i politici sono stati recuperati. Sono rimasti fuori i politici con id: %s" % politician_ids_copy)
+            if len(charge_ids_copy):
+                raise exceptions.ValidationError(u"Non tutti i politici sono stati recuperati. Sono rimasti fuori i politici con id: %s" % charge_ids_copy)
 
             lookup = get_lookup(MAP_FIELD_NAME_TO_CHANNEL[field_name])
             values = lookup.get_objects(politician_ids)
@@ -131,12 +135,13 @@ class ActionForm(askbot_forms.AskForm):
 
         return values
 
-    def get_politicians_from_cityrep(self, politician_ids, cityrep_id):
+    def get_politicians_from_cityrep(self, charge_ids, cityrep_id):
         """ Return a list of politicians from a list of city
         representatives """
 
         lookup = get_lookup(CITYREP_CHANNEL_NAME)
-        politicians = []
+        politician_charges = []
+        politician_ids = []
 
         cityrep_data = lookup.get_objects([cityrep_id])[0]['city_representatives']
 
@@ -146,10 +151,11 @@ class ActionForm(askbot_forms.AskForm):
                 cityreps_of_kind = cityrep_data[institution][inst_kind]
 
                 for politician in cityreps_of_kind:
-                    if politician['politician_id'] in politician_ids:
-                        politicians.append(politician['politician_id'])
+                    if politician['charge_id'] in charge_ids:
+                        politician_charges.append(politician['charge_id'])
+                        politician_ids.append(politician['politician_id'])
 
-        return politicians
+        return politician_charges, politician_ids
 
     def check_threshold(self, cleaned_data):
         """ Check that the threshold deltas sum is equal to the given total

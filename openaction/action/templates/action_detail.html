@@ -138,6 +138,7 @@
         {% for blog_post in action.blog_posts %}
         {% html_blogpost_item blog_post %}
         {% endfor %}
+        {% if user_can_edit %}<a href="{% url action-blogpost-add pk=action.pk %}">Inserisci un nuovo post</a>{% endif %}
       </div>
       <div class="tab-pane" id="action-voters">
         <ul>
@@ -226,7 +227,7 @@
   <hr>
 
   <p>
-    <strong>Mancano 200 adesioni per il prossimo obiettivo</strong>.
+    <strong>Mancano {{ action.votes_to_threshold }} adesioni per il prossimo obiettivo</strong>.
     Aiutaci a coinvolgere più persone possibili
   </p>
 

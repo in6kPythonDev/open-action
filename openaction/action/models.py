@@ -299,6 +299,12 @@ class Action(models.Model, Resource):
             self.save()
         return self._threshold
 
+    @property
+    def votes_to_threshold(self):
+        """ Return how many votes remain to hit the threshold """
+
+        return self.threshold - self.votes.count()
+
     def can_be_ready(self):
         """ Check if it is possible to compute the threshold for an
         Action """
