@@ -2,9 +2,9 @@
 
 <div class="action-list">
     <ul class="nav nav-tabs">
-        <li{% if sorting == 'hot' %} class="active"{% endif %}><a href="{{ base_url }}&__sort=hot">Hot</a></li>
-        <li{% if sorting == 'popular' %} class="active"{% endif %}><a href="{{ base_url }}&__sort=popular">Popolari</a></li>
-        <li{% if sorting == 'date' %} class="active"{% endif %}><a href="{{ base_url }}&__sort=date">Recenti</a></li>
+        <li{% if sorting == 'hot' %} class="active"{% endif %}><a href="{{ base_url }}?__sort=hot">Hot</a></li>
+        <li{% if sorting == 'popular' %} class="active"{% endif %}><a href="{{ base_url }}?__sort=popular">Popolari</a></li>
+        <li{% if sorting == 'date' %} class="active"{% endif %}><a href="{{ base_url }}?__sort=date">Recenti</a></li>
         <li{% if not sorting %} class="active"{% endif %}><a href="{{ base_url }}">Tutte</a></li>
     </ul>
 

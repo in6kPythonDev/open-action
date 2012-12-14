@@ -63,21 +63,21 @@
   </div>
 
   <article>
-    <h1>{{ action.title }}</h1>
+    <h1>{{ action.bare_title }}</h1>
 
     {% html_action_tags action %}
 
     <div class="media action-header">
       <a class="pull-left thumbnail">
       {% if action.image %}
-        <img src="{{ action.image.url }}" height="160" width="160" alt="{{ action.title }}">
+        <img src="{{ action.image.url }}" height="160" width="160" alt="{{ action.bare_title }}">
       {% else %}
         {% if user_can_edit %}
         <div class="image-upload-box">
             <div class="middle"><i class="icon-edit"></i> Inserisci un'immagine</div>
         </div>
         {% else %}
-        <img src="http://placehold.it/160x160" alt="{{ action.title }}">
+        <img src="http://placehold.it/160x160" alt="{{ action.bare_title }}">
         {% endif %}
       {% endif %}
       </a>

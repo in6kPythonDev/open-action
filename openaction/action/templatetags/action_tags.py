@@ -118,10 +118,8 @@ def html_activity_item(activity):
 
 @register.inclusion_tag('tags/action_list.html', takes_context=True)
 def html_action_list(context, action_list):
-    url = context['request'].get_full_path()
-    if '?' not in url: url += '?1=1'
     return {
-        'base_url': url,
+        'base_url': context['request'].get_full_path().split('?')[0],
         'action_list': action_list,
         'sorting': context['request'].GET.get('__sort',False)
     }
