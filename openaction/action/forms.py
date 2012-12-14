@@ -242,8 +242,10 @@ class ActionCommentForm(SingleTextareaForm):
 class BlogpostCommentForm(SingleTextareaForm):
     pass
 
-class ActionBlogpostForm(SingleTextareaForm):
-    pass
+class ActionAddBlogpostForm(forms.Form):
+
+    title = forms.CharField()
+    text = forms.CharField(widget=forms.Textarea)
 
 #--------------------------------------------------------------------------------
 

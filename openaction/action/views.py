@@ -47,6 +47,7 @@ SEP = ','
 ORDERING_MAPS = {
     'popular' : '-thread__score',
     'politicians' : '-politician_set',
+    'date' : '-thread__added_at',
 }
 
 class ActionDetailView(DetailView, views_support.LoginRequiredView):
@@ -246,14 +247,17 @@ class ActionBlogpostView(BlogpostView):
     """
 
     model = Action
-    form_class = forms.ActionBlogpostForm
+    form_class = forms.ActionAddBlogpostForm
     template_name = 'blogpost/add.html'
  
     def form_valid(self, form):
 
         action = self.get_object()
         self.request.user.assert_can_create_blog_post(action)
-        action.blog_post_add(form.cleaned_data['text'], self.request.user)
+        action.blog_post_add(
+            form.cleaned_data['title'], 
+            form.cleaned_data['text'], self.request.user
+        )
         return views_support.response_success(self.request)
 
 
@@ -829,26 +833,49 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
     """ Generic filterable and orderable action list view basing on one or more parameters.
         
         Implemented filters:
+        - by generic query ('q' parameter)
         - by location
         - by politician
         - by category
 
         it is possible to combine filtering parameters.
+        
+        Generic query searches on:
+        * action title
+        * location name
+        * politician name
+        * action_content
 
-        TODO: filterd QS ordering. Need to pass a keyword arg '__sort' containing
-        separated values to determine the ordering preferences, p.e.:
+        QuerySet ordering is implemented through the keyword arg '__sort' 
+        containing separated values to determine the ordering preferences, p.e.:
 
-        [POPULAR,POLITICIANS(by mean of number of involved politcians)]
+        [popular,politicians(by mean of number of involved politcians),date]
     """
 
     model = Action
     paginate_by = 25
-    #template_name = 'action/action_list.html'
+    template_name = 'action/action_list.html'
     #context_object_name = "action_list"
 
     def get_queryset(self):
 
         qs = super(FilteredActionListView, self).get_queryset()
+
+        #Process generic query filter
+        #FUTURE TODO: see if askbot can optimize performance
+        try:
+            query = self.request.GET['q'].strip()
+            qs = qs.filter(
+                thread__title__icontains=query,
+                geoname_set__name__icontains=query,
+                politician_set__last_name__icontains=query,
+                politician_set__first_name__icontains=query,
+                thread__posts__text=query,
+            )
+
+        except KeyError:
+            #OK: cat_pks is not among GET parameters
+            pass
 
         #Process categories
         try:
@@ -898,6 +925,15 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
 
         #-- Process categories
         try:
+            query = self.request.GET['q'].strip()
+            context['filter_query'] = query
+
+        except KeyError:
+            #OK: q is not among GET parameters
+            pass
+
+        #-- Process categories
+        try:
             cat_pks = self.request.GET['cat_pks'].split(SEP)
             context['filter_categories'] = ActionCategory.objects.filter(pk__in=cat_pks)
 
@@ -927,10 +963,10 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         #print("\n-----------context: %s -----------\n" % context)
         return context
 
-#    def get(self, request, *args, **kwargs):
-#        super(FilteredActionListView, self).get(request, *args, **kwargs)
-#
-#        return views_support.response_success(request)
+    #TODO?: def get(self, request, *args, **kwargs):
+    #    
+    #    rv = super(FilteredActionListView, self).get(request, *args, **kwargs)
+    #    return views_support.response_success(request)
 
     def sort_queryset(self, qs, sorting):
 
@@ -943,6 +979,40 @@ class BaseActionListView(ListView):
 
     model = Action
     filter_class = None
+
+    def sort_qs(self, qs):
+
+        try:
+            sort_keys = self.request.GET['__sort'].split(SEP)
+        except KeyError:
+            pass
+        else:
+
+            sort_key = sort_keys[0]
+            if sort_key.startswith('hot'):
+                qs = self.sort_qs_by_hot(qs, sort_key)
+            elif sort_key.startswith('popular'):
+                qs = self.sort_qs_by_popularity(qs)
+            elif sort_key.startswith('date'):
+                qs = self.sort_qs_by_date(qs)
+
+        return qs
+
+    def sort_qs_by_hot(self, qs, sort_key):
+        """ The most voted in the last period of time """
+        try:
+            days = sort_key.split(":")[1]
+        except IndexError as e:
+            days = 7
+        return qs.sort_by_hot(days)
+
+    def sort_qs_by_popularity(self, qs):
+        """ The most voted of ever """
+        return qs.sort_by_popularity()
+
+    def sort_qs_by_date(self, qs):
+        """ The most recent """
+        return qs.sort_by_date()
 
     def get_context_data(self, **kwargs):
 
@@ -961,7 +1031,8 @@ class ActionByCategoryListView(BaseActionListView):
 
     def get_queryset(self):
         qs = super(ActionByCategoryListView, self).get_queryset()
-        return qs.by_categories(self.kwargs['pk'])
+        qs = qs.by_categories(self.kwargs['pk'])
+        return self.sort_qs(qs)
 
 
 class ActionByGeonameListView(BaseActionListView):
@@ -971,3 +1042,5 @@ class ActionByGeonameListView(BaseActionListView):
     def get_queryset(self):
         qs = super(ActionByGeonameListView, self).get_queryset()
         return qs.by_geonames(self.kwargs['pk'])
+
+

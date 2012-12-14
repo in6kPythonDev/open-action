@@ -33,7 +33,7 @@ from askbot_extensions import models
 
 from lib import views_support
 
-import os, urllib2
+import os, urllib2, datetime
 
 class OpenActionViewTestCase(AskbotTestCase):
 
@@ -1573,6 +1573,173 @@ class ActionViewTest(OpenActionViewTestCase):
             pol_pks=pol_pks,
             geo_pks=geo_pks,
             sort=sort
+        )
+
+        self._check_for_success_response(response)
+
+    def test_sort_actions(self, user=None):
+        """ Order actions by 
+        * `hot`: number of votes in a certain period of time
+        * `popular`: number of votes
+        * `date`: descending
+        """
+
+        #self.test_create_action_with_politicians(user)
+        logged_in = self._login(user)
+
+        #CREATING FIRST ACTION
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+        in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
+        geoname_set = '|145|185|287|'
+        politician_set = '|657159|'
+        threshold = "0"
+
+        response = self._do_POST_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text,
+            in_nomine=in_nomine,
+            geoname_set=geoname_set,
+            politician_set=politician_set,
+            threshold=threshold
+        )
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+
+            try:
+                action_obj = Action.objects.latest()
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+
+            self.assertTrue(action_obj.in_nomine_org == None)
+            #TODO: check that Action has the desired locations
+            for _id in [145,185,287]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    geoname_obj = Geoname.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    geoname_obj = False
+
+                self.assertTrue(geoname_obj)
+            for _id in [657157]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    politician_obj = Politician.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    politician_obj = False
+
+                self.assertTrue(politician_obj)
+ 
+        else:
+            self._check_for_redirect_response(response)
+
+        #CREATING SECOND ACTION
+        title = "Aggiungo una seconda action"
+        tagnames = None
+        text = "Blablablablablablabla" 
+        in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
+        #geoname_set = '|145|185|287|'
+        geoname_set = '|5132|1974|',
+        #politician_set = '|332997|543662|626222|'
+        politician_set = '|355786|397514|583733|'
+        threshold = "0"
+
+        response = self._do_POST_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text,
+            in_nomine=in_nomine,
+            geoname_set=geoname_set,
+            politician_set=politician_set,
+            threshold=threshold
+        )
+
+        if logged_in:
+            self._check_for_redirect_response(response, is_ajax=True)
+
+            try:
+                action_obj = Action.objects.latest()
+            except Action.DoesNotExist as e:
+                action_obj = False
+
+            self.assertTrue(action_obj)
+
+            self.assertTrue(action_obj.in_nomine_org == None)
+            #TODO: check that Action has the desired locations
+            for _id in [145,185,287]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    geoname_obj = Geoname.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    geoname_obj = False
+
+                self.assertTrue(geoname_obj)
+            #for _id in [332997,543662,626222]:
+            for _id in [125719,397513,740]:
+                try:
+                    e_r = ExternalResource.objects.get(ext_res_id=_id)
+                    politician_obj = Politician.objects.get(external_resource=e_r)
+                except Action.DoesNotExist as e:
+                    politician_obj = False
+
+                self.assertTrue(politician_obj)
+ 
+        else:
+            self._check_for_redirect_response(response)
+
+        #VOTING SECOND ACTION
+
+        self._do_POST_action_add_vote(action_obj)
+
+        #FILTER ACTION
+        pol_pks = "1"
+        geo_pks = "1"
+        sort="politicians"
+
+        #SORT ACTION BY HOT
+        __sort = "hot:7"
+
+        response = self._do_GET_filter_actions(
+            ajax=True,
+            pol_pks=pol_pks,
+            geo_pks=geo_pks,
+            sort=sort,
+            __sort=__sort
+        )
+
+        self._check_for_success_response(response)
+
+        #SORT ACTION BY POPULARITY
+
+        __sort = "popular"
+
+        response = self._do_GET_filter_actions(
+            ajax=True,
+            pol_pks=pol_pks,
+            geo_pks=geo_pks,
+            sort=sort,
+            __sort=__sort
+        )
+
+        self._check_for_success_response(response)
+
+        #SORT ACTION BY DATE
+
+        __sort = "date"
+
+        response = self._do_GET_filter_actions(
+            ajax=True,
+            pol_pks=pol_pks,
+            geo_pks=geo_pks,
+            sort=sort,
+            __sort=__sort
         )
 
         self._check_for_success_response(response)
