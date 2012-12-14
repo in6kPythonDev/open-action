@@ -9,7 +9,9 @@
 {% block content %}
 
   <article class="action-list">
-    <h1>{% html_render_resource filter_object %}</h1>
+    {% if filter_object %}
+        <h1>{% html_render_resource filter_object %}</h1>
+    {% endif %}
 
     <div id="action-slideshow"></div>
 

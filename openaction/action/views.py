@@ -47,6 +47,7 @@ SEP = ','
 ORDERING_MAPS = {
     'popular' : '-thread__score',
     'politicians' : '-politician_set',
+    'date' : '-thread__added_at',
 }
 
 class ActionDetailView(DetailView, views_support.LoginRequiredView):
@@ -845,12 +846,12 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         QuerySet ordering is implemented through the keyword arg '__sort' 
         containing separated values to determine the ordering preferences, p.e.:
 
-        [POPULAR,POLITICIANS(by mean of number of involved politcians)]
+        [popular,politicians(by mean of number of involved politcians),date]
     """
 
     model = Action
     paginate_by = 25
-    #template_name = 'action/action_list.html'
+    template_name = 'action/action_list.html'
     #context_object_name = "action_list"
 
     def get_queryset(self):
@@ -959,10 +960,10 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         #print("\n-----------context: %s -----------\n" % context)
         return context
 
-    def get(self, request, *args, **kwargs):
-        super(FilteredActionListView, self).get(request, *args, **kwargs)
-
-        return views_support.response_success(request)
+    #TODO?: def get(self, request, *args, **kwargs):
+    #    
+    #    rv = super(FilteredActionListView, self).get(request, *args, **kwargs)
+    #    return views_support.response_success(request)
 
     def sort_queryset(self, qs, sorting):
 
