@@ -980,6 +980,40 @@ class BaseActionListView(ListView):
     model = Action
     filter_class = None
 
+    def sort_qs(self, qs):
+
+        try:
+            sort_keys = self.request.GET['__sort'].split(SEP)
+        except KeyError:
+            pass
+        else:
+
+            sort_key = sort_keys[0]
+            if sort_key.startswith('hot'):
+                qs = self.sort_qs_by_hot(qs, sort_key)
+            elif sort_key.startswith('popular'):
+                qs = self.sort_qs_by_popularity(qs)
+            elif sort_key.startswith('date'):
+                qs = self.sort_qs_by_date(qs)
+
+        return qs
+
+    def sort_qs_by_hot(self, qs, sort_key):
+        """ The most voted in the last period of time """
+        try:
+            days = sort_key.split(":")[1]
+        except IndexError as e:
+            days = 7
+        return qs.sort_by_hot(days)
+
+    def sort_qs_by_popularity(self, qs):
+        """ The most voted of ever """
+        return qs.sort_by_popularity()
+
+    def sort_qs_by_date(self, qs):
+        """ The most recent """
+        return qs.sort_by_date()
+
     def get_context_data(self, **kwargs):
 
         if self.__class__ == BaseActionListView:
@@ -997,7 +1031,8 @@ class ActionByCategoryListView(BaseActionListView):
 
     def get_queryset(self):
         qs = super(ActionByCategoryListView, self).get_queryset()
-        return qs.by_categories(self.kwargs['pk'])
+        qs = qs.by_categories(self.kwargs['pk'])
+        return self.sort_qs(qs)
 
 
 class ActionByGeonameListView(BaseActionListView):
@@ -1007,3 +1042,5 @@ class ActionByGeonameListView(BaseActionListView):
     def get_queryset(self):
         qs = super(ActionByGeonameListView, self).get_queryset()
         return qs.by_geonames(self.kwargs['pk'])
+
+

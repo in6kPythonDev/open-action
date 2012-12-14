@@ -18,3 +18,12 @@ class ActionManager(models.Manager):
 
     def by_politicians(self, *politicians):
         return self.get_query_set().by_politicians(*politicians)
+
+    def sort_by_hot(self, delta):
+        return self.get_query_set().sort_by_hot(delta)
+
+    def sort_by_popularity(self):
+        return self.get_query_set().sort_by_popularity() 
+
+    def sort_by_date(self):
+        return self.get_query_set().sort_by_date()

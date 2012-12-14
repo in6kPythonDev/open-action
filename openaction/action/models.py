@@ -239,6 +239,15 @@ class Action(models.Model, Resource):
         #WAS: return Vote.objects.all() & self.question.votes.all()
         return Vote.objects.filter(voted_post=self.question)
 
+    def votes_since_date(self, delta):
+        votes_since_date = Vote.objects.filter(voted_post=self.question)
+
+        for vote in votes_since_date.values('voted_at'):
+            if (datetime.datetime.now() - vote['voted_at']) > delta:
+                votes_since_date.exclude(vote)
+
+        return votes_since_date.count()
+
     @property
     def voters(self):
         """Return User queryset containing users who declared their votes for this action."""
