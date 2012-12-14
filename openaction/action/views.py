@@ -829,14 +829,21 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
     """ Generic filterable and orderable action list view basing on one or more parameters.
         
         Implemented filters:
+        - by generic query ('q' parameter)
         - by location
         - by politician
         - by category
 
         it is possible to combine filtering parameters.
+        
+        Generic query searches on:
+        * action title
+        * location name
+        * politician name
+        * action_content
 
-        TODO: filterd QS ordering. Need to pass a keyword arg '__sort' containing
-        separated values to determine the ordering preferences, p.e.:
+        QuerySet ordering is implemented through the keyword arg '__sort' 
+        containing separated values to determine the ordering preferences, p.e.:
 
         [POPULAR,POLITICIANS(by mean of number of involved politcians)]
     """
@@ -849,6 +856,22 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
     def get_queryset(self):
 
         qs = super(FilteredActionListView, self).get_queryset()
+
+        #Process generic query filter
+        #FUTURE TODO: see if askbot can optimize performance
+        try:
+            query = self.request.GET['q'].strip()
+            qs = qs.filter(
+                thread__title__icontains=query,
+                geoname_set__name__icontains=query,
+                politician_set__last_name__icontains=query,
+                politician_set__first_name__icontains=query,
+                thread__posts__text=query,
+            )
+
+        except KeyError:
+            #OK: cat_pks is not among GET parameters
+            pass
 
         #Process categories
         try:
@@ -895,6 +918,15 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         """ What kind of data could we need to get from here? """
 
         context = super(FilteredActionListView, self).get_context_data(**kwargs)
+
+        #-- Process categories
+        try:
+            query = self.request.GET['q'].strip()
+            context['filter_query'] = query
+
+        except KeyError:
+            #OK: q is not among GET parameters
+            pass
 
         #-- Process categories
         try:
