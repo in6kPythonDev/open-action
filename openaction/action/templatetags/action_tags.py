@@ -12,7 +12,7 @@ def html_render_resource(resource):
     html = """<a href="%(url)s" class="%(res_type)s">%(resource)s</a>""" % {
         'url' : resource.get_absolute_url(),
         'res_type' : resource.resource_type,
-        'resource' : resource
+        'resource' : getattr(resource, 'bare_title', resource)
     }
     return html
 
