@@ -927,10 +927,10 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         #print("\n-----------context: %s -----------\n" % context)
         return context
 
-    def get(self, request, *args, **kwargs):
-        super(FilteredActionListView, self).get(request, *args, **kwargs)
-
-        return views_support.response_success(request)
+#    def get(self, request, *args, **kwargs):
+#        super(FilteredActionListView, self).get(request, *args, **kwargs)
+#
+#        return views_support.response_success(request)
 
     def sort_queryset(self, qs, sorting):
 

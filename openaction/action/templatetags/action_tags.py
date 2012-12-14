@@ -16,6 +16,17 @@ def html_render_resource(resource):
     }
     return html
 
+@register.simple_tag
+def html_render_action(action):
+    """Render an OpenAction resource"""
+
+    html = """<a href="%(url)s" class="%(res_type)s">%(resource)s</a>""" % {
+        'url' : action.get_absolute_url(),
+        'res_type' : action.resource_type,
+        'resource' : action.bare_title,
+    }
+    return html
+
 @register.inclusion_tag('tags/action_item.html')
 def html_action_item(action):
     """Return html snippet for an action item."""
@@ -105,3 +116,12 @@ def html_activity_item(activity):
         }
 
 
+@register.inclusion_tag('tags/action_list.html', takes_context=True)
+def html_action_list(context, action_list):
+    url = context['request'].get_full_path()
+    if '?' not in url: url += '?1=1'
+    return {
+        'base_url': url,
+        'action_list': action_list,
+        'sorting': context['request'].GET.get('__sort',False)
+    }
