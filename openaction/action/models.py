@@ -378,10 +378,10 @@ class Action(models.Model, Resource):
             user, self
         ))
 
-    def blog_post_add(self, text, user):
+    def blog_post_add(self, title, text, user):
         """ Add a blog post to an Action. """
 
-        Post.objects.create_new_answer(thread=self.thread,
+        blog_post = Post.objects.create_new_answer(thread=self.thread,
             author=user,
             added_at=datetime.datetime.now(),
             text=text,
@@ -389,6 +389,14 @@ class Action(models.Model, Resource):
             email_notify = False,
             by_email = False
         )
+
+        try:
+            blog_post.title = title
+            blog_post.save()
+        except:
+            #TODO Matteo field TITLE for Post model
+            # then remove this try/except
+            pass
 
         log.debug("Blog post added for user %s on action %s" % (
             user, self

@@ -247,14 +247,17 @@ class ActionBlogpostView(BlogpostView):
     """
 
     model = Action
-    form_class = forms.ActionBlogpostForm
+    form_class = forms.ActionAddBlogpostForm
     template_name = 'blogpost/add.html'
  
     def form_valid(self, form):
 
         action = self.get_object()
         self.request.user.assert_can_create_blog_post(action)
-        action.blog_post_add(form.cleaned_data['text'], self.request.user)
+        action.blog_post_add(
+            form.cleaned_data['title'], 
+            form.cleaned_data['text'], self.request.user
+        )
         return views_support.response_success(self.request)
 
 
