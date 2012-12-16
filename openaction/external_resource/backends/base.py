@@ -75,6 +75,14 @@ class CachedResourceBackend(ExternalResourceBackend):
         })
         return True
 
+    def delete_from_cache(self, full_url):
+
+        key = self.cache_key(full_url)
+        # COMMENT Matteo: exception here should be handled from 
+        # redis
+        oa_cache.delete(key)
+        return True
+
     @classmethod
     def cache_key(cls, url):
         return url

@@ -37,6 +37,12 @@ class Store(object):
         return rc.set(key, pickled_value)
 
     @classmethod
+    def delete(cls, key):
+        key = cls.key_prefix+key
+        rv = rc.delete(key)
+        return rv
+
+    @classmethod
     def clean(cls):
         for k in rc.keys(cls.key_prefix+'*'):
             rc.delete(k)

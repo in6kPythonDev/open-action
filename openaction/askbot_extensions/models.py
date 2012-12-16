@@ -67,6 +67,9 @@ class PostExtension(AskbotModelExtender):
 
 Post.add_to_class('ext_noattr', PostExtension())
 
+Post.add_to_class('title', models.CharField(default='',max_length=256)
+)
+
 #--------------------------------------------------------------------------------
 
 #TODO: place can be blank/null at creation time?

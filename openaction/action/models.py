@@ -399,13 +399,8 @@ class Action(models.Model, Resource):
             by_email = False
         )
 
-        try:
-            blog_post.title = title
-            blog_post.save()
-        except:
-            #TODO Matteo field TITLE for Post model
-            # then remove this try/except
-            pass
+        blog_post.title = title
+        blog_post.save()
 
         log.debug("Blog post added for user %s on action %s" % (
             user, self

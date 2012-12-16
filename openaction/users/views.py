@@ -12,6 +12,8 @@ from askbot.models.user import User as AskbotUser
 import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as a_consts
+from django.views.generic.edit import FormView
+from users.forms import UserRegistrationForm
 
 from lib import views_support
 
@@ -98,3 +100,11 @@ class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
 
         return context
 
+class RegistrationOA(FormView):
+    """ Registration view form OA registration"""
+
+    form_class = UserRegistrationForm
+
+    def form_valid(self, form):
+
+        return super(RegistrationOA, self).form_valid(form)
