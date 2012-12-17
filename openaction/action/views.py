@@ -260,6 +260,35 @@ class ActionBlogpostView(BlogpostView):
         )
         return views_support.response_success(self.request)
 
+class UpdateActionBlogpostView(BlogpostView):
+    """Update an article of the Action blog
+
+    An article can be updated only from Users who are Action referrers, and only
+    if the Action is in a valid status. The valid status are:
+        * ready
+        * active
+        * closed
+        * victory
+    """
+
+    model = Post
+    form_class = forms.ActionEditBlogpostForm
+    template_name = 'blogpost/update.html'
+ 
+    def form_valid(self, form):
+
+        blog_post = self.get_object()
+        action = blog_post.action
+        #TODO Matteo: see if it is correct
+        self.request.user.assert_can_update_blog_post(action)
+        action.blog_post_edit(
+            blog_post,
+            self.request.user,
+            title=form.cleaned_data.get('title', None), 
+            text=form.cleaned_data.get('text', None)
+        )
+        return views_support.response_success(self.request)
+
 
 #---------------------------------------------------------------------------------
 

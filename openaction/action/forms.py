@@ -247,6 +247,11 @@ class ActionAddBlogpostForm(forms.Form):
     title = forms.CharField()
     text = forms.CharField(widget=forms.Textarea)
 
+class ActionEditBlogpostForm(forms.Form):
+
+    title = forms.CharField(required=False)
+    text = forms.CharField(required=False,widget=forms.Textarea)
+
 #--------------------------------------------------------------------------------
 
 class ModeratorRemoveForm(forms.Form):

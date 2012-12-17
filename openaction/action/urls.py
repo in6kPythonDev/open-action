@@ -42,6 +42,9 @@ urlpatterns = patterns('',
     url(r'^(?P<pk>\d+)/blogpost/add/$', action_views.ActionBlogpostView.as_view(), 
         name='action-blogpost-add'
     ),
+    url(r'^blogpost/(?P<pk>\d+)/edit/$', action_views.UpdateActionBlogpostView.as_view(), 
+        name='action-blogpost-edit'
+    ),
     url(r'^comment/(?P<pk>\d+)/vote/add/$', action_views.CommentVoteView.as_view(), 
         name='comment-vote'
     ),

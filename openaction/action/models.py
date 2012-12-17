@@ -406,6 +406,23 @@ class Action(models.Model, Resource):
             user, self
         ))
     
+    def blog_post_edit(self, blog_post, user, title=None, text=None):
+        """ Add a blog post to an Action. """
+
+        if text:
+            blog_post.apply_edit(
+                edited_by=user,
+                text=text
+            )
+
+        if title:
+            blog_post.title = title
+            blog_post.save()
+
+        log.debug("Blog post editetd for user %s on action %s" % (
+            user, self
+        ))
+
     def users_impact_factor(self):
         """Return a User queryset with annotation of action impact factor"""
         # TODO: TOCACHE

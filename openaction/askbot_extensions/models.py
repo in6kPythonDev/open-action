@@ -281,6 +281,22 @@ class UserExtension(AskbotModelExtender):
         if self not in action.referrers.all():
             raise exceptions.UserIsNotActionReferralException(self, action)
 
+    def _askbot_ext_assert_can_update_blog_post(self, action):
+        """Check permission. If invalid --> raise exception.
+        
+        Check if the user has the permission to update an article of 
+        the Action blog
+        """
+        # TODO Matteo: dooes the action need to not be in theese statuses
+        # so that a blog post can be updated?
+        if action.status in (
+            action_const.ACTION_STATUS_DRAFT, 
+            action_const.ACTION_STATUS_DELETED,
+        ):
+            raise exceptions.BlogpostActionInvalidStatusException(action.status)
+        if self not in action.referrers.all():
+            raise exceptions.UserIsNotActionReferralException(self, action)
+
     def _askbot_ext_assert_can_follow_action(self, action):
         """Check permission. If invalid --> raise exception"""
         if action.status in (
