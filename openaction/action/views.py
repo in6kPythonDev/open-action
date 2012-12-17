@@ -429,7 +429,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
         return geonames
 
-    def get_or_create_politicians(self, politician_list):
+    def get_or_create_politicians(self, politician_list, politician_keys):
         """ Here we have to check if there exist Politician objects with pk into
         the provided ids.
 
@@ -445,12 +445,14 @@ class ActionView(FormView, views_support.LoginRequiredView):
         for datum in politician_list:
 
             ext_res_id = datum['content_id']
+            charge_id = politician_keys.get(int(ext_res_id))
             ext_res_type = datum['institution_charges']['current'][0]['charge_type']
 
             try:
                 politician = Politician.objects.get(
                     external_resource__ext_res_id=ext_res_id,
-                    external_resource__ext_res_type=ext_res_type
+                    external_resource__ext_res_type=ext_res_type,
+                    charge_id=charge_id
                 )
             except Politician.DoesNotExist as e:
 
@@ -467,7 +469,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 politician = Politician.objects.create(
                     first_name=first_name,
                     last_name=last_name,
-                    external_resource = e_r
+                    external_resource = e_r,
+                    charge_id=charge_id
                 )
 
             else:
@@ -543,9 +546,12 @@ class ActionCreateView(ActionView):
         geonames = self.get_or_create_geonames(geoname_data)
         action.geoname_set.add(*geonames)
         
-        politician_data = form.cleaned_data['politician_set']
-        politicians = self.get_or_create_politicians(politician_data)
-        action.politician_set.add(*politicians)
+        if form.cleaned_data['politician_set']:
+            politician_data, politician_keys = form.cleaned_data['politician_set']
+            politicians = self.get_or_create_politicians(politician_data, 
+                politician_keys
+            )
+            action.politician_set.add(*politicians)
         
         medias = form.cleaned_data['media_set']
         #TODO: Matteo 
@@ -623,14 +629,17 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         action.geoname_set.add(*to_add)
         action.geoname_set.remove(*to_remove)
 
-        politician_data = form.cleaned_data['politician_set']
-        old_politicians = action.politicians
-        new_politicians = self.get_or_create_politicians(politician_data)
-        to_add, to_remove = self.update_values(old_politicians, 
-            new_politicians
-        )
-        action.politician_set.add(*to_add)
-        action.politician_set.remove(*to_remove)
+        if form.cleaned_data['politician_set']:
+            politician_data, politician_keys = form.cleaned_data['politician_set']
+            old_politicians = action.politicians
+            new_politicians = self.get_or_create_politicians(politician_data, politician_keys)
+            to_add, to_remove = self.update_values(
+                old_politicians, 
+                new_politicians,
+                attr='charge_id'
+            )
+            action.politician_set.add(*to_add)
+            action.politician_set.remove(*to_remove)
         
         medias = form.cleaned_data['media_set']
         #TODO: Matteo 
@@ -726,7 +735,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
-    def update_values(self, old_values, new_values):
+    def update_values(self, old_values, new_values, attr='id'):
         """ Get two sets of values as input and return two sets of values as output.
 
         This can be used when receiving a set of objects of the same tipe from a form 
@@ -748,10 +757,10 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             to_add.append(obj_new)
 
         for obj_old in old_values:
-            #print "old %s" % obj_old.id
+            #print "old %s" % obj_old.__getattribute__(attr)
             for obj_new in new_values:
-                #print "new %s" % obj_new.id
-                if obj_old.id == obj_new.id:
+                #print "new %s" % obj_new.__getattribute__(attr)
+                if obj_old.__getattribute__(attr) == obj_new.__getattribute__(attr):
                     #already present, does not need 
                     #to be added
                     to_add.remove(obj_new)

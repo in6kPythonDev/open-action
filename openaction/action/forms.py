@@ -106,6 +106,7 @@ class ActionForm(askbot_forms.AskForm):
         field_name = 'politician_set'
         charge_ids = [int(elem) for elem in cleaned_data[field_name].strip('|').split('|')]
         charge_ids_copy = list(charge_ids)
+        politician_data = {}
 
         if charge_ids:
 
@@ -114,10 +115,17 @@ class ActionForm(askbot_forms.AskForm):
             for cityrep_id in geoname_ids:
                 if not len(charge_ids_copy):
                     break
-                found_ids, pol_ids = self.get_politicians_from_cityrep(
+                #found_ids, pol_ids = self.get_politicians_from_cityrep(
+                #    charge_ids_copy,
+                #    cityrep_id
+                #)
+                data = self.get_politicians_from_cityrep(
                     charge_ids_copy,
                     cityrep_id
                 )
+                pol_ids = data.keys()
+                found_ids = data.values()
+                politician_data.update(data)
                 for pol_id in pol_ids:
                     politician_ids.append(pol_id)
                 #print("\ncityrep_id: %s\ncharge_ids_copy: %s\nfound_ids: %s\n" % (cityrep_id, charge_ids_copy, found_ids))
@@ -133,7 +141,7 @@ class ActionForm(askbot_forms.AskForm):
         else:
             values = []
 
-        return values
+        return values, politician_data
 
     def get_politicians_from_cityrep(self, charge_ids, cityrep_id):
         """ Return a list of politicians from a list of city
@@ -142,6 +150,7 @@ class ActionForm(askbot_forms.AskForm):
         lookup = get_lookup(CITYREP_CHANNEL_NAME)
         politician_charges = []
         politician_ids = []
+        politician_data = {}
 
         cityrep_data = lookup.get_objects([cityrep_id])[0]['city_representatives']
 
@@ -154,8 +163,11 @@ class ActionForm(askbot_forms.AskForm):
                     if politician['charge_id'] in charge_ids:
                         politician_charges.append(politician['charge_id'])
                         politician_ids.append(politician['politician_id'])
+                        politician_data[politician['politician_id']] = \
+                            politician['charge_id']
 
-        return politician_charges, politician_ids
+        #return politician_charges, politician_ids
+        return politician_data
 
     def check_threshold(self, cleaned_data):
         """ Check that the threshold deltas sum is equal to the given total
@@ -270,3 +282,9 @@ class ModeratorRemoveForm(forms.Form):
 
         super(ModeratorRemoveForm, self).__init__(*args, **kwargs)
         self.fields['moderator'].queryset = moderators
+
+#--------------------------------------------------------------------------------
+
+class UpdateImageForm(forms.Form):
+
+    image = forms.ImageField()

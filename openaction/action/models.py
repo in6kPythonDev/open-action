@@ -520,6 +520,7 @@ class Politician(models.Model):
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
     charge = models.CharField(max_length=128)
+    charge_id = models.IntegerField()
     external_resource = models.OneToOneField(ExternalResource)
 
     def __unicode__(self):
