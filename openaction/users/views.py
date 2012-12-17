@@ -5,6 +5,12 @@ from django.views.generic import DetailView
 from django.views.generic.list import ListView
 from django.utils.decorators import method_decorator
 
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+
 from users.models import UserProfile
 from askbot.models.post import Post
 from askbot.models.repute import Vote
@@ -100,11 +106,25 @@ class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
 
         return context
 
-class RegistrationOA(FormView):
-    """ Registration view form OA registration"""
+@csrf_protect
+@never_cache
+def registration(request, *args, **kw):
 
     form_class = UserRegistrationForm
+    if request.method == "POST":
+        form = form_class(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.info(request, "Ti sei registrato con successo. Conferma via mail")
+            return HttpResponseRedirect(settings.LOGIN_URL)
+    else:
+        form = form_class()
 
-    def form_valid(self, form):
+    context = {
+        'registration_form' : form,
+    }
 
-        return super(RegistrationOA, self).form_valid(form)
+    return render_to_response(
+        "users/register.html", context,
+        context_instance=RequestContext(request)
+    )
