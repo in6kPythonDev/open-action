@@ -161,7 +161,7 @@ class ActionForm(askbot_forms.AskForm):
         """ Check that the threshold deltas sum is equal to the given total
         threshold. """
 
-        computed_threshold = 0
+        computed_threshold = 3
         politician_data = cleaned_data['politician_set']
         total_threshold = int(cleaned_data['threshold'])
 

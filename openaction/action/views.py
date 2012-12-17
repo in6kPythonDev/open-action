@@ -330,7 +330,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
             'in_nomine': self.request.REQUEST.get('in_nomine', "user-%s" % self.request.user.pk),
-            'threshold': '0',
+            'threshold': '3',
             'wiki': False,
             'is_anonymous': False,
         }
@@ -549,6 +549,21 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         print("\n____________________action.get_object %s\n" % self.get_object())
         kwargs['action'] = self.get_object()
         return kwargs
+
+    def get_initial(self):
+        action = self.get_object()
+        return {
+            'title': action.bare_title,
+            'text': action.content,
+            'tags': action.thread.tagnames,
+            'in_nomine': action.in_nomine_org or ("user-%s" % self.request.user.pk),
+            'threshold': action.threshold,
+            'wiki': False,
+            'is_anonymous': False,
+            'category_set': action.categories,
+            'geoname_set': [g.external_resource.ext_res_id for g in action.geonames],
+            'politician_set': [p.external_resource.ext_res_id for p in action.politicians],
+        }
     
     @transaction.commit_on_success
     def form_valid(self, form):
