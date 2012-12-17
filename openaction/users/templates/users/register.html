@@ -1,0 +1,11 @@
+{% load url from future %}
+<h1>Accedi per agire insieme! </h1>
+
+<form method="post" action="{% url 'users.views.registration' %}">
+{% csrf_token %}
+{{ registration_form.as_p }}
+
+<input type="submit" value="procedi" />
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+

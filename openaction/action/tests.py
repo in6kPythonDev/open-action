@@ -609,7 +609,12 @@ class ActionViewTest(OpenActionViewTestCase):
 
         #Adding blog_post to action 
         text = "Articolo di blog relativo a action %s" % self._action
-        response = self._do_POST_add_blog_POST(ajax=True, text=text)
+        title = "Il mio primo articolo di blog"
+        response = self._do_POST_add_blog_POST(
+            ajax=True, 
+            title=title,
+            text=text
+        )
         #print "------------- %s" % response
         
         if logged_in:
@@ -617,7 +622,9 @@ class ActionViewTest(OpenActionViewTestCase):
             success = self._check_for_success_response(response)
             try:
                 blogpost_obj = self._action.blog_posts.get(
-                    text=text, author=self._author
+                    title=title,
+                    text=text, 
+                    author=self._author
                 )
             except Post.DoesNotExist as e:
                 blogpost_obj = False
@@ -645,9 +652,15 @@ class ActionViewTest(OpenActionViewTestCase):
         self._action.update_status(const.ACTION_STATUS_READY)
         #already tested, does not need asserts
         text = "Altro blog post su action %s" % self._action
-        self._do_POST_add_blog_POST(ajax=True, text=text)
+        title = "Altro titolo"
+        self._do_POST_add_blog_POST(ajax=True, 
+            title=title,
+            text=text
+        )
         blog_post = self._action.blog_posts.get(
-            text=text, author=self._author
+            title=title,
+            text=text, 
+            author=self._author
         )
 
         logged_in = self._login(user)
@@ -666,7 +679,8 @@ class ActionViewTest(OpenActionViewTestCase):
             success = self._check_for_success_response(response)
             try:
                 comment_obj = blog_post.comments.get(
-                    text=comment_text, author=self._author
+                    text=comment_text,
+                    author=self._author
                 )
             except Post.DoesNotExist as e:
                 comment_obj = False
@@ -693,7 +707,8 @@ class ActionViewTest(OpenActionViewTestCase):
         
         #Adding comment to action
         response = self._do_POST_add_comment(ajax=True, text=comment_text)
-        comment = self._action.comments.get(text=comment_text,
+        comment = self._action.comments.get(
+            text=comment_text,
             author=self._author
         )
         print "add_vote_action_comment_response: %s" % response
@@ -803,7 +818,7 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        geoname_set = '|145|185|287|'
+        geoname_set = '|145|185|287|5132|'
         threshold = 0
 
         response = self._do_POST_create_action(
@@ -832,7 +847,7 @@ class ActionViewTest(OpenActionViewTestCase):
             # since the user is not representative of any ot them
             self.assertTrue(action_obj.in_nomine_org == None)
             #TODO: check that Action has the desired locations
-            for _id in [145,185,287]:
+            for _id in [145,185,287,5132]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     geoname_obj = Geoname.objects.get(external_resource=e_r)
@@ -1420,33 +1435,33 @@ class ActionViewTest(OpenActionViewTestCase):
 
         #TEST FILTERING
         geo_pks = "1"
-        sort="popular"
+        __sort="hot:9"
 
         response = self._do_GET_filter_actions(
-            ajax=True,
+            #ajax=True,
             geo_pks=geo_pks,
-            sort=sort
+            __sort=__sort
         )
 
-        self._check_for_success_response(response)
+        self._check_for_success_response(response, is_ajax=False)
 
     def test_filter_actions_by_politician(self, user=None):
         """ Filter action by politician, then order the resulting QS"""
 
         pol_pks = "1"
-        sort="popular"
+        __sort="popular"
 
         #TODO
         self.test_create_action_with_locations(user)
         self.test_create_action_with_politicians(user)
 
         response = self._do_GET_filter_actions(
-            ajax=True,
+            #ajax=True,
             pol_ext_res_id=pol_pks,
-            sort=sort
+            __sort=__sort
         )
 
-        self._check_for_success_response(response)
+        self._check_for_success_response(response, is_ajax=False)
 
     def test_filter_actions_by_geoname_and_politician(self, user=None):
         """ Filter action by geoname and politician, then order the 
@@ -1566,16 +1581,16 @@ class ActionViewTest(OpenActionViewTestCase):
         #FILTER ACTION
         pol_pks = "1"
         geo_pks = "1"
-        sort="politicians"
+        __sort="date"
 
         response = self._do_GET_filter_actions(
-            ajax=True,
+            #ajax=True,
             pol_pks=pol_pks,
             geo_pks=geo_pks,
-            sort=sort
+            __sort=__sort
         )
 
-        self._check_for_success_response(response)
+        self._check_for_success_response(response, is_ajax=False)
 
     def test_sort_actions(self, user=None):
         """ Order actions by 
@@ -1701,48 +1716,44 @@ class ActionViewTest(OpenActionViewTestCase):
         #FILTER ACTION
         pol_pks = "1"
         geo_pks = "1"
-        sort="politicians"
 
         #SORT ACTION BY HOT
         __sort = "hot:7"
 
         response = self._do_GET_filter_actions(
-            ajax=True,
+            #ajax=True,
             pol_pks=pol_pks,
             geo_pks=geo_pks,
-            sort=sort,
             __sort=__sort
         )
 
-        self._check_for_success_response(response)
+        self._check_for_success_response(response, is_ajax=False)
 
         #SORT ACTION BY POPULARITY
 
         __sort = "popular"
 
         response = self._do_GET_filter_actions(
-            ajax=True,
+            #ajax=True,
             pol_pks=pol_pks,
             geo_pks=geo_pks,
-            sort=sort,
             __sort=__sort
         )
 
-        self._check_for_success_response(response)
+        self._check_for_success_response(response, is_ajax=False)
 
         #SORT ACTION BY DATE
 
         __sort = "date"
 
         response = self._do_GET_filter_actions(
-            ajax=True,
+            #ajax=True,
             pol_pks=pol_pks,
             geo_pks=geo_pks,
-            sort=sort,
             __sort=__sort
         )
 
-        self._check_for_success_response(response)
+        self._check_for_success_response(response, is_ajax=False)
 
     def test_action_details(self, user=None):
         """ Show Action details, including data on its politicians 

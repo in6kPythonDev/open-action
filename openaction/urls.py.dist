@@ -6,6 +6,9 @@
 #aggiungi in testa nei pattern
     #url(r'' , include('base.urls')),
     #url(r'^users/' , include('users.urls')),
+	#(r'^%saccounts/registration/$' % settings.ASKBOT_URL, 'users.views.registration'),
+	#(r'^%saccounts/login/$' % settings.ASKBOT_URL, 'users.views.login'),
+	#(r'^%saccounts/logout/$' % settings.ASKBOT_URL, 'django.contrib.auth.views.logout_then_login'),
     #url(r'^%ssocial_auth/' % settings.ASKBOT_URL, include('oa_social_auth.urls')),
     #(r'^%saction/' % settings.ASKBOT_URL, include('action.urls')),
     #WAS: (r'^%saction/lookups/', include(ajax_select_urls)),

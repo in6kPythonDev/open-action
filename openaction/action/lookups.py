@@ -29,12 +29,12 @@ class GeonameLookup(LookupChannel):
         data = backend.get_data(full_url)
         fake_qs = []
         for d in data:
-            backend_name = "cityreps"
-            backend = utils.load_backend(backend_name)
-            rel_url = 'cityreps/op_id/' + str(d["id"]) + '/'
-            city_reps_url = urlparse.urljoin(backend.base_url, rel_url)
-            city_reps_data = backend.get_data(city_reps_url)
-            d.update(city_reps_data)
+            #WAS: backend_name = "cityreps"
+            #WAS: backend = utils.load_backend(backend_name)
+            #WAS: rel_url = 'cityreps/op_id/' + str(d["id"]) + '/'
+            #WAS: city_reps_url = urlparse.urljoin(backend.base_url, rel_url)
+            #WAS: city_reps_data = backend.get_data(city_reps_url)
+            #WAS: d.update(city_reps_data)
             fake_qs.append(GeonameDict(d["id"], **d))
         return fake_qs
  

@@ -546,7 +546,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
 
     def get_form_kwargs(self):
         kwargs = super(ActionUpdateView, self).get_form_kwargs()
-        print("\n____________________action.get_object %s\n" % self.get_object())
+        #print("\n____________________action.get_object %s\n" % self.get_object())
         kwargs['action'] = self.get_object()
         return kwargs
 
@@ -919,8 +919,6 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
             #OK: pol_pks is not among GET parameters
             pass
 
-
-        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
         try:
             sorting = self.request.GET['__sort']
             self.sort_queryset(qs, sorting)
@@ -928,8 +926,6 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         except KeyError:
             #OK: no sorting requested
             pass
-
-        #print("\n-----------filtered: %s ---------- size: %s\n" % (filtered, len(filtered)))
 
         return qs
 
@@ -974,8 +970,6 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
             #OK: pol_pks is not among GET parameters
             pass
 
-
-        #print("\n-----------context: %s -----------\n" % context)
         return context
 
     #TODO?: def get(self, request, *args, **kwargs):

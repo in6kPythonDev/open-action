@@ -1,6 +1,6 @@
-Steps to add the DB the ModelFields added to the Vote askbot Model:
+Steps to add the DB the ModelFields added to the Vote and Post askbot Models
 
-Note: the db has to be wiped and the add_to_class() methods commented before start
+Note: the db has to be wiped and the add_to_class() methods for the fields to add commented before start
 
 1- create and sync db with ./manage.py syncdb
 2- askbot uses South to perform migrations in the database, so the following are South commands:

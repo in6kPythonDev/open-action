@@ -5,6 +5,13 @@ from django.views.generic import DetailView
 from django.views.generic.list import ListView
 from django.utils.decorators import method_decorator
 
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.contrib.auth.views import login as django_auth_login
+
 from users.models import UserProfile
 from askbot.models.post import Post
 from askbot.models.repute import Vote
@@ -12,6 +19,8 @@ from askbot.models.user import User as AskbotUser
 import askbot.utils.decorators as askbot_decorators
 from action.models import Action
 from action import const as a_consts
+from django.views.generic.edit import FormView
+from users.forms import UserRegistrationForm
 
 from lib import views_support
 
@@ -98,3 +107,30 @@ class UserProfileDetailView(DetailView, views_support.LoginRequiredView):
 
         return context
 
+@csrf_protect
+@never_cache
+def registration(request, *args, **kw):
+
+    form_class = UserRegistrationForm
+    if request.method == "POST":
+        form = form_class(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.info(request, "Ti sei registrato con successo. Conferma via mail")
+            return HttpResponseRedirect(settings.LOGIN_URL)
+    else:
+        form = form_class()
+
+    context = {
+        'registration_form' : form,
+    }
+
+    return render_to_response(
+        "users/register.html", context,
+        context_instance=RequestContext(request)
+    )
+
+@never_cache
+def login(request, *args, **kw):
+
+    return django_auth_login(request, template_name="users/login.html", *args, **kw)
