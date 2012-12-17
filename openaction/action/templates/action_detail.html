@@ -99,11 +99,11 @@
           <ul>
             {% for politician in action.politicians %}
             <li>{{ politician.charge }} {{ politician.first_name|title }} {{ politician.last_name|title }}</li>
-            {% if forloop.counter == 5 %}
+            {% if forloop.counter == 5 and  action.politicians|length > 5 %}
             <li><a data-toggle="collapse" href="#morePoliticians">e altri {{ action.politicians|length|add:-5 }} politici <i class="icon-sort-down"></i></a>
                 <ul id="morePoliticians" class="collapse">
             {% endif %}
-            {% if forloop.last and forloop.index > 5 %}
+            {% if forloop.last and action.politicians|length > 5 %}
             </ul></li>
             {% endif %}
             {% endfor %}

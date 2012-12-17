@@ -76,6 +76,7 @@ TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'social_auth.context_processors.social_auth_by_type_backends',
     'social_auth.context_processors.social_auth_login_redirect',
     'django.core.context_processors.static',
+    'base.context.global_context',
 )
 
 #--------------------------------------------------------------------------------

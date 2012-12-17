@@ -1,0 +1,10 @@
+{% extends 'action/create.html' %}
+
+{% block content %}
+    <h1>Modifica Azione</h1>
+
+    <form action="{% url action-update pk=form.action.pk %}" method="post" class="action-create-form">
+        {% include "action/action_form.html" with save_text='Modifica' %}
+    </form>
+
+{% endblock content %}

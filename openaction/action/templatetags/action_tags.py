@@ -89,11 +89,11 @@ def html_blogpost_item(blogpost):
 </li>
 """ % {
         "action_title" : blogpost.action,
-        "blogpost_title" : blogpost.title,
+        "blogpost_title" : 'title',
         "blogpost_date" : blogpost.added_at,
         "blogpost_author" : blogpost.author,
         "ncomments" : blogpost.comments.count(),
-        "blogpost_excerpt": filters.truncatewords(blogpost.html(), 300),
+        "blogpost_excerpt": filters.truncatewords(blogpost.html, 300),
     }
     return html
 
