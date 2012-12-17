@@ -149,6 +149,12 @@ class CityrepLookup(LookupChannel):
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
 
+    def get_url(self, _id=None):
+
+        if _id:
+            return "cityreps/%s/" % _id
+        return "cityreps/"
+
 class PoliticianLookup(LookupChannel):
 
     def get_objects(self, ids):
@@ -176,6 +182,12 @@ class PoliticianLookup(LookupChannel):
         if not request.user.is_authenticated():
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
+
+    def get_url(self, _id=None):
+
+        if _id:
+            return "politicians/%s/" % _id
+        return "politicians/"
 
 #class PersonLookup(LookupChannel):
 #
