@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.contrib.auth.views import login as django_auth_login
 
 from users.models import UserProfile
 from askbot.models.post import Post
@@ -128,3 +129,8 @@ def registration(request, *args, **kw):
         "users/register.html", context,
         context_instance=RequestContext(request)
     )
+
+@never_cache
+def login(request, *args, **kw):
+
+    return django_auth_login(request, template_name="users/login.html", *args, **kw)

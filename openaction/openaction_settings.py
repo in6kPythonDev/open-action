@@ -5,9 +5,12 @@ import settings
 #--------------------------------------------------------------------------------
 # Social auth authentication
 
-LOGIN_URL          = '/social_auth/login-form/'
-LOGIN_REDIRECT_URL = '/'
-LOGIN_ERROR_URL    = '/social_auth/login-error/'
+LOGIN_URL          = '%s/accounts/login/' % settings.ASKBOT_URL
+LOGIN_REDIRECT_URL = '%s/' % settings.ASKBOT_URL
+LOGIN_ERROR_URL    = '%s/social_auth/login-error/' % settings.ASKBOT_URL
+#WAS: LOGIN_URL          = '/social_auth/login-form/'
+#WAS: LOGIN_REDIRECT_URL = '/'
+#WAS: LOGIN_ERROR_URL    = '/social_auth/login-error/'
 
 # Taken from open_municipio social-auth integration
 
