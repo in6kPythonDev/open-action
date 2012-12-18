@@ -5,12 +5,9 @@ import settings
 #--------------------------------------------------------------------------------
 # Social auth authentication
 
-LOGIN_URL          = '%s/accounts/login/' % settings.ASKBOT_URL
-LOGIN_REDIRECT_URL = '%s/' % settings.ASKBOT_URL
-LOGIN_ERROR_URL    = '%s/social_auth/login-error/' % settings.ASKBOT_URL
-#WAS: LOGIN_URL          = '/social_auth/login-form/'
-#WAS: LOGIN_REDIRECT_URL = '/'
-#WAS: LOGIN_ERROR_URL    = '/social_auth/login-error/'
+LOGIN_URL          = 'accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_ERROR_URL    = 'social_auth/login-error/'
 
 # Taken from open_municipio social-auth integration
 
@@ -69,9 +66,6 @@ SKYROCK_CONSUMER_SECRET   = ''
 YAHOO_CONSUMER_KEY        = ''
 YAHOO_CONSUMER_SECRET     = ''
 
-LOGIN_URL          = '/login-form/'
-LOGIN_REDIRECT_URL = '/logged-in/'
-LOGIN_ERROR_URL    = '/login-error/'
 
 TEMPLATE_CONTEXT_PROCESSORS = settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'social_auth.context_processors.social_auth_by_name_backends',
