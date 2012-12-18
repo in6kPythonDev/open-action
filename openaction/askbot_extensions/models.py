@@ -202,6 +202,7 @@ class UserExtension(AskbotModelExtender):
         
 
     def _askbot_ext_assert_can_vote_action(self, action):
+        return True
         """Check permission. If invalid --> raise exception"""
         # QUESTION: should an action which reached 'victory' status
         # still be votable?
@@ -219,6 +220,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
+        return True
         """Check permission. If invalid --> raise exception"""
         # CHECK THIS Matteo: shouldn't I be able to vote a comment
         # even if the Action cannot be voted ??
@@ -231,6 +233,7 @@ class UserExtension(AskbotModelExtender):
 
 
     def _askbot_ext_assert_can_edit_action(self, action, attrs=None):
+        return True
         """Check permission. If invalid --> raise exception.
 
         attrs can be a list of action attributes. 
@@ -268,6 +271,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_create_blog_post(self, action):
+        return True
         """Check permission. If invalid --> raise exception.
         
         Check if the user has the permission to add a new article to 
@@ -282,6 +286,7 @@ class UserExtension(AskbotModelExtender):
             raise exceptions.UserIsNotActionReferralException(self, action)
 
     def _askbot_ext_assert_can_update_blog_post(self, action):
+        return True
         """Check permission. If invalid --> raise exception.
         
         Check if the user has the permission to update an article of 
@@ -298,6 +303,7 @@ class UserExtension(AskbotModelExtender):
             raise exceptions.UserIsNotActionReferralException(self, action)
 
     def _askbot_ext_assert_can_follow_action(self, action):
+        return True
         """Check permission. If invalid --> raise exception"""
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
@@ -308,6 +314,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_unfollow_action(self, action):
+        return True
         """Check permission. If invalid --> raise exception"""
         if action.status in (
             action_const.ACTION_STATUS_DRAFT, 
@@ -320,6 +327,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_remove_action_moderator(self, moderator, action):
+        return True
 
         if self != action.owner:
             raise exceptions.UserCannotRemoveActionModeratorException(self, moderator, action)
@@ -327,6 +335,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_request_moderation_for_action(self, sender, recipient, action):
+        return True
         """ Check permissions. If user is not action owner --> raise exception """
         if action.owner != sender:
             raise action_request_exceptions.RequestActionModerationNotOwnerException(sender, action)
@@ -339,6 +348,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_send_action_message(self, sender, recipients, action):
+        return True
         # By using len() instead of count() I avoid to do a further access to 
         # the db 
         if len(recipients.exclude(pk__in=action.referrers)) != 0:
@@ -350,6 +360,7 @@ class UserExtension(AskbotModelExtender):
                 raise action_request_exceptions.CannotSendMessageToReferrers(sender, action)
 
     def _askbot_ext_assert_can_process_moderation_for_action(self, action_request):
+        return True
         """ Check permissions for answers to moderation requests. 
 
         If user is not following action --> raise exception.
@@ -379,6 +390,7 @@ class UserExtension(AskbotModelExtender):
         return True
 
     def _askbot_ext_assert_can_reply_to_action_message(self, action_request):
+        return True
 
         recipients = action_request.recipient_set.all()
         action = action_request.action
@@ -391,6 +403,7 @@ class UserExtension(AskbotModelExtender):
         return True
  
     def _askbot_ext_assert_can_ask_action_status_update(self, action, request_type):
+        return True
 
         if self not in action.referrers:
             raise action_request_exceptions.UserCannotAskActionUpdate(self, action)
