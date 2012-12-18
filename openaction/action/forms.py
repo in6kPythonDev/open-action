@@ -173,7 +173,7 @@ class ActionForm(askbot_forms.AskForm):
         """ Check that the threshold deltas sum is equal to the given total
         threshold. """
 
-        computed_threshold = 0
+        computed_threshold = 3
         politician_data = cleaned_data['politician_set']
         total_threshold = int(cleaned_data['threshold'])
 
@@ -203,12 +203,16 @@ class ActionForm(askbot_forms.AskForm):
         else:
             external_resource_ids = self.action.geonames.values_list('external_resource', flat=True)
             geoname_ids = [external_resource.ext_res_id for external_resource in ExternalResource.objects.filter(pk__in=external_resource_ids)]
+
  
-        if cleaned_data['politician_set']:
+        if cleaned_data['politician_set'] and cleaned_data['politician_set'] != "[u'']":
             cleaned_data['politician_set'] = self._clean_politician_set(
                 cleaned_data,
                 geoname_ids
             )
+        else:
+            cleaned_data['politician_set'] = []
+
         self.check_threshold(cleaned_data)
         # set defaults
         for field_name in ('category_set', 'media_set'):

@@ -359,7 +359,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'text': self.request.REQUEST.get('text', ''),
             'tags': self.request.REQUEST.get('tags', ''),
             'in_nomine': self.request.REQUEST.get('in_nomine', "user-%s" % self.request.user.pk),
-            'threshold': '0',
+            'threshold': '3',
             'wiki': False,
             'is_anonymous': False,
         }
@@ -546,14 +546,14 @@ class ActionCreateView(ActionView):
         # The same is valid for other m2m fields below
         geonames = self.get_or_create_geonames(geoname_data)
         action.geoname_set.add(*geonames)
-        
+ 
         if form.cleaned_data['politician_set']:
             politician_data, politician_keys = form.cleaned_data['politician_set']
             politicians = self.get_or_create_politicians(politician_data, 
                 politician_keys
             )
             action.politician_set.add(*politicians)
-        
+ 
         medias = form.cleaned_data['media_set']
         #TODO: Matteo 
         action.media_set.add(*medias)
