@@ -288,13 +288,14 @@ class ActionViewTest(OpenActionViewTestCase):
             updated_set = kwargs['updated_geoname_set']
             updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
         elif model == Politician:
-            #old_ids = kwargs['politician_set'][1:-1].split('|')
-            old_ids = kwargs['old_politician_set'][1:-1].split('|')
+            #WAS: old_ids = kwargs['old_politician_set'][1:-1].split('|')
+            old_ids = kwargs['politician_set'][1:-1].split('|')
             geoname_set = kwargs['geoname_set']
             politician_set = kwargs['politician_set']
             updated_set = kwargs['updated_politician_set']
-            updated_set_ids = kwargs['updated_politician_ids']
-            updated_ids = [int(_id) for _id in  updated_set_ids[1:-1].split('|')] 
+            #updated_set_ids = kwargs['updated_politician_ids']
+            #WAS: updated_ids = [int(_id) for _id in  updated_set_ids[1:-1].split('|')] 
+            updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
             
         #updated_ids = [int(_id) for _id in  updated_set[1:-1].split('|')] 
         
@@ -1011,8 +1012,9 @@ class ActionViewTest(OpenActionViewTestCase):
 
                 self.assertTrue(geoname_obj)
             #check that the politicians have been created
-            #for _id in [332997,543662,626222]:
-            for _id in [125719,397513,740,583731,274820,21]:
+            ##for _id in [332997,543662,626222]:
+            #WAS: for _id in [125719,397513,740,583731,274820,21]:
+            for _id in [355786,397514,583733,583732,391934,391931]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -1149,10 +1151,8 @@ class ActionViewTest(OpenActionViewTestCase):
             geoname_set = '|5132|1974|', 
             #politician_set = '|332997|543662|',
             politician_set = '|355786|397514|',
-            old_politician_set = '|125719|397513|',
             #updated_politician_set = '|332997|543662|626209|'
             updated_politician_set = '|624417|333080|498067|',
-            updated_politician_ids = '|274713|333079|4521|'
         ) 
 
     def test_update_action_remove_geonames(self, user=None):
@@ -1179,9 +1179,7 @@ class ActionViewTest(OpenActionViewTestCase):
             geoname_set = '|5132|1974|',
             #politician_set = '|332997|543662|626209|',
             politician_set = '|355786|397514|583733|',
-            old_politician_set = '|125719|397513|740|',
             updated_politician_set = '|355786|397514|',
-            updated_politician_ids = '|125719|397513|'
         ) 
 
     def test_update_action_same_geonames(self, user=None):
@@ -1208,10 +1206,8 @@ class ActionViewTest(OpenActionViewTestCase):
             geoname_set = '|5132|1974|',
             #politician_set = '|332997|543662|626209|',
             politician_set = '|355786|397514|583733|',
-            old_politician_set = '|125719|397513|740|',
             #updated_politician_set = '|332997|543662|626209|'
             updated_politician_set = '|355786|397514|583733|',
-            updated_politician_ids = '|125719|397513|740|'
         ) 
 
     def test_update_action_not_overlapping_geonames(self, user=None):
@@ -1236,9 +1232,7 @@ class ActionViewTest(OpenActionViewTestCase):
             geoname_set = '|5132|1974|',
             #politician_set = '|332997|543662|626209|',
             politician_set = '|355786|397514|583733|',
-            old_politician_set = '|125719|397513|740|',
             updated_politician_set = '|583733|',
-            updated_politician_ids = '|740|'
         ) 
 
 #    def test_update_unauthenticated_action(self):
@@ -1611,7 +1605,8 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
-            for _id in [657157]:
+            #WAS: for _id in [657157]:
+            for _id in [657159]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -1665,8 +1660,9 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
-            #for _id in [332997,543662,626222]:
-            for _id in [125719,397513,740]:
+            ##for _id in [332997,543662,626222]:
+            #WAS: for _id in [125719,397513,740]:
+            for _id in [355786,397514,583733]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -1742,7 +1738,8 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
-            for _id in [657157]:
+            #WAS: for _id in [657157]:
+            for _id in [657159]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)
@@ -1796,8 +1793,9 @@ class ActionViewTest(OpenActionViewTestCase):
                     geoname_obj = False
 
                 self.assertTrue(geoname_obj)
-            #for _id in [332997,543662,626222]:
-            for _id in [125719,397513,740]:
+            ##for _id in [332997,543662,626222]:
+            #WAS: for _id in [125719,397513,740]:
+            for _id in [355786,397514,583733]:
                 try:
                     e_r = ExternalResource.objects.get(ext_res_id=_id)
                     politician_obj = Politician.objects.get(external_resource=e_r)

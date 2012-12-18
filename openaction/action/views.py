@@ -444,8 +444,9 @@ class ActionView(FormView, views_support.LoginRequiredView):
 
         for datum in politician_list:
 
-            ext_res_id = datum['content_id']
-            charge_id = politician_keys.get(int(ext_res_id))
+            politician_id = datum['content_id']
+            ext_res_id = politician_keys.get(int(politician_id))
+            charge_id = politician_keys.get(int(politician_id))
             ext_res_type = datum['institution_charges']['current'][0]['charge_type']
 
             try:
@@ -470,7 +471,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
                     first_name=first_name,
                     last_name=last_name,
                     external_resource = e_r,
-                    charge_id=charge_id
+                    charge_id=charge_id,
+                    politician_id=politician_id
                 )
 
             else:
