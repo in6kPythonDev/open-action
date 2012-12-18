@@ -2,12 +2,14 @@
 
 import settings
 
+LESS_DEBUG = False
+
 #--------------------------------------------------------------------------------
 # Social auth authentication
 
-LOGIN_URL          = 'accounts/login/'
+LOGIN_URL          = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
-LOGIN_ERROR_URL    = 'social_auth/login-error/'
+LOGIN_ERROR_URL    = '/social_auth/login-error/'
 
 # Taken from open_municipio social-auth integration
 
