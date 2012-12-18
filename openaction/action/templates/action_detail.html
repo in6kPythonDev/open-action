@@ -25,6 +25,11 @@
         }).css('border-bottom','0');
         {% endif %}
 
+        $('#action-voters-tab2').click(function(e){
+          e.preventDefault();
+          $('#action-voters-tab').tab('show');
+        });
+
         {% if settings.BITLY %}
         {# START BITLY SUPPORT : ADD BITLY INPUT FORMFIELD #}
         $('input.bitly').each(function() {
@@ -70,14 +75,14 @@
     <div class="media action-header">
       <a class="pull-left thumbnail">
       {% if action.image %}
-        <img src="{{ action.image.url }}" height="160" width="160" alt="{{ action.bare_title }}">
+        <img src="{{ action.image.url }}" height="160" width="160" alt="{{ action.bare_title }}" id="action-image">
       {% else %}
         {% if user_can_edit %}
         <div class="image-upload-box">
             <div class="middle"><i class="icon-edit"></i> Inserisci un'immagine</div>
         </div>
         {% else %}
-        <img src="http://placehold.it/160x160" alt="{{ action.bare_title }}">
+        <img src="http://placehold.it/160x160" alt="{{ action.bare_title }}" id="action-image">
         {% endif %}
       {% endif %}
       </a>
@@ -125,7 +130,7 @@
     <ul class="nav nav-tabs">
       <li class="active"><a href="#action-overview" data-toggle="tab">Azione</a></li>
       <li><a href="#action-blog" data-toggle="tab">Blog</a></li>
-      <li><a href="#action-voters" data-toggle="tab">Aderenti</a></li>
+      <li><a href="#action-voters" data-toggle="tab" id="action-voters-tab">Aderenti</a></li>
     </ul>
 
     <div class="tab-content">
@@ -135,19 +140,17 @@
         </div>
       </div>
       <div class="tab-pane" id="action-blog">
-        {% for blog_post in action.blog_posts %}
-        {% html_blogpost_item blog_post %}
-        {% endfor %}
-        {% if user_can_edit %}<a href="{% url action-blogpost-add pk=action.pk %}">Inserisci un nuovo post</a>{% endif %}
+        {% html_blogpost_list action.blog_posts %}
+        {% if request.user == action.owner %}<a href="{% url action-blogpost-add pk=action.pk %}">Inserisci un nuovo post</a>{% endif %}
       </div>
       <div class="tab-pane" id="action-voters">
-        <ul>
-          {% for voter in action.voters %}
-          <li><span class="action-vote-number">{{ forloop.revcounter }}</span> {{ voter.username}}</li>
-          {% empty %}
-          <li><i>Nessuna persona ha aderito a questa Action</i></li>
-          {% endfor %}
-        </ul>
+
+        {% for voter in action.voters %}
+        {% html_voter_list action.voters %}
+        {% empty %}
+        <p class="mute"><i>Nessuna persona ha aderito a questa Action</i></p>
+        {% endfor %}
+
       </div>
     </div>
 
@@ -161,7 +164,7 @@
     <ul class="news-list">
       {% for action_related in '' %}
         <li>
-          {% html_action_item action %}
+          {% html_action_item action_related %}
         </li>
       {% empty %}
         <li>
@@ -267,31 +270,6 @@
         </div>
       </div>
     </li>
-  {% empty %}
-    <li>
-      <div class="media">
-        <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64">
-        </a>
-        <div class="media-body">
-          <a href="#">Mario rossi</a>
-          <br> Roma
-          <br> 200 persone coinvolte
-        </div>
-      </div>
-    </li>
-    <li>
-      <div class="media">
-        <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64">
-        </a>
-        <div class="media-body">
-          <a href="#">Mario rossi</a>
-          <br> Roma
-          <br> 200 persone coinvolte
-        </div>
-      </div>
-    </li>
   {% endfor %}
   </ul>
   <a href="#">Tutti i sostenitori</a>
@@ -299,30 +277,19 @@
   <hr>
 
   <h3>Ultime adesioni</h3>
-  <a href="#">Tutti le adesioni</a>
-
+  {% if action.voters %}
+  {% html_voter_list action.voters 5 1 %}
+  <a href="#action-voters" id="action-voters-tab2">Tutti le adesioni</a>
   <hr>
+  {% endif %}
 
   <h3>Perchè aderisco</h3>
   <ul class="news-list">
+    {% for comment in action.comments %}
     <li>
-      <div class="media">
-        <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64">
-        </a>
-        <div class="media-body">
-          <a href="#">Mario rossi</a>
-          <br> Roma
-          <br> oggi
-        </div>
-      </div>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-        Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
-        Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
-      <form action="#">
-        145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
-      </form>
+      {% html_action_comment comment %}
     </li>
+    {% endfor %}
     <li>
       <div class="media">
         <a class="pull-left" href="#">

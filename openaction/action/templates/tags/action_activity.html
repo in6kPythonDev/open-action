@@ -1,7 +1,8 @@
+{% load humanize %}
 <div class="media">
     <div class="media-body">
-        <small>{{ activity_date|date }} {{ activity_user }} {{ activity_type }}</small>
-        <h4 class="media-heading"><a href="{% url action-detail action.pk %}">{{ action }}</a></h4>
+        <small>{{ activity_date|naturalday }} {{ activity_user }} {{ activity_type }}</small>
+        <h4 class="media-heading"><a href="{% url action-detail action.pk %}">{{ action|striptags|truncatewords:100 }}</a></h4>
         {% if extra_content %}<p class="text-success">{{ extra_content }}</p>{% endif %}
     </div>
 </div>

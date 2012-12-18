@@ -2629,7 +2629,7 @@ ul.icons li .icon-large:before {
 .open {
   *z-index: 1000;
 }
-.open > .dropdown-menu {
+.open  > .dropdown-menu {
   display: block;
 }
 .pull-right > .dropdown-menu {
@@ -5301,6 +5301,7 @@ a.badge:hover {
   width: 110px;
 }
 #site_menu .nav .dropdown > a {
+  text-align: center;
   padding-left: 0;
   padding-right: 0;
   text-align: center;
@@ -5342,7 +5343,7 @@ a.badge:hover {
   padding-top: 300px;
   color: #000000;
 }
-#homepage_banner > div {
+#homepage_banner  > div {
   padding-bottom: 30px;
   background: transparent;
   zoom: 1;
@@ -5364,6 +5365,9 @@ body.homepage #site_body h3 {
   font-size: 14px;
   line-height: 18px;
   text-transform: uppercase;
+}
+#content {
+  padding-bottom: 15px;
 }
 #content .media-heading a {
   color: #c6242a;
@@ -5404,9 +5408,14 @@ body.homepage #site_body h3 {
   background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
   background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
   background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+  background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
   border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
   *background-color: #e6e6e6;
+  /* Darken IE7 buttons by default so they stand out more given they won't have borders */
+
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
   border: 1px solid #bbbbbb;
   *border: 0;
   border-bottom-color: #a2a2a2;
@@ -5685,7 +5694,7 @@ table.action-status td.action-target {
 .action-list #action-sorting .nav > li:first-child {
   border-right: 0;
 }
-.action-list #action-sorting .nav > li > a {
+.action-list #action-sorting .nav > li  > a {
   text-shadow: 0 0 0;
   color: #397267;
   padding: 5px 15px;
@@ -5751,19 +5760,19 @@ table.action-status td.action-target {
 .vertical-align {
   display: table;
 }
-.vertical-align > .middle,
-.vertical-align > .top,
-.vertical-align > .bottom {
+.vertical-align  > .middle,
+.vertical-align  > .top,
+.vertical-align  > .bottom {
   display: table-cell;
   text-align: center;
 }
-.vertical-align > .middle {
+.vertical-align  > .middle {
   vertical-align: middle;
 }
-.vertical-align > .top {
+.vertical-align  > .top {
   vertical-align: top;
 }
-.vertical-align > .bottom {
+.vertical-align  > .bottom {
   vertical-align: bottom;
 }
 .image-upload-box {
@@ -5773,22 +5782,22 @@ table.action-status td.action-target {
   background-color: #ccc;
   cursor: pointer;
 }
-.image-upload-box > .middle,
-.image-upload-box > .top,
-.image-upload-box > .bottom {
+.image-upload-box  > .middle,
+.image-upload-box  > .top,
+.image-upload-box  > .bottom {
   display: table-cell;
   text-align: center;
 }
-.image-upload-box > .middle {
+.image-upload-box  > .middle {
   vertical-align: middle;
 }
-.image-upload-box > .top {
+.image-upload-box  > .top {
   vertical-align: top;
 }
-.image-upload-box > .bottom {
+.image-upload-box  > .bottom {
   vertical-align: bottom;
 }
-.image-upload-box > div {
+.image-upload-box  > div {
   width: 80%;
   color: #868686;
   font-weight: normal;
@@ -5800,4 +5809,25 @@ table.action-status td.action-target {
 }
 .bigModal .modal-body {
   max-height: 600px;
+}
+.action-voters-list span.pull-left {
+  color: #555555;
+  font-size: 24px;
+  margin-top: 4px;
+}
+.action-voters-list a {
+  font-weight: bold;
+}
+#sidebar .action-voters-list li {
+  border-bottom: 1px dashed #999999;
+}
+.blogpost-list {
+  list-style: none;
+}
+.blogpost-list h4 {
+  color: #397267;
+}
+.blogpost-list li > p,
+.blogpost-list li > h4 {
+  margin-bottom: 0;
 }

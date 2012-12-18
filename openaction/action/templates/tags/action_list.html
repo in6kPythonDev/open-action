@@ -2,9 +2,9 @@
 
 <div class="action-list">
     <ul class="nav nav-tabs">
-        <li{% if sorting == 'hot' %} class="active"{% endif %}><a href="{{ base_url }}?__sort=hot">Hot</a></li>
-        <li{% if sorting == 'popular' %} class="active"{% endif %}><a href="{{ base_url }}?__sort=popular">Popolari</a></li>
-        <li{% if sorting == 'date' %} class="active"{% endif %}><a href="{{ base_url }}?__sort=date">Recenti</a></li>
+        <li{% if sorting == 'hot' %} class="active"{% endif %}><a href="{{ base_url }}&__sort=hot">Hot</a></li>
+        <li{% if sorting == 'popular' %} class="active"{% endif %}><a href="{{ base_url }}&__sort=popular">Popolari</a></li>
+        <li{% if sorting == 'date' %} class="active"{% endif %}><a href="{{ base_url }}&__sort=date">Recenti</a></li>
         <li{% if not sorting %} class="active"{% endif %}><a href="{{ base_url }}">Tutte</a></li>
     </ul>
 
@@ -23,22 +23,7 @@
     {#    </div>#}
     {#    <div class="clearfix"></div>#}
     <div class="tab-content">
-        <div class="tab-pane{% if sorting == 'hot' %} active{% endif %}" id="action-hot">
-            {% for action in action_list %}
-                {% html_action_overview action %}
-            {% endfor %}
-        </div>
-        <div class="tab-pane{% if sorting == 'popular' %} active{% endif %}" id="action-pop">
-            {% for action in action_list %}
-                {% html_action_overview action %}
-            {% endfor %}
-        </div>
-        <div class="tab-pane{% if sorting == 'date' %} active{% endif %}" id="action-latest">
-            {% for action in action_list %}
-                {% html_action_overview action %}
-            {% endfor %}
-        </div>
-        <div class="tab-pane{% if not sorting %} active{% endif %}" id="action-all">
+        <div class="tab-pane active" id="action-{{ sorting|default:'all' }}">
             {% for action in action_list %}
                 {% html_action_overview action %}
             {% endfor %}

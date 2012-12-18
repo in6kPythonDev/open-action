@@ -1,0 +1,16 @@
+{% load humanize %}
+<ul class="blogpost-list">
+  {% for blogpost in blog_post_list %}
+  <li>
+    <h4>{{ blogpost.title }}</h4>
+    <p><span class="label label-success">DAL SITO</span>
+      {{ blogpost.added_at|naturalday }}
+      - {{ blogpost.author.get_profile.public_name }}
+      - {{ blogpost.comment_count }}
+    </p>
+    <div>
+      {{ blogpost.get_snippet }} <a href="#">Continua a leggere</a>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

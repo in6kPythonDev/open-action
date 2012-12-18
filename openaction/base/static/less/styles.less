@@ -97,6 +97,7 @@ body.homepage #site_body {
 }
 
 #content {
+  padding-bottom:15px;
 //  .media { padding-bottom: 5px; border-bottom: 1px dotted @grayLight; margin-bottom: 5px; }
   .media-heading a { color: @red; }
   p.text-success { font-weight: bold; }
@@ -385,4 +386,19 @@ table.action-status {
 
 
   .modal-body { max-height: 600px; }
+}
+
+.action-voters-list {
+//  list-style: none;
+//  margin: 0;
+//  li { padding-bottom: 5px; margin-bottom: 5px; }
+  span.pull-left { color: @gray; font-size: 24px; margin-top: 4px; }
+  a { font-weight: bold; }
+}
+
+#sidebar .action-voters-list li { border-bottom: 1px dashed @grayLight;  }
+
+.blogpost-list { list-style: none;
+  h4 { color: @greenDark;  }
+  li > p, li > h4 { margin-bottom: 0; }
 }

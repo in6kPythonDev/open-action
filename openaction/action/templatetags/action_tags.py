@@ -80,7 +80,7 @@ def html_action_overview(action):
 def html_blogpost_item(blogpost):
     """Return html snippet for a blog post item."""
 
-    html = """
+    html = u"""
 <li class="blogpost-item">
     <div class="blogpost-action">%(action_title)s</div>
     <div class="blogpost-title">%(blogpost_title)s</div>
@@ -89,7 +89,7 @@ def html_blogpost_item(blogpost):
 </li>
 """ % {
         "action_title" : blogpost.action,
-        "blogpost_title" : 'title',
+        "blogpost_title" : blogpost.title,
         "blogpost_date" : blogpost.added_at,
         "blogpost_author" : blogpost.author,
         "ncomments" : blogpost.comments.count(),
@@ -118,8 +118,31 @@ def html_activity_item(activity):
 
 @register.inclusion_tag('tags/action_list.html', takes_context=True)
 def html_action_list(context, action_list):
+
+    from django.http import QueryDict
+#    base_url = context['request'].get_full_path().split()
+#    if '?' not in base_url: base_url += '?'
+    base_url = context['request'].path
+    q = context['request'].GET.copy()
+    try:
+        del q['__sort']
+    except KeyError:
+        pass
     return {
-        'base_url': context['request'].get_full_path().split('?')[0],
+        'base_url': base_url + '?' + q.urlencode(),
         'action_list': action_list,
         'sorting': context['request'].GET.get('__sort',False)
     }
+
+@register.inclusion_tag('tags/action_comment.html')
+def html_action_comment(comment):
+    return { 'comment': comment }
+
+@register.inclusion_tag('tags/blogpost_list.html')
+def html_blogpost_list(blog_post_list):
+    return { 'blog_post_list': blog_post_list }
+
+@register.inclusion_tag('tags/voter_list.html')
+def html_voter_list(voters, latest=None, reversed=False):
+    voters = voters[::-1] if reversed else voters
+    return { 'voters': voters[:latest] if latest else voters }

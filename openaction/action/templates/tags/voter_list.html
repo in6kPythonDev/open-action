@@ -1,0 +1,11 @@
+<div class="action-voters-list">
+  {% for voter in voters %}
+    <div class="media">
+      <span class="pull-left">{{ forloop.revcounter }}</span>
+      <div class="media-body">
+        <a href="{% url  profiles_profile_detail username=voter.username %}">{{ voter.get_profile.public_name }}</a>
+        <br>{{ voter.get_profile.city }}
+      </div>
+    </div>
+  {% endfor %}
+</div>

@@ -19,25 +19,17 @@
 
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 
-        <h3>{{ request.user.username }}, grazie per aver aderito. <br>Aiutaci ad incoraggiare anche gli altri a farlo.</h3>
+        <h4>{{ request.user.username }}, grazie per aver aderito. <br>Aiutaci ad incoraggiare anche gli altri a farlo.</h4>
         <p class="lead">
             Scrivici perchè hai aderito:
         </p>
 
-        <form action="#" method="post">
+        <form action="{% url comment-vote-add action.pk %}" method="post">
             <fieldset>
-                <textarea name="description" id="id_description" cols="30" rows="10"></textarea>
-                <input class="btn pull-right" type="submit" name="submit" value="Pubblica sull'azione">
+                <textarea name="text" id="id_text" class="span6"></textarea><br>
+                <input class="btn" type="submit" name="submit" value="Pubblica sull'azione">
             </fieldset>
         </form>
-
-        <h3>Aiutaci a sensibilizzare più persone possibili</h3>
-
-        ## INVITA I TUOI AMICI - FB ##
-
-        ## POST TO YOUR WALL - FB ##
-
-        ## TWEET ##
 
     </div>
 </div>
