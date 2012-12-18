@@ -144,8 +144,8 @@
         var politician_pks = parsePipedPks( $(politicians_form_id).val() );
 
         // read initial data
+        var charges_pks = [];
         parsePipedPks( $(geoname_form_id).val() ).forEach(function(geoname_pk, index, geonames){
-            var charges_pks = [];
             $.getJSON('/external/locations/'+geoname_pk, function(item){
                 cached_geonames[geoname_pk] = {'value': item};
                 cached_geoname_pks.push(geoname_pk);
