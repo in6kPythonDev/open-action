@@ -874,6 +874,8 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
 
     def get_queryset(self):
 
+        from django.db.models import Q
+
         qs = super(FilteredActionListView, self).get_queryset()
 
         #Process generic query filter
@@ -881,12 +883,12 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         try:
             query = self.request.GET['q'].strip()
             qs = qs.filter(
-                thread__title__icontains=query,
-                geoname_set__name__icontains=query,
-                politician_set__last_name__icontains=query,
-                politician_set__first_name__icontains=query,
-                thread__posts__text=query,
-            )
+                Q(thread__title__icontains=query) |
+                Q(geoname_set__name__icontains=query) |
+                Q(politician_set__last_name__icontains=query) |
+                Q(politician_set__first_name__icontains=query) |
+                Q(thread__posts__text=query)
+            ).distinct()
 
         except KeyError:
             #OK: cat_pks is not among GET parameters
@@ -1037,6 +1039,7 @@ class BaseActionListView(ListView):
 class ActionByCategoryListView(BaseActionListView):
 
     filter_class = ActionCategory
+    template_name = 'action/action_list.html'
 
     def get_queryset(self):
         qs = super(ActionByCategoryListView, self).get_queryset()
@@ -1047,6 +1050,7 @@ class ActionByCategoryListView(BaseActionListView):
 class ActionByGeonameListView(BaseActionListView):
 
     filter_class = Geoname
+    template_name = 'action/action_list.html'
 
     def get_queryset(self):
         qs = super(ActionByGeonameListView, self).get_queryset()
