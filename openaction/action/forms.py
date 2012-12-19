@@ -57,6 +57,8 @@ class ActionForm(askbot_forms.AskForm):
         required=False
     ) 
 
+    image = forms.ImageField()
+
     def __init__(self, request, *args, **kw):
         if kw.get('action'):
             self.action = kw.pop('action')
@@ -205,7 +207,7 @@ class ActionForm(askbot_forms.AskForm):
             geoname_ids = [external_resource.ext_res_id for external_resource in ExternalResource.objects.filter(pk__in=external_resource_ids)]
 
  
-        if cleaned_data['politician_set'] and cleaned_data['politician_set'] != "[u'']":
+        if cleaned_data['politician_set'] and '|' in cleaned_data['politician_set']:
             cleaned_data['politician_set'] = self._clean_politician_set(
                 cleaned_data,
                 geoname_ids
@@ -287,8 +289,8 @@ class ModeratorRemoveForm(forms.Form):
         super(ModeratorRemoveForm, self).__init__(*args, **kwargs)
         self.fields['moderator'].queryset = moderators
 
-#--------------------------------------------------------------------------------
-
-class UpdateImageForm(forms.Form):
-
-    image = forms.ImageField()
+##--------------------------------------------------------------------------------
+#
+#class UpdateImageForm(forms.Form):
+#
+#    image = forms.ImageField()
