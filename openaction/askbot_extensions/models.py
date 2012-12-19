@@ -220,11 +220,18 @@ class UserExtension(AskbotModelExtender):
 
     def _askbot_ext_assert_can_vote_comment(self, comment):
         """Check permission. If invalid --> raise exception"""
-        # CHECK THIS Matteo: shouldn't I be able to vote a comment
-        # even if the Action cannot be voted ??
-        try:
-            self.assert_can_vote_action(comment.action)
-        except exceptions.PermissionDenied as e:
+        # COMMENT Matteo: if a user has already voted the 
+        # action to which the comment is related, then he 
+        # cannot vote the comment !
+        # Here we should check only if the action is votable
+        #WAS: try:
+        #WAS:    self.assert_can_vote_action(comment.action)
+        #WAS: except exceptions.PermissionDenied as e:
+        action = comment.action
+        if action.status not in (
+            action_const.ACTION_STATUS_READY, 
+            action_const.ACTION_STATUS_ACTIVE
+        ):
             raise exceptions.VoteOnUnauthorizedCommentException()
             
         return True
