@@ -516,6 +516,7 @@ class ActionCreateView(ActionView):
         text = form.cleaned_data['text']
         in_nomine = form.cleaned_data['in_nomine']
         total_threshold = int(form.cleaned_data['threshold'])
+        image = form.cleaned_data['image']
 
         question = self.request.user.post_question(
             title = title,
@@ -557,6 +558,8 @@ class ActionCreateView(ActionView):
         medias = form.cleaned_data['media_set']
         #TODO: Matteo 
         action.media_set.add(*medias)
+
+        action.image = image
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
@@ -601,6 +604,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
         total_threshold = int(form.cleaned_data['threshold'])
+        image = form.cleaned_data['image']
 
         self.request.user.edit_question(
             question = question,
@@ -643,96 +647,9 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             action.politician_set.remove(*to_remove)
         
         medias = form.cleaned_data['media_set']
-        #TODO: Matteo 
-        #old_medias = action.medias
-        #new_medias = []
-        #to_add, to_remove = self.update_values(old_medias, 
-        #    new_medias
-        #)
-        #action.media_set.add(*to_add)
-        #action.media_set.remove(*to_remove)
-
-        #for m2m_attr in (
-        #    'geoname_set', 
-        #    'politician_set',
-        #    'media_set'
-        #):
-        #    #Theese attributes should contain Json data
-        #    m2m_value = form.cleaned_data.get(m2m_attr)
-        #    if m2m_attr[:-4] == 'geoname':
-        #        model = Geoname
-        #        kwargs = {}
-        #        kwargs['ext_res_type'] = {
-        #            'type' : 'location_type',
-        #            'name' : 'name'
-        #        }
-        #        kwargs['name'] = 'name'
-        #    elif m2m_attr[:-4] == 'politician':
-        #        model = Politician
-        #        kwargs = {}
-        #        #GET cityreps from locations ids
-        #        if form.cleaned_data['geoname_set']:
-        #            cityreps_ids = form.cleaned_data.get('geoname_set')
-        #        else:
-        #            cityreps_ids = [long(obj.external_resource.ext_res_id) 
-        #                for obj in action.geonames]
-
-        #        # here we check that the threshold arrived is equal to
-        #        # the the sum of the thrershold delta of all the politicians
-        #        # the metho dwill raise exceptions if necessary
-        #        #kwargs['charge_ids'] = self.get_politicians_charge_ids(
-        #        #    cityreps_ids,
-        #        #    m2m_value,
-        #        #    get_lookup(MAP_MODEL_SET_TO_CHANNEL['cityrep'])
-        #        #)
-        #        if type(m2m_value) != list:
-        #            m2m_value = [int(elem) for elem in m2m_value.strip('|').split('|')]
-
-        #        m2m_value_copy = [elem for elem in m2m_value]
-        #        kwargs['politicians_jsons'] = self.check_threshold(
-        #            cityreps_ids,
-        #            m2m_value_copy,
-        #            total_threshold
-        #        )
-        #        kwargs['id_prefix'] = 'content_'
-        #    elif m2m_attr[:-4] == 'media':
-        #        kwargs = {}
-        #        model = Media
-
-        #    if len(m2m_value) != 0:
-        #        """ Here we have to check if there are ExternalResource
-        #        objects with pk equal to the provided ids.
-        #        If there are ids that do not match with any ExternalResource
-        #        object pk, than create them. 
-        #        If the ExternalResource which pks match with some ids was
-        #        created too time ago, then check the openpolis Json to see
-        #        if there had been some changes.
-        #        
-        #        Finally check if there are Geoname objects linked to the found
-        #        ExternalResource objects. If not, create them.
-        #        
-        #        """
-        #        # Values can be overlapping or non overlapping
-        #        m2m_values_old = getattr(action, m2m_attr).all()
-
-        #        m2m_values_new = self.get_m2m_values(
-        #            m2m_attr,
-        #            m2m_value,
-        #            model,
-        #            #ext_res_type={
-        #            #    'type' : 'location_type',
-        #            #    'name' : 'name'
-        #            #}
-        #            **kwargs
-        #        )
-
-        #        to_add, to_remove = self.update_values(m2m_values_old, 
-        #            m2m_values_new
-        #        )
-
-        #        getattr(action, m2m_attr).add(*to_add)
-        #        getattr(action, m2m_attr).remove(*to_remove)
     
+        action.image = image
+
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
@@ -1075,5 +992,22 @@ class ActionByGeonameListView(BaseActionListView):
     def get_queryset(self):
         qs = super(ActionByGeonameListView, self).get_queryset()
         return qs.by_geonames(self.kwargs['pk'])
+
+#class UpdateImageView(FormView, views_support.LoginRequiredView):
+#    """ Update Model image attribute """
+#
+#class ActionUpdateView(UpdateImageView, SingleObjectMixin):
+#    """ Update Action image """
+#
+#    model = Action
+#    form_class = forms.UpdateImageForm
+#
+#    def form_valid(self, form):
+#
+#        image = form.cleaned_data['image']
+#
+#        action.image = image
+#
+#        return views_support.response_success(self.request)
 
 
