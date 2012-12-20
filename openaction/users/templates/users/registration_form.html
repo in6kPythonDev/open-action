@@ -1,0 +1,29 @@
+{% load form_tags %}
+
+<form action="{% url OA_registration %}" class="form-horizontal" method="post" accept-charset="utf-8">
+  {% csrf_token %}
+  <fieldset>
+    {% form_field_text registration_form.username %}
+    {% form_field_text registration_form.email %}
+    {% form_field_password registration_form.password1 %}
+    {% form_field_password registration_form.password2 %}
+  </fieldset>
+  <fieldset>
+    {% form_field_text registration_form.first_name %}
+    {% form_field_text registration_form.last_name %}
+    {% form_field_text registration_form.city %}
+
+    {% form_field_checkbox registration_form.says_is_politician %}
+    {% form_field_checkbox registration_form.uses_nickname %}
+    {% form_field_checkbox registration_form.wants_newsletter %}
+    {% form_field_checkbox registration_form.tos %}
+    {% form_field_checkbox registration_form.pri %}
+
+    <div class="control-group">
+      <div class="controls">
+        <input type="submit" class="submit btn btn-info" value="Registrati" />
+      </div>
+    </div>
+  </fieldset>
+
+</form>

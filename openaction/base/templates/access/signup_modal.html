@@ -32,25 +32,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 
                 <h4>Crea un account</h4>
-
-                <form action="{% url user_signup_with_password %}" method="post" accept-charset="utf-8">{% csrf_token %}
-                    <fieldset>
-                        <label for="first_name_id">Nome</label><input type="text" name="id_first_name" id="first_name_id" placeholder="Digita il tuo nome">
-                        <label for="last_name_id">Cognome</label><input type="text" name="id_last_name" id="last_name_id" placeholder="Digita il tuo cognome">
-                        <label for="city_id">Comune di residenza</label><input type="text" name="id_city" id="city_id" placeholder="Digita la tua città">
-                        <label for="email_id">Email</label><input type="text" name="id_email" id="email_id" placeholder="Digita la tua email">
-                        <label for="password1_id">Password</label><input type="password" name="id_password1" id="password1_id">
-                        <label for="password2_id">Ripeti Password</label><input type="password" name="id_password2" id="password2_id">
-
-                        <label class="checkbox">
-                            <input type="checkbox" name="id_accept_terms"> Aderendo, <a href="#">accetti le condizioni per l'utilizzo e la privacy</a>
-                            di <a href="#">Open action</a>.
-                        </label>
-
-                        <input type="submit" class="submit btn btn-info" value="Registrati" />
-
-                    </fieldset>
-                </form>
+                {% include 'users/registration_form.html' %}
 
             </div>
 
