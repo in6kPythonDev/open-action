@@ -10,6 +10,8 @@
   </div>
 </div>
 <div>{{ comment.text }}</div>
-<form action="#">
+{% if comment.author != request.user %}
+<form action="{% url comment-vote-add pk=comment.action.pk %}" method="post">{% csrf_token %}
   {{ comment.score }} persone sono d'accordo <button class="btn">Sono d'accordo</button>
 </form>
+{% endif %}

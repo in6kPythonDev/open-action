@@ -1,0 +1,11 @@
+<div class="control-group{% if field.errors %} error{% endif %}">
+  <label class="control-label" for="id_{{ field.html_name }}">{{ field.label }}</label>
+  <div class="controls">
+    <textarea
+        name="{{ field.html_name }}"
+        id="id_{{ field.html_name }}" class="{{ class }}"
+        {% if cols %}cols="{{ cols }}" {% endif %}
+        {% if rows %}rows="{{ rows }}" {% endif %}>{% if not empty_value %}{{ field.value|default_if_none:'' }}{% endif %}</textarea>
+    <span class="help-inline">{{ field.errors }}</span>
+  </div>
+</div>

@@ -61,7 +61,6 @@
 {% block footer_js_includes %}{% endblock %}
 <script type="text/javascript">
   // Equalize content and sidebar heights
-  var resized = 0;
   function equalHeights() {
     var $sidebar = $("#sidebar"), $content = $("#content");
     // skip for mobiles
@@ -73,7 +72,7 @@
     }
   }
   $(window).resize(equalHeights);
-  $(document).ready(function(){equalHeights();})
+  $(document).ready(function(){equalHeights();});
 
 </script>
 

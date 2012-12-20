@@ -49,6 +49,20 @@
         });
         {# END BITLY SUPPORT #}
         {% endif %}
+
+        $(document).ready(function(){
+            var $el = $('#action-vote-form');
+            $el.submit(function() {
+                $.post($el.attr('action'),{
+                    'csrfmiddlewaretoken': $el.find('input[name=csrfmiddlewaretoken]:first').val()
+                }).done(function() {
+                    $('#share-modal').modal().on('hidden', function() {
+                      document.location.reload();
+                    })
+                });
+                return false;
+            });
+        });
     });
     </script>
 
@@ -145,11 +159,11 @@
       </div>
       <div class="tab-pane" id="action-voters">
 
-        {% for voter in action.voters %}
+        {% if action.voters %}
         {% html_voter_list action.voters %}
-        {% empty %}
+        {% else %}
         <p class="mute"><i>Nessuna persona ha aderito a questa Action</i></p>
-        {% endfor %}
+        {% endif %}
 
       </div>
     </div>
@@ -290,24 +304,6 @@
       {% html_action_comment comment %}
     </li>
     {% endfor %}
-    <li>
-      <div class="media">
-        <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64">
-        </a>
-        <div class="media-body">
-          <a href="#">Mario rossi</a>
-          <br> Roma
-          <br> oggi
-        </div>
-      </div>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-        Donec euismod pulvinar eros vitae lacinia. Aliquam erat volutpat.
-        Nullam quis lectus hendrerit quam dapibus vehicula at ut metus.</p>
-      <form action="#">
-        145 persone sono d'accordo <button class="btn">Sono d'accordo</button>
-      </form>
-    </li>
   </ul>
 
   <a href="#">Leggi tutte le altre</a>

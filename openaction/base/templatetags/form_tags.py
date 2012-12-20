@@ -21,3 +21,12 @@ def form_field_password(formField):
         'type': 'password',
         'empty_value': True,
     }
+
+@register.inclusion_tag('tags/form_field_textarea.html')
+def form_field_textarea(formField, klass='', rows=None, cols=None):
+    return {
+        'field': formField,
+        'class': klass,
+        'rows' : rows,
+        'cols' : cols,
+    }

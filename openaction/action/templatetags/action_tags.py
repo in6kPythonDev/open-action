@@ -145,4 +145,4 @@ def html_blogpost_list(blog_post_list):
 @register.inclusion_tag('tags/voter_list.html')
 def html_voter_list(voters, latest=None, reversed=False):
     voters = voters[::-1] if reversed else voters
-    return { 'voters': voters[:latest] if latest else voters }
+    return { 'voters': voters[:latest] if latest else voters, 'reversed': reversed }
