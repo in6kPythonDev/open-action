@@ -1,0 +1,9 @@
+<label class="checkbox">
+  <input type="checkbox" name="{{ field.html_name }}" id="id_{{ field.html_name }}" {% if field.value %}checked="checked"{% endif %}>
+  {{ field.label }}
+  {% if field.errors %}
+  <div class="text-error">
+    {% for error in field.errors %}{% if not forloop.first %},{% endif %}{{ error }}{% endfor %}
+  </div>
+  {% endif %}
+</label>

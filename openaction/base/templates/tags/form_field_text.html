@@ -1,0 +1,8 @@
+<div class="control-group{% if field.errors %} error{% endif %}">
+  <label class="control-label" for="id_{{ field.html_name }}">{{ field.label }}</label>
+  <div class="controls">
+    <input type="{{ type|default:'text' }}" name="{{ field.html_name }}" id="id_{{ field.html_name }}"
+           {% if not empty_value %}value="{{ field.value|default_if_none:'' }}"{% endif %} placeholder="{{ field.label }}">
+    <span class="help-inline">{{ field.errors }}</span>
+  </div>
+</div>
