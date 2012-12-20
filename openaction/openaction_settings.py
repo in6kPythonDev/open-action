@@ -4,6 +4,9 @@ import settings
 
 LESS_DEBUG = False
 
+# add CSRF protection
+settings.MIDDLEWARE_CLASSES += ('django.middleware.csrf.CsrfViewMiddleware',)
+
 #--------------------------------------------------------------------------------
 # Social auth authentication
 
