@@ -1,12 +1,23 @@
 {% extends "base.html" %}
+{% load form_tags %}
 
-{% block heading %}User basic form{% endblock %}
+{% block title %}Iscriviti ad OpenAction{% endblock %}
 
 {% block content %}
-<form action="" method="post">
+  <h3>Completa l'iscrizione</h3>
+<form action="" method="post" class="form-horizontal">
   {% csrf_token %}
-  {{ user_form.as_p }}
-  {{ profile_form.as_p }}
-  <input type="submit" value="Submit" />
+  <fieldset>
+    {% form_field_text user_form.username %}
+    {% form_field_text profile_form.city %}
+    <div class="control-group">
+      <div class="controls">
+        {% form_field_checkbox profile_form.uses_nickname %}
+        {% form_field_checkbox profile_form.says_is_politician %}
+        {% form_field_checkbox profile_form.wants_newsletter %}
+      </div>
+    </div>
+  </fieldset>
+  <input type="submit" value="Iscriviti" class="btn" />
 </form>
 {% endblock %}

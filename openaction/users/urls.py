@@ -4,6 +4,9 @@ from users.views import UserDetailView, UserProfileListView, UserProfileDetailVi
 from django.contrib.auth.models import User
 
 urlpatterns = patterns('',
+    url(r'^register/$',
+        'users.views.registration',
+        name='OA_registration'),
     url(r'^(?P<username>\w+)/$',
         UserDetailView.as_view(
          model=User,
@@ -16,9 +19,6 @@ urlpatterns = patterns('',
     url(r'^$',
         UserProfileListView.as_view(),
        name='profiles_profile_list'),
-    url(r'^register/$',
-        'users.views.registration',
-       name='OA_registration'),
     #url(r'^profile/(?P<username>\w+)/details/$',
     #    UserProfileDetailView.as_view(),
     #   name='user-profile-details'),
