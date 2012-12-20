@@ -59,6 +59,23 @@
 </div>
 
 {% block footer_js_includes %}{% endblock %}
+<script type="text/javascript">
+  // Equalize content and sidebar heights
+  var resized = 0;
+  function equalHeights() {
+    var $sidebar = $("#sidebar"), $content = $("#content");
+    // skip for mobiles
+    $sidebar.height('auto');
+    if ($('body').width() < 767) { return ;}
+    // expands sidebar height
+    if ($content.height() > $sidebar.height() ) {
+      $sidebar.height($content.height());
+    }
+  }
+  $(window).resize(equalHeights);
+  $(document).ready(function(){equalHeights();})
+
+</script>
 
 {% if not request.user.is_authenticated %}
 {% include "access/signup_modal.html" %}
