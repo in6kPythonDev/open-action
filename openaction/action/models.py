@@ -188,15 +188,39 @@ class Action(models.Model, Resource):
     
     @property
     def relateds_by_owner(self):
-        ''' Actions which have the same authors
-        '''
+        """ Actions which have the same author """
+
         #WAS: return Action.objects.filter(thread__question__author=self.owner)
         #COMMENT Matteo: there should be a better way to do this.... 
-        relateds = Post.objects.filter(post_type='question', author=self.owner).exclude(thread=self.thread)
+        related_questions = Post.objects.filter(post_type='question', author=self.owner).exclude(thread=self.thread)
         actions = Action.objects.all()
+
         return [action for action in actions 
-            if action.question not in relateds
+            if action.question in related_questions
         ]
+
+    @property
+    def relateds_by_category(self):
+        """ Actions which share at least a category """
+        actions = Action.objects.exclude(pk=self.pk)
+        relateds = []
+
+        for action in actions:
+            if set(action.categories) & set(self.categories):
+                relateds.append(action)
+        return relateds
+
+    @property
+    def relateds_by_tag(self):
+        """ Actions which share at least a tag """
+        actions = Action.objects.exclude(pk=self.pk)
+        relateds = []
+
+        for action in actions:
+            if set(action.thread.tags.all()) & \
+               set(self.thread.tags.all()):
+                relateds.append(action)
+        return relateds
 
     @property
     def title(self):
