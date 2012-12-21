@@ -252,6 +252,15 @@ class ActionViewTest(OpenActionViewTestCase):
         )
         return response
 
+    def _do_POST_add_image_to_action(self, action, ajax=False, **kwargs):
+
+        response = self._POST(
+            reverse('action-image', args=(action.pk,)),
+            ajax,
+            **kwargs
+        )
+        return response
+
     def _do_POST_follow_action(self, action, ajax=False, **kwargs):
         
         response = self._POST(
@@ -305,7 +314,7 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        threshold = 0
+        threshold = 3
 
         if model == Geoname:
             response = self._do_POST_create_action(
@@ -881,7 +890,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         geoname_set = '|145|185|287|', 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
-        threshold = 0
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -920,7 +929,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|185|287|5132|'
-        threshold = 0
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -973,7 +982,7 @@ class ActionViewTest(OpenActionViewTestCase):
         #politician_set = '|332997|543662|626209|'
         politician_set = '|355786|397514|583733|583732|391934|391931|',
         #politician_set = '|332997|543662|626222|'
-        threshold = "0"
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -1038,7 +1047,7 @@ class ActionViewTest(OpenActionViewTestCase):
         tagnames = None
         geoname_set = '|145|185|287|', 
         text = "Blablablablablablabla"
-        threshold = 0
+        threshold = 3
         in_nomine = "%s-%s" % ("org", organization.pk)
 
         # NOT DRY: This post is implemented in organization.tests.
@@ -1248,7 +1257,7 @@ class ActionViewTest(OpenActionViewTestCase):
         geoname_set = '|145|185|287|', 
         text = "Blablablablablablabla"
         in_nomine = "%s-%s" % ("user", self._author.pk)
-        threshold = 0;
+        threshold = 3
 
         #create action
         r = self._do_POST_create_action(
@@ -1294,7 +1303,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", self._author.pk)
         geoname_set = '|145|185|287|', 
-        threshold = 0
+        threshold = 3
         #create action
 
         r = self._do_POST_create_action(
@@ -1333,6 +1342,45 @@ class ActionViewTest(OpenActionViewTestCase):
         self._check_for_error_response(response,
             exceptions.UserIsNotActionOwnerException
         )
+
+    def test_add_image_to_action(self, user=None):
+
+        logged_in = self._login(user)
+
+        title = "Aggiungo una nuova action"
+        tagnames = None
+        geoname_set = '|145|185|287|', 
+        text = "Blablablablablablabla"
+        in_nomine = "%s-%s" % ("user", self._author.pk)
+        threshold = 3
+
+        #create action
+        r = self._do_POST_create_action(
+            ajax=True,
+            title=title,
+            tagnames=tagnames,
+            text=text,
+            in_nomine=in_nomine,
+            geoname_set=geoname_set,
+            threshold=threshold
+        )
+        #print "-------------------response: %s" % r
+        action = Action.objects.latest()
+ 
+        #update action
+        base_path = settings.MEDIA_ROOT
+        OA_path = "action_images"
+        image_path = os.path.join(base_path, OA_path, "prova.jpeg")
+        f = open(image_path)
+        response = self._do_POST_add_image_to_action(
+            action=action, 
+            ajax=True,
+            image=f
+        ) 
+        #print "-------------------response: %s" % response
+
+        self._check_for_success_response(response)
+        
 
     def test_follow_action(self, user=None):
         
@@ -1438,7 +1486,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|185|287|'
-        threshold = 0
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -1492,7 +1540,7 @@ class ActionViewTest(OpenActionViewTestCase):
         text = "Blablablablablablabla" 
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|'
-        threshold = 0
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -1572,7 +1620,7 @@ class ActionViewTest(OpenActionViewTestCase):
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|185|287|'
         politician_set = '|657159|'
-        threshold = "0"
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -1627,7 +1675,7 @@ class ActionViewTest(OpenActionViewTestCase):
         geoname_set = '|5132|1974|',
         #politician_set = '|332997|543662|626222|'
         politician_set = '|355786|397514|583733|'
-        threshold = "0"
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -1705,7 +1753,7 @@ class ActionViewTest(OpenActionViewTestCase):
         in_nomine = "%s-%s" % ("user", [self._author, user][bool(user)].pk)
         geoname_set = '|145|185|287|'
         politician_set = '|657159|'
-        threshold = "0"
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,
@@ -1760,7 +1808,7 @@ class ActionViewTest(OpenActionViewTestCase):
         geoname_set = '|5132|1974|',
         #politician_set = '|332997|543662|626222|'
         politician_set = '|355786|397514|583733|'
-        threshold = "0"
+        threshold = 3
 
         response = self._do_POST_create_action(
             ajax=True,

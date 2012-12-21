@@ -516,7 +516,7 @@ class ActionCreateView(ActionView):
         text = form.cleaned_data['text']
         in_nomine = form.cleaned_data['in_nomine']
         total_threshold = int(form.cleaned_data['threshold'])
-        image = form.cleaned_data['image']
+        image = form.cleaned_data.get('image', None)
 
         question = self.request.user.post_question(
             title = title,
@@ -559,7 +559,8 @@ class ActionCreateView(ActionView):
         #TODO: Matteo 
         action.media_set.add(*medias)
 
-        action.image = image
+        if image:
+            action.image = image
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
@@ -604,7 +605,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         tagnames = form.cleaned_data['tags']
         text = form.cleaned_data['text']
         total_threshold = int(form.cleaned_data['threshold'])
-        image = form.cleaned_data['image']
+        image = form.cleaned_data.get('image', None)
 
         self.request.user.edit_question(
             question = question,
@@ -647,8 +648,9 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             action.politician_set.remove(*to_remove)
         
         medias = form.cleaned_data['media_set']
-    
-        action.image = image
+
+        if image:
+            action.image = image
 
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
@@ -993,21 +995,24 @@ class ActionByGeonameListView(BaseActionListView):
         qs = super(ActionByGeonameListView, self).get_queryset()
         return qs.by_geonames(self.kwargs['pk'])
 
-#class UpdateImageView(FormView, views_support.LoginRequiredView):
-#    """ Update Model image attribute """
-#
-#class ActionUpdateView(UpdateImageView, SingleObjectMixin):
-#    """ Update Action image """
-#
-#    model = Action
-#    form_class = forms.UpdateImageForm
-#
-#    def form_valid(self, form):
-#
-#        image = form.cleaned_data['image']
-#
-#        action.image = image
-#
-#        return views_support.response_success(self.request)
+
+class ImageView(FormView, views_support.LoginRequiredView):
+    """ Create/Update Model image attribute """
+
+
+class ActionImageView(ImageView, SingleObjectMixin):
+    """ Action image """
+
+    model = Action
+    form_class = forms.ImageForm
+
+    def form_valid(self, form):
+
+        action = self.get_object()
+        image = form.cleaned_data['image']
+
+        action.image = image
+
+        return views_support.response_success(self.request)
 
 

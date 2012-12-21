@@ -21,6 +21,9 @@ urlpatterns = patterns('',
     url(r'^(?P<pk>\d+)/vote/add/$', action_views.ActionVoteView.as_view(), 
         name='action-vote-add'
     ),
+    url(r'^(?P<pk>\d+)/image/$', action_views.ActionImageView.as_view(), 
+        name='action-image'
+    ),
     url(r'^(?P<pk>\d+)/edit/politicians/$', action_views.EditablePoliticianView.as_view(), 
         name='edit-politician'
     ),
