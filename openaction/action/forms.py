@@ -203,11 +203,12 @@ class ActionForm(askbot_forms.AskForm):
         if geoname_ids:
             cleaned_data['geoname_set'] = self._clean_geoname_set(cleaned_data)
         else:
-            try:
-                external_resource_ids = self.action.geonames.values_list('external_resource', flat=True)
-                geoname_ids = [external_resource.ext_res_id for external_resource in ExternalResource.objects.filter(pk__in=external_resource_ids)]
-            except:
-                pass
+            #try:
+            #    external_resource_ids = self.action.geonames.values_list('external_resource', flat=True)
+            #    geoname_ids = [external_resource.ext_res_id for external_resource in ExternalResource.objects.filter(pk__in=external_resource_ids)]
+            #except:
+            #    pass
+                 geoname_ids = []
 
  
         if cleaned_data['politician_set'] and '|' in cleaned_data['politician_set']:
