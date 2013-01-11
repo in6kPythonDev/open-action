@@ -80,10 +80,15 @@
 
 
                     for (politician in to_add) {
-                        var check_box_el = $('<label class="checkbox">'+to_add[politician]['first_name']+' '+to_add[politician]['last_name']+'</label>')
-                                .prepend( $('<input type="checkbox" name="politician_set_pks" value="'+to_add[politician]['charge_id']+'" />').attr('checked', selected.indexOf(to_add[politician]['charge_id']) != -1) );
-                        body.append(check_box_el);
+                        // check if already added from other location
+                        if (body.find('input[value='+to_add[politician]['charge_id']+']').length == 0) {
+                          var check_box_el = $('<label class="checkbox">'+to_add[politician]['first_name']+' '+to_add[politician]['last_name']+'</label>')
+                              .prepend( $('<input type="checkbox" name="politician_set_pks" value="'+to_add[politician]['charge_id']+'" />').attr('checked', selected.indexOf(to_add[politician]['charge_id']) != -1) );
+                          body.append(check_box_el);
+                        }
                     }
+                    // update count
+                    body.parent().parent().find('.accordion-toggle span').text(body.children().length)
 
                 }
             }
