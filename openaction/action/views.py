@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
 from django.views.generic import View, ListView
@@ -523,7 +524,8 @@ class ActionCreateView(ActionView):
         action.media_set.add(*medias)
 
         success_url = action.get_absolute_url()
-        return views_support.response_redirect(self.request, success_url)
+        return redirect(success_url)
+#        return views_support.response_redirect(self.request, success_url)
 
 class ActionUpdateView(ActionView, SingleObjectMixin):
     #TODO: change according to the Create method
