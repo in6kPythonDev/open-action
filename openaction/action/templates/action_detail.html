@@ -76,7 +76,7 @@
     <div class="span6">
       {% include 'breadcrumbs.html' %}
     </div>
-    <div class="span6">
+    <div class="span6" id="content-status">
       {% html_action_status action %}
     </div>
   </div>
@@ -104,7 +104,7 @@
       <div class="media-body">
         <div class="media">
           <a class="pull-left" href="#">
-            <img class="media-object" src="http://placehold.it/64x64">
+            <img class="media-object" src="http://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=mm">
           </a>
           <div class="media-body">
             Creata il {{ action.created_on }} <br>
@@ -197,34 +197,35 @@
 
 
 {% block sidebar %}
+  <div class="bigger">
+    {% for voter in action.voters %}
+    {% html_render_resource voter %}
+    {% if forloop.last %}
+        ha{% if not forloop.first %}nno{% endif %} già aderito.
+      {% else %},{% endif %}
+    {% empty %}
+    <strong>Nessuno ha ancora aderito a questa Action</strong>
+    {% endfor %}
+    {% if user_can_vote %}
+    <br>Fallo anche tu, cambia le cose.
+    <form action="{% url action-vote-add pk=action.pk %}" id="action-vote-form" method="post">{% csrf_token %}
+      <fieldset class="action-form">
+        <button class="action-button">Aderisci</button>
+      </fieldset>
+      <fieldset>
+      <label class="checkbox">
+        <input type="checkbox" name="anonymous"> Mostra pubblicamente la mia firma
+      </label>
 
-  {% for voter in action.voters %}
-  {% html_render_resource voter %}
-  {% if forloop.last %}
-      ha{% if not forloop.first %}nno{% endif %} già aderito.
-    {% else %},{% endif %}
-  {% empty %}
-  <strong>Nessuno ha ancora aderito a questa Action</strong>
-  {% endfor %}
-  {% if user_can_vote %}
-  <br>Fallo anche tu, cambia le cose.
-  <form action="{% url action-vote-add pk=action.pk %}" id="action-vote-form" method="post">{% csrf_token %}
-    <fieldset class="action-form">
-      <button class="action-button">Aderisci</button>
-    </fieldset>
-    <fieldset>
-    <label class="checkbox">
-      <input type="checkbox" name="anonymous"> Mostra pubblicamente la mia firma
-    </label>
-
-    <label class="checkbox">
-      <input type="checkbox" name="accept_terms"> Autorizza OpenAction al trattamento dei miei dati personali
-    </label>
-    </fieldset>
-  </form>
-  {% else %}
-  <div class="text-success">Hai già aderito a questa Action, <a href="#" data-toggle="modal" data-target="#share-modal">Condividi!</a></div>
-  {% endif %}
+      <label class="checkbox">
+        <input type="checkbox" name="accept_terms"> Autorizza OpenAction al trattamento dei miei dati personali
+      </label>
+      </fieldset>
+    </form>
+    {% else %}
+    <div class="text-success">Hai già aderito a questa Action, <a href="#" data-toggle="modal" data-target="#share-modal">Condividi!</a></div>
+    {% endif %}
+  </div>
 
   <hr>
 
@@ -235,11 +236,11 @@
     <li>Risposte dei politici: <strong>{{ action.comments.count }}</strong></li>
   </ul>
 
-  <p class="well">
-    Gentili signori,
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla pulvinar adipiscing lorem, aliquet tristique nisi pretium at. Aliquam sed tristique elit. Maecenas ultricies condimentum urna.
-    <a href="#">Continua a leggere...</a>
-  </p>
+{#  <p class="well">#}
+{#    Gentili signori,#}
+{#    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla pulvinar adipiscing lorem, aliquet tristique nisi pretium at. Aliquam sed tristique elit. Maecenas ultricies condimentum urna.#}
+{#    <a href="#">Continua a leggere...</a>#}
+{#  </p>#}
 
   <hr>
 
@@ -275,7 +276,7 @@
     <li>
       <div class="media">
         <a class="pull-left" href="#">
-          <img class="media-object" src="http://placehold.it/64x64">
+          <img class="media-object" src="http://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=mm">
         </a>
         <div class="media-body">
           {% html_render_resource referral %}
@@ -312,21 +313,21 @@
 
   <h3>Se ne parla in rete</h3>
   <div class="media">
-    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <a class="pull-left" href="#"><img class="media-object" src="http://cdn1.iconfinder.com/data/icons/socialnetworking/16/google.png"></a>
     <div class="media-body">
       25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
       - <a href="#">ItaliaLavoroTv</a>
     </div>
   </div>
   <div class="media">
-    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <a class="pull-left" href="#"><img class="media-object" src="http://cdn1.iconfinder.com/data/icons/aquaticus/16%20X%2016/technorati.png"></a>
     <div class="media-body">
       25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
       - <a href="#">ItaliaLavoroTv</a>
     </div>
   </div>
   <div class="media">
-    <a class="pull-left" href="#"><img class="media-object" src="http://placehold.it/16x16"></a>
+    <a class="pull-left" href="#"><img class="media-object" src="http://cdn1.iconfinder.com/data/icons/aquaticus/16%20X%2016/technorati.png"></a>
     <div class="media-body">
       25.7.2012 <a href="#">La Rete salva la laguna di Olmitello a Ischia ...</a>
       - <a href="#">ItaliaLavoroTv</a>

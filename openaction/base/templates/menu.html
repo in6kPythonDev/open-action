@@ -3,7 +3,7 @@
     <div class="container">
 
       <a href="{% url homepage %}" class="brand">
-        <img src="{{ STATIC_URL }}img/logo-openaction-small.png" alt="OpenAction">
+        <img src="{{ STATIC_URL }}img/logo-openaction.png" alt="OpenAction">
       </a>
 
       <ul class="nav">
@@ -23,7 +23,7 @@
                 Territori <b class="caret"></b></a>
             <ul class="dropdown-menu" role="menu" aria-labelledby="menuLocations">
                 {% for location in main_locations %}
-                    <li><a href="{% url geoname-action-list pk=location.pk %}">{{ location }}</a></li>
+                    <li><a href="{% url geoname-action-list pk=1 %}">{{ location.name }}</a></li>
                 {% endfor %}
             </ul>
         </li>

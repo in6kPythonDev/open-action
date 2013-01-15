@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <ul class="breadcrumb">
+    <li><a href="/">Home</a> <span class="divider">/</span></li>
+    <li><a href="{% url actions-filter %}">Actions</a> <span class="divider">/</span></li>
+    <li><a href="{{ object.action.get_absolute_url }}">{{ object.action.bare_title }}</a> <span class="divider">/</span></li>
+    <li class="active">Blog</li>
+  </ul>
+
+  <h2>{{ object.title }}</h2>
+
+  <div>{{ object.html|safe }}</div>
+
+{% endblock %}
+
+{% block sidebar %}
+  <h4>Altre news</h4>
+  {% for news in latest_news %}
+    <div class="related-news">
+      <h3><a href="{{ news.action.get_absolute_url }}">{{ news.action.bare_title }}</a></h3>
+      <h4><a href="{% url blogpost-comment pk=news.pk %}">{{ news.title }}</a></h4>
+      {{ news.added_at }} - <a href="{% url blogpost-comment pk=news.pk %}">Leggi tutto</a>
+    </div>
+  {% endfor %}
+  <hr>
+{% endblock %}

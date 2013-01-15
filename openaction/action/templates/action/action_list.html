@@ -10,9 +10,9 @@
 
   <article class="action-list">
     {% if filter_object %}
-    <h1>{% html_render_resource filter_object %}</h1>
+    <h1>{{ filter_object }}</h1>
     {% else %}
-    <h3><small>Ricerca:</small> {{ request.GET.q }}</h3>
+    <h3>{% if request.GET.q %}{{ actions_count }} azioni su "{{ request.GET.q }}"{% else %}Tutte le Azioni{% endif %}</h3>
     {% endif %}
 
     <div id="action-slideshow"></div>
@@ -22,3 +22,34 @@
   </article>
 
 {% endblock content %}
+
+{% block sidebar %}
+  <h2>{{ actions_count }} azioni attive <br>
+  {{ activists_count }} attivisti coivolti</h2>
+
+  <iframe width="100%" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.it/maps?f=q&amp;source=s_q&amp;hl=it&amp;geocode=&amp;q=roma&amp;aq=&amp;sll=40.894451,12.086871&amp;sspn=4.724596,9.360352&amp;t=h&amp;ie=UTF8&amp;hq=&amp;hnear=Roma,+Lazio&amp;z=10&amp;ll=41.901514,12.460774&amp;output=embed"></iframe><br /><small><a href="https://maps.google.it/maps?f=q&amp;source=embed&amp;hl=it&amp;geocode=&amp;q=roma&amp;aq=&amp;sll=40.894451,12.086871&amp;sspn=4.724596,9.360352&amp;t=h&amp;ie=UTF8&amp;hq=&amp;hnear=Roma,+Lazio&amp;z=10&amp;ll=41.901514,12.460774" style="color:#0000FF;text-align:left">Visualizzazione ingrandita della mappa</a></small>
+  <p><strong>Comune di Roma</strong><br>Provincia di Roma, Regione Lazio</p>
+
+  <hr>
+
+  <h4>Ultime dalle Action su {% if filter_object %}{{ filter_object }}{% else %}{{ request.GET.q }}{% endif %}</h4>
+  {% for news in latest_news %}
+  <div class="related-news">
+    <h3><a href="{{ news.action.get_absolute_url }}">{{ news.action.bare_title }}</a></h3>
+    <h4><a href="{% url blogpost-comment pk=news.pk %}">{{ news.title }}</a></h4>
+    {{ news.added_at }} - <a href="#">Leggi tutto</a>
+  </div>
+  {% endfor %}
+  <hr>
+
+  <h4>Organizzazioni più attive</h4>
+  {% html_voter_list organizations %}
+  <a href="#">Tutte le organizzazioni</a>
+
+  <hr>
+
+  <h4>Utenti più attivi</h4>
+  {% html_voter_list users %}
+  <a href="#">Tutti i sostenitori</a>
+
+{% endblock %}

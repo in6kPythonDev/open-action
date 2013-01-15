@@ -1,17 +1,17 @@
 {% load humanize %}
 <div class="media">
   <a class="pull-left" href="#">
-    <img class="media-object" src="http://placehold.it/64x64">
+    <img class="media-object" src="http://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=mm">
   </a>
   <div class="media-body">
     <a href="{% url profiles_profile_detail username=comment.author.username %}">{{ comment.author.get_profile.public_name }}</a>
-    <br> {{ comment.author.city }}
+    <br> {{ comment.author.get_profile.city }}
     <br> {{ comment.added_at|naturalday }}
   </div>
 </div>
-<div>{{ comment.text }}</div>
+<div style="margin-top:4px;">{{ comment.text }}</div>
 {% if comment.author != request.user %}
 <form action="{% url comment-vote-add pk=comment.action.pk %}" method="post">{% csrf_token %}
-  {{ comment.score }} persone sono d'accordo <button class="btn">Sono d'accordo</button>
+  <small class="mute">{{ comment.score }} persone sono d'accordo</small> <button class="btn btn-small">Sono d'accordo</button>
 </form>
 {% endif %}

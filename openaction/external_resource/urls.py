@@ -8,5 +8,5 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^(?P<backend_name>\w+)/(?P<url>.*)', proxy, name='external_proxy'),
-    url(r'^cityreps/(?P<url>.*)', cityreps_proxy, name='cityreps_external_proxy'),
+#    url(r'^cityreps/(?P<url>.*)', cityreps_proxy, name='cityreps_external_proxy'),
 )

@@ -242,9 +242,9 @@ class Action(models.Model, Resource):
     def votes_since_date(self, delta):
         votes_since_date = Vote.objects.filter(voted_post=self.question)
 
-        for vote in votes_since_date.values('voted_at'):
+        for vote in votes_since_date.values('voted_at','pk'):
             if (datetime.datetime.now() - vote['voted_at']) > delta:
-                votes_since_date.exclude(vote)
+                votes_since_date.exclude(pk=vote['pk'])
 
         return votes_since_date.count()
 

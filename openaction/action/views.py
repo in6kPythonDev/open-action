@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.views.generic.detail import DetailView, SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
@@ -51,11 +52,11 @@ ORDERING_MAPS = {
     'date' : '-thread__added_at',
 }
 
-class ActionDetailView(DetailView, views_support.LoginRequiredView):
+class ActionDetailView(DetailView):
     """ List the details of an Action """
 
     model = Action
-    context_object_name="action" 
+    context_object_name="action"
     template_name="action_detail.html"
 
     def get_object(self):
@@ -77,14 +78,14 @@ class ActionDetailView(DetailView, views_support.LoginRequiredView):
 
         try:
             context['user_can_vote'] = self.request.user.assert_can_vote_action(action)
-        except exceptions.VoteActionInvalidStatusException as e:
+        except (exceptions.VoteActionInvalidStatusException,AttributeError) as e:
             context['user_can_vote'] = False
         context['user_voted'] = self.request.user in action.voters
         try:
             context['user_can_edit'] = self.request.user.assert_can_edit_action(action)
-        except (exceptions.EditActionInvalidStatusException, exceptions.UserIsNotActionOwnerException) as e:
+        except (exceptions.EditActionInvalidStatusException, exceptions.UserIsNotActionOwnerException, AttributeError) as e:
             context['user_can_edit'] = False
-        #print("\n\n\ncontext: %s\n" % context) 
+        #print("\n\n\ncontext: %s\n" % context)
         #KO: and (
         #KO:     self.instance not in self.request.user.actions.all()
         #KO: )
@@ -119,7 +120,7 @@ class ActionVoteView(VoteView):
         * ready
         * active
 
-    If the condition above are satisfied, the Action score will be incremented 
+    If the condition above are satisfied, the Action score will be incremented
     by 1 and a new vote will be added to the Action question votes
 
     This view accepts only POST requests.
@@ -141,26 +142,26 @@ class ActionVoteView(VoteView):
                 log.debug("User %s has itself as the referral for its vote \
                      on the action %s" % (request.user, action))
         action.vote_add(request.user, referral=referral)
-        
+
         return views_support.response_success(request)
 
 class CommentVoteView(VoteView):
     """Add a vote to an Action comment.
 
-    A comment (a Post of type 'comment') can be voted only from an authenticated 
-    User, and only if the Action the comment is child of is in a valid state. 
+    A comment (a Post of type 'comment') can be voted only from an authenticated
+    User, and only if the Action the comment is child of is in a valid state.
     The valid states are:
         * ready
         * active
         * closed
         * victory
 
-    If the condition above are satisfied, the comment score will be incremented 
+    If the condition above are satisfied, the comment score will be incremented
     by 1 and a new vote will be added to the comment post votes
 
     This view accepts only POST requests.
     """
-    
+
     model = Post
 
     def post(self, request, *args, **kwargs):
@@ -168,13 +169,13 @@ class CommentVoteView(VoteView):
         request.user.assert_can_vote_comment(comment)
         referral = self.get_referral(comment.action)
         askbot_extensions_utils.vote_add(comment, request.user, referral)
-        return views_support.response_success(request) 
+        return views_support.response_success(request)
 
 #---------------------------------------------------------------------------------
 
 class CommentView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ Add a comment to a post"""
-    
+
 class ActionCommentView(CommentView):
     """ Add a comment to an Action
 
@@ -187,7 +188,7 @@ class ActionCommentView(CommentView):
 
     NOTE: the check above is performed in the Post pre_save()
 
-    If the condition above are satisfied a new comment (a new Post object 
+    If the condition above are satisfied a new comment (a new Post object
     of type 'comment') will be added to Action Thread
     """
 
@@ -200,14 +201,16 @@ class ActionCommentView(CommentView):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         action = self.get_object()
         #WAS: return action.comment_add(form.cleaned_data['text'], self.request.user)
-        action.comment_add(form.cleaned_data['text'], self.request.user)
-        return views_support.response_success(self.request)
+        success_url = action.get_absolute_url()
+        return redirect(success_url)
+#        action.comment_add(form.cleaned_data['text'], self.request.user)
+#        return views_support.response_success(self.request)
 
 class BlogpostCommentView(CommentView):
     """ Add a comment to an action blog post
 
     A blog post (a Post object of type 'answer') can be commented only if the
-    Action related to the Thread that is parent of the blog post is in a valid 
+    Action related to the Thread that is parent of the blog post is in a valid
     state. The valid states are:
         * ready
         * active
@@ -224,17 +227,26 @@ class BlogpostCommentView(CommentView):
         """ Redirect to get_success_url(). Must return an HttpResponse."""
         post = self.get_object()
         #WAS: post.comment_add(form.cleaned_data['text'], self.request.user)
-        post.add_comment(form.cleaned_data['text'], 
+        post.add_comment(form.cleaned_data['text'],
             self.request.user,
-            added_at=None, 
+            added_at=None,
             by_email=False
         )
         return views_support.response_success(self.request)
 
 #---------------------------------------------------------------------------------
 
-class BlogpostView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
+class BlogpostView(FormView, SingleObjectMixin):
     pass
+
+class BlogpostDetailView(DetailView):
+    model = Post
+    template_name = 'blogpost/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(BlogpostDetailView,self).get_context_data(**kwargs)
+        context['latest_news'] = Post.objects.all().order_by('-added_at').exclude(pk=self.object.pk)[:5]
+        return context
 
 class ActionBlogpostView(BlogpostView):
     """Add an article to the Action blog
@@ -250,16 +262,18 @@ class ActionBlogpostView(BlogpostView):
     model = Action
     form_class = forms.ActionAddBlogpostForm
     template_name = 'blogpost/add.html'
- 
+
     def form_valid(self, form):
 
         action = self.get_object()
         self.request.user.assert_can_create_blog_post(action)
         action.blog_post_add(
-            form.cleaned_data['title'], 
+            form.cleaned_data['title'],
             form.cleaned_data['text'], self.request.user
         )
-        return views_support.response_success(self.request)
+        success_url = action.get_absolute_url()
+        return redirect(success_url)
+#        return views_support.response_success(self.request)
 
 
 #---------------------------------------------------------------------------------
@@ -270,7 +284,7 @@ class EditableParameterView(UpdateView):
 #
 #    * accessibile solo tramite POST
 #    * recupera l'istanza del modello Action
-#    * fa getattr(instance, "update_%s" % <attr_name>)(value, save=True) 
+#    * fa getattr(instance, "update_%s" % <attr_name>)(value, save=True)
 #    * dove value e' request.POST["value"]
 #    per testare:
 #    <form method="post" action="/action/1/edit/title">
@@ -298,29 +312,29 @@ class EditableParameterView(UpdateView):
 #            return HttpResponse(request.META['HTTP_REFERER'])
 #        self.action = self.get_object()
 #        form_class = self.get_form_class()
-#        #value has to be taken from a form text_field 
+#        #value has to be taken from a form text_field
 #        #need to define the form
-#        
+#
 #        return HttpResponse(request.META['HTTP_REFERER'])
 #
 #    def form_valid(self, form):
 #        super(VoteView, self).form_valid(form)
 #        #first i get the value from the form
 #        getattr(self.action, "update_%s" % attr)(value, save=True)
-#        
+#
 #
 class EditablePoliticianView(EditableParameterView):
    pass
 
-    
+
 
 #---------------------------------------------------------------------------------
 
-class ActionView(FormView, views_support.LoginRequiredView):
+class ActionView(FormView):
     """ Superclass to create/edit Actions """
 
     form_class = forms.ActionForm
-    
+
     #KO: @method_decorator(askbot_decorators.check_spam('text'))
     #KO: def dispatch(self, request, *args, **kwargs):
     #KO: return super(ActionView, self).dispatch(request, *args, **kwargs)
@@ -335,7 +349,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
             'wiki': False,
             'is_anonymous': False,
         }
-    
+
     def get_form(self, form_class):
 
         #KO: form = super(ActionView, self).get_form(form_class)
@@ -349,14 +363,14 @@ class ActionView(FormView, views_support.LoginRequiredView):
         #using the askbot logic to hide our fields
         form.hide_field('threshold')
         return form
- 
+
     def get_or_create_geonames(self, geoname_list):
         """ Here we have to check if there exist Geonames with pk into
         the provided ids.
 
         If there are ids that do not match with any of the existing Geoname
-        pk, than create new Geonames togheter with their ExternalResource. 
-        If there are some existing ExternalResource which was created too time 
+        pk, than create new Geonames togheter with their ExternalResource.
+        If there are some existing ExternalResource which was created too time
         ago, then check the openpolis API to see if there had been some changes.
         """
 
@@ -379,7 +393,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 kind = ext_res_type
 
                 e_r = ExternalResource.objects.create(
-                    ext_res_id = ext_res_id, 
+                    ext_res_id = ext_res_id,
                     ext_res_type = ext_res_type,
                     backend_name = lookup.get_backend_name(),
                 )
@@ -392,8 +406,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
             else:
                 last_get_delta = datetime.datetime.now() - geoname.external_resource.last_get_on
                 if last_get_delta.seconds > Geoname.MAX_CACHE_VALID_MINUTES:
-                    geoname.external_resource.update_external_data(lookup, 
-                        ext_res_id, 
+                    geoname.external_resource.update_external_data(lookup,
+                        ext_res_id,
                         datum
                     )
 
@@ -406,8 +420,8 @@ class ActionView(FormView, views_support.LoginRequiredView):
         the provided ids.
 
         If there are ids that do not match with any of the existing Politician
-        pks, than create new Geonames togheter with their ExternalResource. 
-        If there are some existing ExternalResource which was created too time 
+        pks, than create new Geonames togheter with their ExternalResource.
+        If there are some existing ExternalResource which was created too time
         ago, then check the openpolis API to see if there had been some changes.
         """
 
@@ -431,7 +445,7 @@ class ActionView(FormView, views_support.LoginRequiredView):
                 charge = ext_res_type
 
                 e_r = ExternalResource.objects.create(
-                    ext_res_id = ext_res_id, 
+                    ext_res_id = ext_res_id,
                     ext_res_type = ext_res_type,
                     backend_name = lookup.get_backend_name(),
                     # MANCA IL DATA! TODO Matteo: valutare
@@ -454,16 +468,16 @@ class ActionView(FormView, views_support.LoginRequiredView):
             politicians.append(politician)
 
         return politicians
-                
-class ActionCreateView(ActionView):
+
+class ActionCreateView(ActionView, views_support.LoginRequiredView):
     """Create a new Action.
 
     Firstly, a new askbot question (and thus a new Thread) is created.
-    This cause a new Action to be automatically created, with the Thread 
+    This cause a new Action to be automatically created, with the Thread
     as a o2o field.
 
     Secondly, the Action relations with
-        * geonames, 
+        * geonames,
         * categories,
         * politicians,
         * medias
@@ -473,7 +487,7 @@ class ActionCreateView(ActionView):
     """
 
     template_name = "action/create.html"
-    
+
     @transaction.commit_on_success
     def form_valid(self, form):
         """Create askbot question --> then set action relations"""
@@ -494,7 +508,7 @@ class ActionCreateView(ActionView):
             timestamp = timestamp
         )
 
-        action = question.action 
+        action = question.action
 
         # check if this action is created by an organization
         if in_nomine[:3] == "org":
@@ -514,33 +528,33 @@ class ActionCreateView(ActionView):
         # The same is valid for other m2m fields below
         geonames = self.get_or_create_geonames(geoname_data)
         action.geoname_set.add(*geonames)
-        
+
         politician_data = form.cleaned_data['politician_set']
         politicians = self.get_or_create_politicians(politician_data)
         action.politician_set.add(*politicians)
-        
+
         medias = form.cleaned_data['media_set']
-        #TODO: Matteo 
+        #TODO: Matteo
         action.media_set.add(*medias)
 
         success_url = action.get_absolute_url()
         return redirect(success_url)
 #        return views_support.response_redirect(self.request, success_url)
 
-class ActionUpdateView(ActionView, SingleObjectMixin):
+class ActionUpdateView(ActionView, SingleObjectMixin, views_support.LoginRequiredView):
     #TODO: change according to the Create method
     """Update an action
 
     Firstly, the question of the Thread related to the Action to update is
     edited with the data got from the validated form.
- 
+
     Then, the Action relations with
-        * geonames, 
+        * geonames,
         * categories,
         * politicians,
         * medias
     are updated basing on the set of values reveived with the form.
-    The Action question tags are updated with the ones defined by the User 
+    The Action question tags are updated with the ones defined by the User
     who submitted the form.
     """
     model = Action
@@ -566,16 +580,16 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             'geoname_set': [g.external_resource.ext_res_id for g in action.geonames],
             'politician_set': [p.external_resource.ext_res_id for p in action.politicians],
         }
-    
+
     @transaction.commit_on_success
     def form_valid(self, form):
         """Edit askbot question --> then set action relations"""
 
         action = self.get_object()
-        
+
         self.request.user.assert_can_edit_action(action)
 
-        question = action.question 
+        question = action.question
 
         title = form.cleaned_data['title']
         #theese tags will be replaced to the old ones
@@ -589,14 +603,14 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             body_text = text,
             revision_comment = None,
             tags = tagnames,
-            wiki = False, 
+            wiki = False,
             edit_anonymously = False,
-        )   
+        )
 
 
         new_categories = form.cleaned_data['category_set']
         old_categories = action.categories
-        to_add, to_remove = self.update_values(old_categories, 
+        to_add, to_remove = self.update_values(old_categories,
             new_categories
         )
         action.category_set.add(*to_add)
@@ -605,7 +619,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         geoname_data = form.cleaned_data['geoname_set']
         old_geonames = action.geonames
         new_geonames = self.get_or_create_geonames(geoname_data)
-        to_add, to_remove = self.update_values(old_geonames, 
+        to_add, to_remove = self.update_values(old_geonames,
             new_geonames
         )
         action.geoname_set.add(*to_add)
@@ -614,24 +628,24 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         politician_data = form.cleaned_data['politician_set']
         old_politicians = action.politicians
         new_politicians = self.get_or_create_politicians(politician_data)
-        to_add, to_remove = self.update_values(old_politicians, 
+        to_add, to_remove = self.update_values(old_politicians,
             new_politicians
         )
         action.politician_set.add(*to_add)
         action.politician_set.remove(*to_remove)
-        
+
         medias = form.cleaned_data['media_set']
-        #TODO: Matteo 
+        #TODO: Matteo
         #old_medias = action.medias
         #new_medias = []
-        #to_add, to_remove = self.update_values(old_medias, 
+        #to_add, to_remove = self.update_values(old_medias,
         #    new_medias
         #)
         #action.media_set.add(*to_add)
         #action.media_set.remove(*to_remove)
 
         #for m2m_attr in (
-        #    'geoname_set', 
+        #    'geoname_set',
         #    'politician_set',
         #    'media_set'
         #):
@@ -652,7 +666,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         #        if form.cleaned_data['geoname_set']:
         #            cityreps_ids = form.cleaned_data.get('geoname_set')
         #        else:
-        #            cityreps_ids = [long(obj.external_resource.ext_res_id) 
+        #            cityreps_ids = [long(obj.external_resource.ext_res_id)
         #                for obj in action.geonames]
 
         #        # here we check that the threshold arrived is equal to
@@ -681,14 +695,14 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         #        """ Here we have to check if there are ExternalResource
         #        objects with pk equal to the provided ids.
         #        If there are ids that do not match with any ExternalResource
-        #        object pk, than create them. 
+        #        object pk, than create them.
         #        If the ExternalResource which pks match with some ids was
         #        created too time ago, then check the openpolis Json to see
         #        if there had been some changes.
-        #        
+        #
         #        Finally check if there are Geoname objects linked to the found
         #        ExternalResource objects. If not, create them.
-        #        
+        #
         #        """
         #        # Values can be overlapping or non overlapping
         #        m2m_values_old = getattr(action, m2m_attr).all()
@@ -704,23 +718,23 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
         #            **kwargs
         #        )
 
-        #        to_add, to_remove = self.update_values(m2m_values_old, 
+        #        to_add, to_remove = self.update_values(m2m_values_old,
         #            m2m_values_new
         #        )
 
         #        getattr(action, m2m_attr).add(*to_add)
         #        getattr(action, m2m_attr).remove(*to_remove)
-    
+
         success_url = action.get_absolute_url()
         return views_support.response_redirect(self.request, success_url)
 
     def update_values(self, old_values, new_values):
         """ Get two sets of values as input and return two sets of values as output.
 
-        This can be used when receiving a set of objects of the same tipe from a form 
+        This can be used when receiving a set of objects of the same tipe from a form
         to determine, knowing the old set of values, which objects have to be
         removed, which ones have to be added and which ones have to be kept.
-        
+
         The outputted set contain respectively the objects to add and the objects
         to remove.
         """
@@ -740,7 +754,7 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
             for obj_new in new_values:
                 #print "new %s" % obj_new.id
                 if obj_old.id == obj_new.id:
-                    #already present, does not need 
+                    #already present, does not need
                     #to be added
                     to_add.remove(obj_new)
                     break
@@ -753,14 +767,14 @@ class ActionUpdateView(ActionView, SingleObjectMixin):
                 to_remove.append(obj_old)
 
             count = 0
-        
+
         return to_add, to_remove
 
 
 class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
     """ Allow to an User to follow an Action
 
-    A follower of an Action can receive notifications of the Action updates, 
+    A follower of an Action can receive notifications of the Action updates,
     with respect to the Action itself and all the objects linked to it.
 
     A User can follow an action only if it is in a valid states. Valid states
@@ -769,11 +783,11 @@ class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
         * active
         * closed
         * victory
-    
+
     This view accepts only POST requests.
     """
     model = Action
-   
+
     def post(self, request, *args, **kwargs):
 
         action = self.get_object()
@@ -781,16 +795,16 @@ class ActionFollowView(SingleObjectMixin, views_support.LoginRequiredView):
 
         user.assert_can_follow_action(action)
         user.follow_action(action)
-        
+
         return views_support.response_success(request)
 
 class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
     """ Allow to an User to unfollow an Action
 
-    By unfollowing an Action a User stops to receive notifications of the 
-    Action updates, with respect to the Action itself and all the objects 
+    By unfollowing an Action a User stops to receive notifications of the
+    Action updates, with respect to the Action itself and all the objects
     linked to it.
-   
+
     This view accepts only POST requests.
     """
 
@@ -802,16 +816,16 @@ class ActionUnfollowView(SingleObjectMixin, views_support.LoginRequiredView):
         user = request.user
         user.assert_can_unfollow_action(action)
         user.unfollow_action(action)
-        
+
         return views_support.response_success(request)
 
 class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.LoginRequiredView):
     """ Allow to the Action owner to remove an Action moderator.
 
-    The ex-moderator is notified of this and he can send a message to 
-    the Action owner asking for the reasons behind his removal. 
+    The ex-moderator is notified of this and he can send a message to
+    the Action owner asking for the reasons behind his removal.
 
-    """ 
+    """
 
     model = Action
     form_class = forms.ModeratorRemoveForm
@@ -831,13 +845,13 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
         #notes = form.cleaned_data['text']
 
         sender.assert_can_remove_action_moderator(
-            moderator, 
+            moderator,
             action
         )
 
         action.moderator_set.remove(moderator)
 
-        action_moderator_removed.send(sender=action, 
+        action_moderator_removed.send(sender=action,
             moderator=moderator
         )
 
@@ -846,9 +860,9 @@ class ActionModerationRemoveView(FormView, SingleObjectMixin, views_support.Logi
 
 #--------------------------------------------------------------------------------
 
-class FilteredActionListView(ListView, views_support.LoginRequiredView):
+class FilteredActionListView(ListView):
     """ Generic filterable and orderable action list view basing on one or more parameters.
-        
+
         Implemented filters:
         - by generic query ('q' parameter)
         - by location
@@ -856,14 +870,14 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
         - by category
 
         it is possible to combine filtering parameters.
-        
+
         Generic query searches on:
         * action title
         * location name
         * politician name
         * action_content
 
-        QuerySet ordering is implemented through the keyword arg '__sort' 
+        QuerySet ordering is implemented through the keyword arg '__sort'
         containing separated values to determine the ordering preferences, p.e.:
 
         [popular,politicians(by mean of number of involved politcians),date]
@@ -974,10 +988,16 @@ class FilteredActionListView(ListView, views_support.LoginRequiredView):
             #OK: pol_pks is not among GET parameters
             pass
 
+        context['actions_count'] = len(self.get_queryset())
+        context['activists_count'] = 2000
+        context['latest_news'] = Post.objects.order_by('-added_at')[:5]
+        context['organizations'] = Organization.objects.all()[:5]
+        context['users'] = User.objects.all().exclude(pk=1)[:5]
+
         return context
 
     #TODO?: def get(self, request, *args, **kwargs):
-    #    
+    #
     #    rv = super(FilteredActionListView, self).get(request, *args, **kwargs)
     #    return views_support.response_success(request)
 
@@ -1034,6 +1054,11 @@ class BaseActionListView(ListView):
 
         context = super(BaseActionListView, self).get_context_data(**kwargs)
         context['filter_object'] = self.filter_class.objects.get(pk=self.kwargs['pk'])
+        context['actions_count'] = len(self.get_queryset())
+        context['activists_count'] = 2000
+        context['latest_news'] = Post.objects.order_by('-added_at')[:5]
+        context['users'] = User.objects.all().exclude(pk=1)[:5]
+        context['organizations'] = Organization.objects.all()[:5]
 
         return context
 

@@ -5,6 +5,7 @@
 
 {% block body %}
   <div id="homepage_banner">
+    <h3 id="slogan">Ora dovranno ascoltarci.</h3>
     <div>
       <div class="container">
         <div class="row">
@@ -43,18 +44,16 @@
 
     {% for action in action_list %}
       {% html_action_overview action %}
-      <hr>
     {% endfor %}
 
     <p class="media"><a href="{% url actions-filter %}">Tutte le azioni più calde</a></p>
 
   </div>
-  <div class="span6">
+  <div class="span6 activity-list">
     <h3>Dentro OpenAction</h3>
 
     {% for activity in latest_activities %}
       {% html_activity_item activity %}
-      <hr>
     {% endfor %}
   </div>
 </div>
@@ -64,15 +63,23 @@
 {% block sidebar %}
   <form action="{% url action-create %}" class="action-form">
     <button class="action-button">Crea un'Azione</button>
+    <p>
+      <strong>Questo è un call to action.</strong>
+      Un testo molto convincente che invita gli utenti a iscriversi e aprire un'azione.
+    </p>
   </form>
 
-  <p>
-    <b>Questo è un call to action</b>.
-    Un testo molto convincente che invita gli utenti a iscriversi e aprire un'azione.
-    Può essere a firma di un testimonial, di utenti, o di Action aid e Openpolis,
-    o anche solo un semplice testo breve ma potente, che centri il punto della questione e inviti all'azione.
-    <br>
-    <i>– Mario Rossi</i>
-  </p>
-{% endblock %}
+  <h4>In attesa di risposte da</h4>
 
+  <div class="politician-list">
+    {% for politician in politician_list %}
+    <div class="media">
+      <span class="pull-left"><strong>30</strong><br>Giorni</span>
+      <p>{{ politician.last_name|title }} {{ politician.first_name|title }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  <a href="#">Gli altri politici da cui attendiamo risposte</a>
+
+
+{% endblock %}

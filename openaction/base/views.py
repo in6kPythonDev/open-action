@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from action.models import Action
+from action.models import Action, Politician
 from askbot.models import Activity
 
 class HomepageView(TemplateView):
@@ -11,5 +11,7 @@ class HomepageView(TemplateView):
 
         context['action_list'] = Action.objects.all()[:5]
         context['latest_activities'] = Activity.objects.order_by('-active_at').all()[:5]
+        context['politician_list'] = Politician.objects.all().order_by('?')[:5]
+
 
         return context

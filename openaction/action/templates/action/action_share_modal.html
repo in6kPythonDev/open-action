@@ -1,5 +1,5 @@
 
-<div class="modal hide fade bigModal" id="share-modal" tabindex="-1" role="dialog" aria-labelledby="Share" aria-hidden="true">
+<div class="modal hide fade" id="share-modal" tabindex="-1" role="dialog" aria-labelledby="Share" aria-hidden="true">
     <div class="modal-body">
 
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -12,7 +12,7 @@
         <form action="{% url action-comment-add action.pk %}" method="post">
           {% csrf_token %}
             <fieldset>
-                <textarea name="text" id="id_text" class="span6"></textarea><br>
+                <textarea name="text" id="id_text" class="span5"></textarea><br>
                 <input class="btn" type="submit" name="submit" value="Pubblica sull'azione">
             </fieldset>
         </form>
