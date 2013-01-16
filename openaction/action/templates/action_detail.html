@@ -50,19 +50,37 @@
         {# END BITLY SUPPORT #}
         {% endif %}
 
-        $(document).ready(function(){
-            var $el = $('#action-vote-form');
-            $el.submit(function() {
-                $.post($el.attr('action'),{
-                    'csrfmiddlewaretoken': $el.find('input[name=csrfmiddlewaretoken]:first').val()
-                }).done(function() {
-                    $('#share-modal').modal().on('hidden', function() {
-                      document.location.reload();
-                    })
-                });
-                return false;
+
+        var $el = $('#action-vote-form');
+        $el.submit(function() {
+            $.post($el.attr('action'),{
+                'csrfmiddlewaretoken': $el.find('input[name=csrfmiddlewaretoken]:first').val()
+            }).done(function() {
+                $('#share-modal').modal().on('hidden', function() {
+                  document.location.reload();
+                })
             });
+            return false;
         });
+
+
+        $('.share-popup').click(function(event) {
+            var width  = 575,
+                height = 400,
+                left   = ($(window).width()  - width)  / 2,
+                top    = ($(window).height() - height) / 2,
+                url    = this.href,
+                opts   = 'status=1' +
+                    ',width='  + width  +
+                    ',height=' + height +
+                    ',top='    + top    +
+                    ',left='   + left;
+
+            window.open(url, 'share-popup', opts);
+
+            return false;
+        });
+
     });
     </script>
 
@@ -250,14 +268,14 @@
   </p>
 
   <p>
-    <button class="btn btn-social">
+    <a class="btn btn-social share-popup" href="http://twitter.com/share?text={{ action.bare_title|urlencode }}">
       <i class="socialicon-twitter"></i> Condividi su Twitter
-    </button>
+    </a>
   </p>
   <p>
-    <button class="btn btn-social">
+    <a class="btn btn-social share-popup" href="http://www.facebook.com/share.php?u={{ action_absolute_uri }}">
       <i class="socialicon-facebook"></i> Condividi su Facebook
-    </button>
+    </a>
   </p>
 
   <h4>Copia e condividi sul tuo sito</h4>
