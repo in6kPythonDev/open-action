@@ -5312,7 +5312,7 @@ a.badge:hover {
 #site_body,
 #content,
 #sidebar {
-  min-height: 200px;
+  min-height: 400px;
 }
 #sidebar {
   background-color: #ECEEEE;
@@ -5937,4 +5937,7 @@ table.action-status td.action-target {
 }
 #sidebar .related-news h4 a {
   color: #397267;
+}
+#sidebar > .bigger {
+  font-size: 19px;
 }

@@ -2,7 +2,7 @@
 {#{% load url from future %}#}
 
 {% block content %}
-<h1>Accedi per agire insieme! </h1>
+<h1>{# Accedi per agire insieme!  #}&nbsp;</h1>
 
 {#<form method="post" action="{% url 'users.views.login' %}">#}
   <form action="{{ LOGIN_URL }}" method="post" class="form-horizontal">
@@ -32,9 +32,9 @@
         <a class="btn btn-social" href="{% url socialauth_begin 'google' %}?{{ redirect_querystring }}">
           <i class="socialicon-google"></i> Accedi con Google
         </a>
-        <a class="btn btn-social" href="{% url socialauth_begin 'facebook' %}?{{ redirect_querystring }}">
-          <i class="socialicon-facebook"></i> Accedi con Facebook
-        </a>
+{#        <a class="btn btn-social" href="{% url socialauth_begin 'facebook' %}?{{ redirect_querystring }}">#}
+{#          <i class="socialicon-facebook"></i> Accedi con Facebook#}
+{#        </a>#}
       </div>
     </div>
 

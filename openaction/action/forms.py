@@ -161,7 +161,7 @@ class ActionForm(askbot_forms.AskForm):
         """ Check that the threshold deltas sum is equal to the given total
         threshold. """
 
-        computed_threshold = 3
+        computed_threshold = 0
         politician_data = cleaned_data['politician_set']
         total_threshold = int(cleaned_data['threshold'])
 
@@ -170,13 +170,13 @@ class ActionForm(askbot_forms.AskForm):
             #compute politician threshold
             threshold_delta = self.compute_threshold_delta(datum)
             computed_threshold = computed_threshold + threshold_delta
-
+        print "threshold : %s" % computed_threshold
         if computed_threshold != total_threshold:
             raise exceptions.ValidationError("La soglia indicata non corrisponde a quella ricavata dai politici scelti")
 
     def compute_threshold_delta(self, politician_datum):
-        return 0
- 
+        return 1
+
     def clean(self):
         """ overriding form clean """
         cleaned_data = super(ActionForm, self).clean()
@@ -191,7 +191,7 @@ class ActionForm(askbot_forms.AskForm):
         else:
             external_resource_ids = self.action.geonames.values_list('external_resource', flat=True)
             geoname_ids = [external_resource.ext_res_id for external_resource in ExternalResource.objects.filter(pk__in=external_resource_ids)]
- 
+
         if cleaned_data['politician_set']:
             cleaned_data['politician_set'] = self._clean_politician_set(
                 cleaned_data,
