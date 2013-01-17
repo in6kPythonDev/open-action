@@ -24,7 +24,7 @@
     <div class="control-group">
       <div class="controls">
         <input type="submit" value="Accedi" class="btn" />
-        <input type="hidden" name="next" value="{{ next }}" />
+        <input type="hidden" name="next" value="{% if next %}{{ next }}{% else %}/{% endif %}" />
       </div>
     </div>
     <div class="control-group">
