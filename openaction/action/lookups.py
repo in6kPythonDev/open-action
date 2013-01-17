@@ -84,7 +84,7 @@ class GeonameLookup(LookupChannel):
 
     def format_item_display(self,obj):
         
-        return u"<div><i>%s</i> (%s)</div>" % (escape(obj["name"]),obj["id"])
+        return u"<div><i>%s</i> (%s)</div>" % (escape(obj["name"]),obj["location_type"]["name"])
 #        values = (escape(obj.name),escape(obj.zipcode),escape(obj.city))
 #        format = u"%s - %s %s"
 #        if len(obj.province) > 0:
