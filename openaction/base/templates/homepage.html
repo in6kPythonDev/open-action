@@ -53,7 +53,9 @@
     <h3>Dentro OpenAction</h3>
 
     {% for activity in latest_activities %}
+      {% if activity.content_object.action or activity.content_object.post.action %}
       {% html_activity_item activity %}
+      {% endif %}
     {% endfor %}
   </div>
 </div>

@@ -107,11 +107,22 @@ def html_activity_item(activity):
     if activity.activity_type == consts.TYPE_ACTIVITY_ANSWER:
         extra_content = activity.content_object.title
 
+    action = activity.content_object
+
+    from action.models import Action
+    if not isinstance(activity.content_object, Action):
+        try:
+            action = action.action
+        except AttributeError:
+            action = action.post.action
+
+
+
     return {
         "activity_user" : activity.user,
         "activity_date" : activity.active_at,
         "activity_type" : activities[activity.activity_type],
-        "action" : activity.content_object,
+        "action" : action,
         "extra_content" : extra_content,
         }
 
