@@ -240,7 +240,7 @@
       </label>
       </fieldset>
     </form>
-    {% else %}
+    {% endif %}{% if user_voted %}
     <div class="text-success">Hai già aderito a questa Action, <a href="#" data-toggle="modal" data-target="#share-modal">Condividi!</a></div>
     {% endif %}
   </div>
